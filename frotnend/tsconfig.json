@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "outDir": ".dist/esm",
+    "rootDir": "src",
+    "target": "ES2020",
+    "declarationDir": ".dist/types",
+    "types": [
+      "node"
+    ],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "references": [
+  ]
+}

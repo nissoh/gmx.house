@@ -1,0 +1,15 @@
+{
+    "name": "server",
+    "version": "10.0.0",
+    "license": "MIT",
+    "module": ".dist/esm/index.js",
+    "files": [
+        ".dist"
+    ],
+    "scripts": {
+        "build": "webpack --mode production",
+        "dev": "webpack serve",
+        "start": "tsc && node .dist/cjs/server",
+        "start:dev": "nodemon --watch 'app/**/*.ts' --exec 'ts-node' --transpile-only app/server.ts"
+    }
+}

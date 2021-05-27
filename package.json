@@ -1,0 +1,34 @@
+{
+    "name": "aelea",
+    "license": "MIT",
+    "author": "Nissan Hanina <nissanhanina@gmail.com>",
+    "workspaces": [
+        "*"
+    ],
+    "scripts": {
+        "build": "yarn workspaces foreach --no-private --verbose --topological --parallel run build",
+        "clean": "yarn workspaces foreach --verbose --no-private --parallel run clean",
+        "lint": "eslint . --ext .ts",
+        "check-version": "yarn version check --interactive",
+        "check-version:apply": "yarn run check-version && yarn version apply --all",
+        "publish": "yarn workspaces foreach --exclude aelea --verbose npm publish --tolerate-republish --access public",
+        "upgrade-interactive": "yarn upgrade-interactive",
+        ".": "_______GLOBAL_TASKS_____",
+        "g:tsc:clean": "cd $INIT_CWD && tsc -b --clean",
+        "g:dev": "cd $INIT_CWD && tsc -b --clean",
+        "g:tsc:project": "cd $INIT_CWD && tsc -b --verbose",
+        "g:tsc:project:watch": "cd $INIT_CWD && tsc -b -w --verbose",
+        "g:tsc:cjs": "cd $INIT_CWD && tsc --outDir .dist/commonjs --module CommonJS --declarationMap false --composite false --declaration false --declarationDir null",
+        "g:parallel": "cd $INIT_CWD && concurrently"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "4.25.0",
+        "@typescript-eslint/parser": "4.25.0",
+        "concurrently": "^6.2.0",
+        "eslint": "7.27.0",
+        "typescript": "4.2.4"
+    },
+    "dependencies": {
+        "@yarnpkg/pnpify": "^3.0.0-rc.3"
+    }
+}

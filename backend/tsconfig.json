@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "outDir": ".dist/cjs",
+    "rootDir": "src",
+    "target": "ES2018",
+    "module": "CommonJS",
+    "types": ["node"],
+    "experimentalDecorators": true,
+    "declarationDir": ".dist/types",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
+  },
+  "references": [
+  ]
+}

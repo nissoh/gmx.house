@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "noUnusedLocals": false,
+    "forceConsistentCasingInFileNames": true,
+    "declarationMap": true,
+    "target": "ES2018",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "composite": true,
+    "incremental": true,
+    "sourceMap": true,
+    "declaration": true,
+    "strict": true,
+    "pretty": true,
+    "lib": [
+      "DOM",
+      "es2020"
+    ]
+  },
+  "exclude": [
+    "**/*.test.ts",
+    "**/.dist"
+  ]
+}
