@@ -88,10 +88,10 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@aelea/ui-components", [
-        ["npm:0.16.0", {
-          "packageLocation": "./.yarn/cache/@aelea-ui-components-npm-0.16.0-6439f09026-a1d444d804.zip/node_modules/@aelea/ui-components/",
+        ["npm:0.17.0", {
+          "packageLocation": "./.yarn/cache/@aelea-ui-components-npm-0.17.0-91e323b3a4-81123564bf.zip/node_modules/@aelea/ui-components/",
           "packageDependencies": [
-            ["@aelea/ui-components", "npm:0.16.0"],
+            ["@aelea/ui-components", "npm:0.17.0"],
             ["@aelea/core", "npm:0.15.0"],
             ["@aelea/router", "npm:0.13.0"],
             ["@aelea/ui-components-theme", "npm:0.6.0"],
@@ -99,8 +99,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@most/disposable", "npm:1.3.0"],
             ["@most/prelude", "npm:1.8.0"],
             ["@most/scheduler", "npm:1.3.0"],
-            ["@most/types", "npm:1.1.0"],
-            ["monaco-editor", "npm:0.24.0"]
+            ["@most/types", "npm:1.1.0"]
           ],
           "linkType": "HARD",
         }]
@@ -4401,7 +4400,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["frontend", "workspace:frontend"],
             ["@aelea/core", "npm:0.15.0"],
             ["@aelea/router", "npm:0.13.0"],
-            ["@aelea/ui-components", "npm:0.16.0"],
+            ["@aelea/ui-components", "npm:0.17.0"],
             ["@aelea/ui-components-theme", "npm:0.6.0"],
             ["@ethersproject/abi", "npm:5.2.0"],
             ["@ethersproject/bytes", "npm:5.2.0"],
@@ -6380,15 +6379,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/mkdirp-npm-1.0.4-37f6ef56b9-1aa3a6a2d7.zip/node_modules/mkdirp/",
           "packageDependencies": [
             ["mkdirp", "npm:1.0.4"]
-          ],
-          "linkType": "HARD",
-        }]
-      ]],
-      ["monaco-editor", [
-        ["npm:0.24.0", {
-          "packageLocation": "./.yarn/cache/monaco-editor-npm-0.24.0-2acd336f92-e3978b7ad0.zip/node_modules/monaco-editor/",
-          "packageDependencies": [
-            ["monaco-editor", "npm:0.24.0"]
           ],
           "linkType": "HARD",
         }]

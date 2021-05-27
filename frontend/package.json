@@ -14,7 +14,7 @@
     "dependencies": {
         "@aelea/core": "0.15.0",
         "@aelea/router": "0.13.0",
-        "@aelea/ui-components": "0.16.0",
+        "@aelea/ui-components": "0.17.0",
         "@aelea/ui-components-theme": "0.6.0",
         "@ethersproject/abi": "5.2.0",
         "@ethersproject/bytes": "5.2.0",

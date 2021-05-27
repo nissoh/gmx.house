@@ -40,9 +40,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aelea/ui-components@npm:0.16.0":
-  version: 0.16.0
-  resolution: "@aelea/ui-components@npm:0.16.0"
+"@aelea/ui-components@npm:0.17.0":
+  version: 0.17.0
+  resolution: "@aelea/ui-components@npm:0.17.0"
   dependencies:
     "@aelea/core": 0.15.0
     "@aelea/router": 0.13.0
@@ -52,8 +52,7 @@ __metadata:
     "@most/prelude": 1.8.0
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
-    monaco-editor: 0.24.0
-  checksum: a1d444d804c61ed5af26834637e56d7cd3b0caeccae3ea89f0ee62aeecc57b15be359ce0d46ee2a1f06747f159d6a4270e9f2b6263d616002f3b02f1ab1579a0
+  checksum: 81123564bf057ec4849f94ebaea59c60ff792ed202c80dc6189b8af6c8b97a2ae073fe710c9b61fc9c00442943d90f1f6f28550967168eb363ec4fd91d3e07d6
   languageName: node
   linkType: hard
 
@@ -3637,7 +3636,7 @@ __metadata:
   dependencies:
     "@aelea/core": 0.15.0
     "@aelea/router": 0.13.0
-    "@aelea/ui-components": 0.16.0
+    "@aelea/ui-components": 0.17.0
     "@aelea/ui-components-theme": 0.6.0
     "@ethersproject/abi": 5.2.0
     "@ethersproject/bytes": 5.2.0
@@ -5439,13 +5438,6 @@ fsevents@~2.3.1:
   bin:
     mkdirp: bin/cmd.js
   checksum: 1aa3a6a2d7514f094a91329ec09994f5d32d2955a4985ecbb3d86f2aaeafc4aa11521f98d606144c1d49cd9835004d9a73342709b8c692c92e59eacf37412468
-  languageName: node
-  linkType: hard
-
-"monaco-editor@npm:0.24.0":
-  version: 0.24.0
-  resolution: "monaco-editor@npm:0.24.0"
-  checksum: e3978b7ad0422bc469ea1cf7abf089756f635b025096e95d61cb945d479affab95acb197e785104f8d61b861478df049cdce1ef12486b1562177e368992d50b0
   languageName: node
   linkType: hard
 
