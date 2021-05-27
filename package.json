@@ -1,5 +1,5 @@
 {
-    "name": "aelea",
+    "name": "monorepo",
     "license": "MIT",
     "author": "Nissan Hanina <nissanhanina@gmail.com>",
     "workspaces": [
@@ -9,11 +9,12 @@
         "build": "yarn workspaces foreach --no-private --verbose --topological --parallel run build",
         "clean": "yarn workspaces foreach --verbose --no-private --parallel run clean",
         "lint": "eslint . --ext .ts",
+        "start": "yarn workspace backend run start",
         "check-version": "yarn version check --interactive",
         "check-version:apply": "yarn run check-version && yarn version apply --all",
         "publish": "yarn workspaces foreach --exclude aelea --verbose npm publish --tolerate-republish --access public",
         "upgrade-interactive": "yarn upgrade-interactive",
-        ".": "_______GLOBAL_TASKS_____",
+        "                    ": "_______GLOBAL_TASKS_____",
         "g:tsc:clean": "cd $INIT_CWD && tsc -b --clean",
         "g:dev": "cd $INIT_CWD && tsc -b --clean",
         "g:tsc:project": "cd $INIT_CWD && tsc -b --verbose",
@@ -27,6 +28,10 @@
         "concurrently": "^6.2.0",
         "eslint": "7.27.0",
         "typescript": "4.2.4"
+    },
+    "engines": {
+        "node": "14.x",
+        "yarn": "2.x"
     },
     "dependencies": {
         "@yarnpkg/pnpify": "^3.0.0-rc.3"

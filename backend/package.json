@@ -1,5 +1,5 @@
 {
-    "name": "server",
+    "name": "backend",
     "version": "10.0.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
@@ -7,9 +7,19 @@
         ".dist"
     ],
     "scripts": {
-        "build": "webpack --mode production",
+        "build": "tsc",
         "dev": "webpack serve",
-        "start": "tsc && node .dist/cjs/server",
+        "start": "node .dist/cjs/server.js",
         "start:dev": "nodemon --watch 'app/**/*.ts' --exec 'ts-node' --transpile-only app/server.ts"
+    },
+    "devDependencies": {
+        "@types/koa": "^2.13.1",
+        "@types/koa-static": "^4.0.1",
+        "@types/node": "^15.6.1",
+        "typescript": "4.2.4"
+    },
+    "dependencies": {
+        "koa": "^2.13.1",
+        "koa-static": "^5.0.0"
     }
 }
