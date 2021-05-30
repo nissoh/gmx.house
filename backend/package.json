@@ -11,8 +11,7 @@
     "types": ".dist/types/index.d.ts",
     "scripts": {
         "start": "yarn g:tsc:cjs && node .dist/cjs/server",
-        "start:dev": "yarn g:tsc:cjs && node -r dotenv/config .dist/cjs/server",
-        "start:prod": "tsc && node dist/server",
+        "dev": "yarn g:tsc:cjs && node -r dotenv/config .dist/cjs/server",
         "clean": "yarn g:tsc:clean",
         "build:project": "yarn g:tsc:project",
         "build:cjs": "yarn g:tsc:cjs",
