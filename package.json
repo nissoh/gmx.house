@@ -8,9 +8,9 @@
     ],
     "scripts": {
         "build": "yarn workspaces foreach --verbose --topological --parallel run build",
-        "clean": "yarn workspaces foreach --verbose --no-private --parallel run clean",
+        "clean": "yarn workspaces foreach --verbose --parallel run clean",
         "lint": "eslint . --ext .ts",
-        "start": "yarn workspace backend run start",
+        "start": "yarn workspace gambit-backend run start",
         "check-version": "yarn version check --interactive",
         "check-version:apply": "yarn run check-version && yarn version apply --all",
         "publish": "yarn workspaces foreach --no-private --verbose npm publish --tolerate-republish --access public",
