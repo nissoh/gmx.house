@@ -1,8 +1,9 @@
 {
-    "name": "frontend",
+    "name": "gambit-frontend",
     "version": "10.0.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
+    "private": true,
     "files": [
         ".dist"
     ],
