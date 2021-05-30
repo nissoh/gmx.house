@@ -9,6 +9,8 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { gambitContract } from 'gambit-middleware'
 
 import { leaderboardApi } from './api'
+import e from 'express'
+import path from 'path'
 
 const bscNini = new JsonRpcProvider(
   "https://bsc-dataseed1.ninicoin.io/",
@@ -176,10 +178,18 @@ const run = async () => {
 
   
 
+  const publicDir = __dirname + './../../../frontend/dist'
   // app.use(express.json())
-  app.use(express.static(__dirname + './../../../frontend/dist'))
+  app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', leaderboardApi)
+  app.use((req, res, next) => {
+    if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
+      res.sendFile(path.join(publicDir, '/index.html'), err => err && next())
+    } else {
+      next()
+    }
+  })
   app.use((req, res) => res.status(404).json({ message: 'No route found' }))
 
   server.listen(port, () => {
