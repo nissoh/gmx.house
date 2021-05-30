@@ -13,7 +13,7 @@
         "start": "yarn workspace backend run start",
         "check-version": "yarn version check --interactive",
         "check-version:apply": "yarn run check-version && yarn version apply --all",
-        "publish": "yarn workspaces foreach --exclude aelea --verbose npm publish --tolerate-republish --access public",
+        "publish": "yarn workspaces foreach --exclude monorepo --verbose npm publish --tolerate-republish --access public",
         "upgrade-interactive": "yarn upgrade-interactive",
         "                    ": "_______GLOBAL_TASKS_____",
         "g:tsc:clean": "cd $INIT_CWD && tsc -b --clean",
