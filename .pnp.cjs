@@ -4157,7 +4157,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["express-promise-router", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:4.1.0"],
             ["express-session", "npm:1.17.2"],
             ["gambit-middleware", "workspace:middleware"],
-            ["typescript", "patch:typescript@npm%3A4.3.2#~builtin<compat/typescript>::version=4.3.2&hash=d8b4e7"],
             ["ws", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:7.4.6"]
           ],
           "linkType": "SOFT",
