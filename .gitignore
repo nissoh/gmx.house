@@ -1,4 +1,5 @@
 .dist
+.env
 dist
 tsconfig.tsbuildinfo
 

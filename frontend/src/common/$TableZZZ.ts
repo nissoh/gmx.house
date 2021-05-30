@@ -1,8 +1,9 @@
 import { map, merge, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { $Node, Behavior, component, INode, O, Op, style, stylePseudo } from '@aelea/core'
+import { $Node, Behavior, component, INode, style, stylePseudo } from '@aelea/core'
 import { pallete } from "@aelea/ui-components-theme"
 import { $row, $VirtualScroll, layoutSheet, QuantumScroll, ScrollRequest } from "@aelea/ui-components"
+import { O, Op } from "@aelea/utils"
 
 
 export interface TablePageResponse<T> {
@@ -26,6 +27,8 @@ export interface TableOption<T> {
 export interface TableColumn<T> {
   $head: $Node
   valueOp: Op<T, $Node>
+
+  columnOp?: Op<INode, INode>
 }
 
 
@@ -40,7 +43,7 @@ export const $TableZZ = <T>({ dataSource, columns, scrollConfig, cellOp, headerC
 
 
   const cellStyle = O(
-    style({ padding: '3px 6px', overflowWrap: 'break-word' }),
+    style({ padding: '3px 6px', overflowWrap: 'break-word', alignItems: 'center' }),
     layoutSheet.flex,
   )
 
@@ -59,7 +62,7 @@ export const $TableZZ = <T>({ dataSource, columns, scrollConfig, cellOp, headerC
 
   const $header = $rowHeaderContainer(
     ...columns.map(col => {
-      return $CellHeader(
+      return $CellHeader(col.columnOp || O())(
         col.$head
       )
     })
@@ -73,7 +76,7 @@ export const $TableZZ = <T>({ dataSource, columns, scrollConfig, cellOp, headerC
       const $items = data.map(rowData =>
         $rowContainer(
           ...columns.map(col =>
-            $CellBody(
+            $CellBody(col.columnOp || O())(
               switchLatest(col.valueOp(now(rowData)))
             )
           )

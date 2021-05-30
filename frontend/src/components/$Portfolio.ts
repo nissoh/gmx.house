@@ -2,7 +2,7 @@ import { $Node, $text, Behavior, component, INode, style } from "@aelea/core"
 import { $column, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { skipRepeats } from "@most/core"
-import { BSC_CONTRACTS } from "../api/address/contract"
+import { BSC_CONTRACTS } from "gambit-middleware"
 import { $icon } from "../common/$icons"
 
 

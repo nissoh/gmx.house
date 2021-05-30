@@ -1,10 +1,11 @@
-import { $wrapNativeElement, Behavior, component, fromCallback, INode, style, styleBehavior } from '@aelea/core'
-import { layoutSheet, observer } from '@aelea/ui-components'
-import { pallete, theme } from '@aelea/ui-components-theme'
+import { $wrapNativeElement, Behavior, component, INode, style, styleBehavior } from '@aelea/core'
+import { observer } from '@aelea/ui-components'
+import { pallete } from '@aelea/ui-components-theme'
+import { fromCallback } from '@aelea/utils'
 import { chain, map, multicast, never } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
-import { BarData, BarPrice, BarPrices, BusinessDay, ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, LogicalRange, MouseEventParams, SeriesDataItemTypeMap, SeriesType, TimeRange, UTCTimestamp } from 'lightweight-charts'
+import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, SeriesDataItemTypeMap, SeriesType, TimeRange } from 'lightweight-charts'
 
 
 interface IChart<T extends SeriesType> {

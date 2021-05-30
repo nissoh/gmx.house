@@ -10,7 +10,90 @@
 </head>
 
 <body>
-
+    <style>
+        .cubes .cube * {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+    
+        .cubes .cube .shadow {
+            background: #000000;
+            top: 40%;
+        }
+    
+        .cubes .cube .sides div {
+            backface-visibility: hidden;
+            will-change: transform;
+            display: flex;
+            align-items: center;
+            place-content: center;
+        }
+    
+        .cubes .cube .sides .front {
+            transform: rotateY(0deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .back {
+            transform: rotateY(-180deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .left {
+            transform: rotateY(-90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .right {
+            transform: rotateY(90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .top {
+            transform: rotateX(90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .bottom {
+            transform: rotateX(-90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides {
+            transform-style: preserve-3d;
+            perspective: 600px;
+        }
+    
+        .cubes {
+            pointer-events: none;
+        }
+    
+        .cubes .cube {
+            position: absolute;
+            height: 100px;
+            width: 100px;
+            margin: 0;
+    
+            animation: cube-fade-in 2s cubic-bezier(0.1, 0.31, 0, 1.19);
+            will-change: transform;
+    
+        }
+    
+        @keyframes cube-fade-in {
+            0% {
+                opacity: 0;
+                transform: scale(.5)
+            }
+        }
+    </style>
+    <template id="cube-template">
+        <div class="cube">
+            <div class="shadow"></div>
+            <div class="sides">
+                <div class="back">T</div>
+                <div class="top">U</div>
+                <div class="left">Z</div>
+                <div class="front">Y</div>
+                <div class="right">R</div>
+                <div class="bottom">L</div>
+            </div>
+        </div>
+    </template>
 </body>
 
 </html>

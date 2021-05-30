@@ -1,0 +1,33 @@
+{
+    "name": "gambit-middleware",
+    "version": "0.0.0",
+    "license": "MIT",
+    "module": ".dist/esm/index.js",
+    "main": ".dist/cjs/index.js",
+    "sideEffects": false,
+    "files": [
+        ".dist"
+    ],
+    "types": ".dist/types/index.d.ts",
+    "scripts": {
+        "clean": "yarn g:tsc:clean",
+        "build:project": "yarn g:tsc:project",
+        "build:cjs": "yarn g:tsc:cjs",
+        "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
+    },
+    "dependencies": {
+        "@aelea/utils": "1.1.0",
+        "@ethersproject/abi": "5.2.0",
+        "@ethersproject/abstract-signer": "5.2.0",
+        "@ethersproject/bignumber": "^5.2.0",
+        "@ethersproject/bytes": "5.2.0",
+        "@ethersproject/contracts": "^5.2.0",
+        "@ethersproject/providers": "5.2.0",
+        "@most/core": "1.6.1",
+        "@most/disposable": "1.3.0",
+        "@most/prelude": "1.8.0",
+        "@most/scheduler": "1.3.0",
+        "@most/types": "1.1.0",
+        "@types/node": "^15.6.1"
+    }
+}

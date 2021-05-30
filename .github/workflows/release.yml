@@ -1,0 +1,38 @@
+name: CI
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          # https://yarnpkg.com/features/release-workflow/#ensuring-that-versions-are-bumped-ci
+          fetch-depth: 0
+
+      - name: Use Node.js 14.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+
+      - name: Check if commit includes version information
+        # Run `yarn version check --interactive` before committing
+        run: yarn version check
+
+      - name: Install Dependencies
+        run: yarn install --immutable
+
+      - name: Lint
+        run: yarn eslint
+
+      - name: Build
+        run: yarn build
+
+      - name: Publish if versioned
+        if: contains(github.ref, 'master')
+        run: yarn publish
+        env:
+          YARN_NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH }}

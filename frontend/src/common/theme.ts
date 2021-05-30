@@ -1,23 +1,6 @@
 
 import type { Theme } from '@aelea/ui-components-theme'
 
-// https://www.radixdlt.com/
-// --background-color: #fff;
-// --bg-shade-color: #dde5ed;
-// --bg-shade-color-alt: #f2f2fc;
-// --bg-shade-empty: #e6f1f4;
-// --border-light: #e8edf2;
-// --primary-color: #060f8f;
-// --primary-color-alt: #052cc0;
-// --primary-brand-color: #00c389;
-// --primary-brand-color-alt: #00ab84;
-// --font-color: #003057;
-// --font-color-alt: #425563;
-// --box-color: #dfdfdf;
-// --shade-gradient: linear-gradient(270deg,var(--bg-shade-color-alt),#fff);
-// --primary-gradient: linear-gradient(180deg,var(--primary-color-alt),var(--primary-color));
-// --primary-gradient-rot: linear-gradient(225deg,var(--primary-color-alt),var(--primary-color));
-// radial-gradient(at center center, #0a0f5f 50vh, #00002d)
 
 const light: Theme = {
   name: 'light',
@@ -27,9 +10,9 @@ const light: Theme = {
     message: '#000000',
 
     background: '#ffffff',
-    horizon: '#fff5de',
+    horizon: '#dcdcdc',
     middleground: '#e0d0ab',
-    foreground: '#866724',
+    foreground: '#7b7b7b',
 
     positive: '#0fd25e',
     negative: '#b70636',

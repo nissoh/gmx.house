@@ -1,6 +1,7 @@
-import { O, style } from "@aelea/core"
+import { style } from "@aelea/core"
 import { $Button as $UIComponentsButton, IButton } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
+import { O } from "@aelea/utils"
 
 
 

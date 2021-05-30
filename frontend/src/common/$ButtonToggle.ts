@@ -1,9 +1,9 @@
-import { $Node, $text, Behavior, component, event, INode, Op, style, styleBehavior } from "@aelea/core"
+import { $Node, $text, Behavior, component, event, INode, style, styleBehavior } from "@aelea/core"
 import { $row, layoutSheet } from "@aelea/ui-components"
-import { pallete, theme } from "@aelea/ui-components-theme"
+import { pallete } from "@aelea/ui-components-theme"
+import { Op } from "@aelea/utils"
 import { constant, map, merge, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { colorLuminocity } from "./utils"
 
 export interface IButton<T> {
   options: T[]

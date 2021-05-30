@@ -1,0 +1,11 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "outDir": ".dist/esm",
+    "rootDir": "src",
+    "types": [
+      "node"
+    ],
+    "declarationDir": ".dist/types"
+  }
+}
