@@ -20,6 +20,7 @@ jobs:
 
       - name: Check if commit includes version information
         # Run `yarn version check --interactive` before committing
+        if: contains(github.ref, 'master')
         run: yarn version check
 
       - name: Install Dependencies
