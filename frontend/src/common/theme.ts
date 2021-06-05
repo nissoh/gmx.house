@@ -23,7 +23,7 @@ const light: Theme = {
 const dark: Theme = {
   name: 'dark',
   pallete: {
-    primary: '#ff36bf',
+    primary: '#c910a1',
 
     message: '#ffffff',
 

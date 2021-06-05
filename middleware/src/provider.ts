@@ -1,6 +1,6 @@
 import { O, Op, fromCallback } from "@aelea/utils"
 import { BaseProvider } from "@ethersproject/providers"
-import { awaitPromises, at, map, chain, recoverWith, continueWith, switchLatest, take } from "@most/core"
+import { awaitPromises, at, map, chain, recoverWith, continueWith, switchLatest, take, filter } from "@most/core"
 import { disposeWith } from "@most/disposable"
 import { Stream } from "@most/types"
 
@@ -15,11 +15,14 @@ export enum CHAIN {
 
 
 
-export const awaitProvider = <T extends BaseProvider>(provider: Stream<T>): Stream<T> => {
+export const awaitProvider = <T extends BaseProvider>(provider: Stream<T | null>): Stream<T> => {
+  const validProvider = filter(provider => {
+    return provider !== null
+  }, provider) as Stream<T>
   const recoverProviderFailure = recoverWith(err => {
     console.error(err)
     return chain(() => awaitProvider(provider), at(3000, null))
-  }, provider)
+  }, validProvider)
 
   return recoverProviderFailure
 }

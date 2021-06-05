@@ -1,62 +1,85 @@
-// import { $text, component, style, Behavior } from "@aelea/core"
-// import { $row } from "@aelea/ui-components"
-// import { pallete, theme } from "@aelea/ui-components-theme"
-// import { combine, map, switchLatest } from "@most/core"
-// import { awaitProvider, network, requestAccounts, account } from "gambit-middleware"
-// import { $jazzicon } from "../common/gAvatar"
-// import { $ButtonPrimary } from "./$Button"
+import { $text, component, style, Behavior, $Node } from "@aelea/core"
+import { $icon, $row, layoutSheet } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
+import { Wallet } from "@ethersproject/wallet"
+import { combine, map, switchLatest } from "@most/core"
+import { Stream } from "@most/types"
+import { CHAIN } from "gambit-middleware"
+import { account, metamaskProvider, requestAccounts, network, InitMetamaskProvider } from "metamask-provider"
+import { $jazzicon } from "../common/gAvatar"
+import { $alert } from "../elements/$common"
+import { $alertIcon } from "../elements/$icons"
+import { $ButtonPrimary } from "./form/$Button"
 
 
 
-// const $userConnectionStatus = (address: string) => $row(style({ backgroundColor: pallete.foreground, borderRadius: '12px', alignItems: 'center', overflow: 'hidden' }))(
-//   $row(style({ borderRadius: '12px', alignItems: 'center', padding: '0 10px' }))(
-//     $text(address.slice(0, 6) + '...' + address.slice(-4))
-//   ),
-//   $row(style({ backgroundColor: pallete.foreground, height: '40px', alignItems: 'center', padding: '0 6px' }))(
-//     $jazzicon(address)
-//   )
-// )
-
-// export const $AccountButton = () => component((
-//   [requestWallet, sampleRequestWallet]: Behavior<any, any>
-// ) => {
-
-//   const $connectButton = style({ zoom: .75 }, $ButtonPrimary({ $content: $text('Engage wallet') })({
-//     click: sampleRequestWallet(
-//       map(() => {
-//         return requestAccounts
-//       }),
-//       switchLatest
-//     ) 
-//   }))
-
-//   const $installMetamaskWarning = $text('installMetamask')
+const $userConnectionStatus = (address: string) => $row(style({ backgroundColor: pallete.foreground, borderRadius: '12px', alignItems: 'center', overflow: 'hidden' }))(
+  $row(style({ borderRadius: '12px', alignItems: 'center', padding: '0 10px' }))(
+    $text(address.slice(0, 6) + '...' + address.slice(-4))
+  ),
+  $row(style({ backgroundColor: pallete.foreground, height: '40px', alignItems: 'center', padding: '0 6px' }))(
+    $jazzicon(address)
+  )
+)
 
 
-//   return [
-//     switchLatest(
-//       map(provider => {
+export interface IIntermediateDisplay {
+  $display: $Node
+  // wallet: Stream<Wallet>
+}
 
-//         if (provider === null)
-//           return $installMetamaskWarning
+export const $IntermediateDisplay = (config: IIntermediateDisplay) => component((
+  [requestWallet, sampleRequestWallet]: Behavior<any, any>
+) => {
 
-//         return switchLatest(
-//           combine((chain, account) => {
-//             if (account === undefined)
-//               return $connectButton
+  const $connectButton = $ButtonPrimary({ $content: $text('Connect Wallet'), buttonOp: style({ zoom: .75 }) })({
+    click: sampleRequestWallet(
+      map(() => requestAccounts),
+      switchLatest
+    ) 
+  })
 
-//             if (chain.chainId !== 3)
-//               return $text(style({ color: pallete.negative }))('Please switch to Ropsten Network')
-
-//             return $userConnectionStatus(account)
-//           }, network, account)
-//         )
+  const $installMetamaskWarning = $text('installMetamask')
 
 
-//       }, awaitProvider)
-//     ),
-//     { requestWallet }
-//   ]
-// })
+  return [
+    switchLatest(
+      map((provider) => {
+        if (provider === null)
+          return $installMetamaskWarning
+
+        return switchLatest(
+          combine((chain, account) => {
+            if (account === undefined)
+              return $connectButton
+            if (chain !== CHAIN.BSC && chain !== CHAIN.ETH_ROPSTEN)
+              return $alert(
+                $text('Switch to BSC Network')
+              )
+            return config.$display
+          }, network, account)
+        )
+      }, metamaskProvider)
+    ),
+    { requestWallet }
+  ]
+})
+
+export const $AccountButton = (config: IIntermediateDisplay) => component((
+  [requestWallet, sampleRequestWallet]: Behavior<any, any>
+) => {
+
+
+  const $installMetamaskWarning = $text('installMetamask')
+
+
+  return [
+    $IntermediateDisplay({
+      $display: $userConnectionStatus('d')
+    })({}),
+    {  }
+  ]
+})
+
 
 

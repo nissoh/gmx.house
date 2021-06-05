@@ -9,16 +9,10 @@ import { JsonRpcProvider } from '@ethersproject/providers'
 import { gambitContract } from 'gambit-middleware'
 
 import { leaderboardApi } from './api'
-import e from 'express'
 import path from 'path'
+import { bscNini } from './rpc'
+import { claimApi } from './api/claimAccount'
 
-const bscNini = new JsonRpcProvider(
-  "https://bsc-dataseed1.ninicoin.io/",
-  {
-    chainId: 56,
-    name: "bsc-mainnet",
-  }
-)
 
 // const sessionParser = session({
 //   saveUninitialized: false,
@@ -36,7 +30,7 @@ export let ORM: MikroORM<IDatabaseDriver<Connection>>
 export let EM: EntityManager<IDatabaseDriver<Connection>>
 
 const app = express()
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 const server = http.createServer(app)
 
@@ -150,10 +144,34 @@ const run = async () => {
       )
 
       return model
-    }, vaultActions.closePosition)
+    }, vaultActions.closePosition),
+
+    map(async (updatedPosition) => {
+      const position = await EM.findOne(dto.PositionUpdate, { key: updatedPosition.key }) || await EM.findOne(dto.PositionDecrease, { key: updatedPosition.key })
+
+      if (position === null) {
+        return
+      }
+
+      const model = new dto.PositionClose(
+        updatedPosition.averagePrice.toBigInt(),
+        updatedPosition.entryFundingRate.toBigInt(),
+        updatedPosition.reserveAmount.toBigInt(),
+        updatedPosition.realisedPnl.toBigInt(),
+        updatedPosition.collateral.toBigInt(),
+        updatedPosition.size.toBigInt(),
+        updatedPosition.key,
+        position.account,
+        position.isLong,
+        position.indexToken,
+        position.collateralToken
+      )
+
+      return model
+    }, vaultActions.updatePosition)
   ])
 
-  const mode = debounce(300, awaitPromises(
+  const mode = awaitPromises(
     map(async modelQuery => {
       try {
         const model = await modelQuery
@@ -164,9 +182,9 @@ const run = async () => {
         console.error(err)
       }
     }, modelChanges)
-  ))
+  )
 
-  mode.run({
+  debounce(300, mode).run({
     async event(time, val) {
       EM.flush()
     },
@@ -179,11 +197,13 @@ const run = async () => {
   
 
   const publicDir = __dirname + './../../../frontend/dist'
-  // app.use(express.json())
+  app.use(express.json())
   app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', leaderboardApi)
+  app.use('/api', claimApi)
   app.use((req, res, next) => {
+    
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
       res.sendFile(path.join(publicDir, '/index.html'), err => err && next())
     } else {

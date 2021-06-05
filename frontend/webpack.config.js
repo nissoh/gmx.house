@@ -51,9 +51,9 @@ module.exports = {
   ],
   // node: { crypto: true, stream: true },
   devServer: {
-    port: 4500,
+    port: 3000,
     proxy: {
-      '/api': 'http://localhost:3000',
+      '/api': 'http://localhost:5555',
     },
     historyApiFallback: true
   },
