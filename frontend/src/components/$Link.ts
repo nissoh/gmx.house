@@ -30,7 +30,7 @@ export const $Link = ({ url, route, $content, anchorOp, disabled = empty() }: IL
             : null
       }, active, focus)
     ),
-    styleBehavior(map(isDisabled => (isDisabled ?  { pointerEvents: 'none', opacity: .5 } : {}), disabled))
+    styleBehavior(map(isDisabled => (isDisabled ?  { pointerEvents: 'none', opacity: .3 } : {}), disabled))
   )($content)
 
   return [

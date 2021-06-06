@@ -1,6 +1,3 @@
-import { Op } from "@aelea/utils"
-import { filter, merge, multicast } from "@most/core"
-import { Stream } from "@most/types"
 import { CHAIN } from "./provider"
 
 const zXAdressRegxp = /^(0x)?[0-9a-fA-F]{40}$/
@@ -16,7 +13,7 @@ export const EXPLORER_URL = {
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
 } as const
 
-
+export const txHashRegxp = /^0x([A-Fa-f0-9]{64})$/
 
 // Constant to pull zeros from for multipliers
 let zeros = "0"
@@ -38,18 +35,12 @@ export function readableUSD(ammount: string) {
     return EMPTY_MESSAGE
   }
 
-
-  if (whole.length > 0) {
-    return whole
+  if (whole.replace(/^-/, '') === '0') {
+    const shortDecimal = decimal.slice(0, 2)
+    return whole + '.' + shortDecimal
   }
 
-  const shortDecimal = decimal.slice(0, 2)
-
-  if (shortDecimal) {
-    return whole + (shortDecimal && ('.' + '0'))
-  }
-
-  return '-'
+  return whole
 }
 
 export function shortenTxAddress(address: string) {
@@ -58,19 +49,6 @@ export function shortenTxAddress(address: string) {
 
 export function expandDecimals(n: bigint, decimals: number) {
   return n * (10n ** BigInt(decimals))
-}
-
-/* converts bigInt(positive) to hex */
-export function bnToHex(n: bigint) {
-  if (n < 0n) {
-    throw new Error('expected positive integer')
-  }
-
-  let hex = n.toString(16)
-  if (hex.length % 2) {
-    hex = '0' + hex
-  }
-  return hex
 }
 
 function getMultiplier(decimals: number): string {
@@ -202,4 +180,42 @@ export function getAccountUrl(chainId: CHAIN, account: string) {
 }
 
 
+/* converts bigInt(positive) to hex */
+export function bnToHex(n: bigint) {
+  if (n < 0n) {
+    throw new Error('expected positive integer')
+  }
+
+  let hex = n.toString(16)
+  if (hex.length % 2) {
+    hex = '0' + hex
+  }
+  return hex
+}
+
+export function bytesToHex(uint8a: Uint8Array): string {
+  let hex = ''
+  for (let i = 0; i < uint8a.length; i++) {
+    hex += uint8a[i].toString(16).padStart(2, '0')
+  }
+  return hex
+}
+
+export function hexToBytes(hex: string): Uint8Array {
+  if (typeof hex !== 'string' || hex.length % 2) throw new Error('Expected valid hex')
+  const array = new Uint8Array(hex.length / 2)
+  for (let i = 0; i < array.length; i++) {
+    const j = i * 2
+    array[i] = Number.parseInt(hex.slice(j, j + 2), 16)
+  }
+  return array
+}
+
+export function hex2asc(pStr: string) {
+  let tempstr = ''
+  for (let b = 0; b < pStr.length; b = b + 2) {
+    tempstr = tempstr + String.fromCharCode(parseInt(pStr.substr(b, 2), 16))
+  }
+  return tempstr
+}
 

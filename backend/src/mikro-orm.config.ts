@@ -9,7 +9,7 @@ const options: Options = {
   // highlighter: new MongoHighlighter(),
   // debug: true,
   ensureIndexes: true,
-  clientUrl: `mongodb+srv://${process.env.MONGO_DB_USER}:${process.env.MONGO_DB_PASSWORD}@cluster0.uytom.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`
+  clientUrl: process.env.DB_CLIENT_URL
 }
 
 export default options

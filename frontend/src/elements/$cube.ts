@@ -1,6 +1,7 @@
 import { $node, $wrapNativeElement, animationFrames, attr, style } from "@aelea/core"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { tap } from "@most/core"
+import { never, tap } from "@most/core"
+import { disposeWith } from "@most/disposable"
 import { map } from "@most/prelude"
 
 interface IPosition{
@@ -43,7 +44,7 @@ const Strut = {
   clamp: function (min: number, max: number, n: number) {
     return Math.max(Math.min(min, n), max)
   },
-  queryArray: function (e: any, t: HTMLElement) {
+  queryArray: function (e: any, t: Element) {
     return t || (t = document.body), Array.prototype.slice.call(t.querySelectorAll(e))
   },
   ready: function (e: any) {
@@ -64,7 +65,7 @@ const setState = (state: IPosition, speed: IPosition) =>
 
 
 
-const template = document.getElementById("cube-template")
+const template = document.getElementById("cube-template") as HTMLTemplateElement
 
 const directions = ["x", "y"] as const
 // rgb(39 38 38)
@@ -99,9 +100,9 @@ const setCubeStyles = ({ cube, size, left, top }: ICube) => {
 
 const createCube = (size: number) => {
 
-  // @ts-ignore
-  const fragment = document.importNode(template.content, true)
-  const cube = fragment.querySelector(".cube")
+  
+  const fragment = template.content
+  const cube = fragment.querySelector(".cube")!.cloneNode(true)! as Element
 
   const state = { x: 0,  y: 0 }
 
@@ -233,9 +234,11 @@ const updateSides = ({ state, speed, size, tint, sides, left }: ICube) => {
   sides.forEach(animate)
 }
 
+
+let disposed = false
 const tick = () => {
   cubes.forEach(updateSides)
-  if (reduceMotion) return
+  if (disposed || reduceMotion) return
   requestAnimationFrame(tick)
 }
 
@@ -243,7 +246,10 @@ const tick = () => {
 // animationFrames(window)
 
 export const $cubes = () => {
+  disposed = false
+
   tick()
+
 
   return $node(
     style({ position: 'absolute', color: colorAlpha(pallete.foreground, .5), left: '0', top: '50%', marginLeft: '-25w', marginTop: '-25vh' }),
@@ -251,6 +257,11 @@ export const $cubes = () => {
       x.element.classList.add('cubes')
     }),
   )(
-    ...cubes.map(({ fragment }) => $wrapNativeElement(fragment)())
+    {
+      run(sink, sch) {
+        return disposeWith(() => disposed = true, null)
+      }
+    },
+    ...cubes.map(({ fragment, cube }) => $wrapNativeElement(cube)())
   )
 }

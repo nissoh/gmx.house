@@ -1,6 +1,6 @@
 {
     "name": "gambit-frontend",
-    "version": "10.0.0",
+    "version": "10.1.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "private": true,
@@ -9,22 +9,23 @@
     ],
     "scripts": {
         "build": "webpack --mode production",
-        "dev": "webpack serve",
-        "upgrade-interactive": "yarn upgrade-interactive"
+        "dev": "webpack serve"
     },
     "sideEffects": false,
     "dependencies": {
-        "@aelea/core": "0.17.0",
-        "@aelea/router": "0.15.0",
-        "@aelea/ui-components": "0.19.0",
-        "@aelea/ui-components-theme": "0.7.0",
+        "@aelea/core": "0.18.0",
+        "@aelea/router": "0.16.0",
+        "@aelea/ui-components": "0.21.0",
+        "@aelea/ui-components-theme": "0.8.0",
         "@aelea/utils": "1.1.0",
-        "@ethersproject/abi": "5.2.0",
-        "@ethersproject/abstract-signer": "5.2.0",
-        "@ethersproject/bignumber": "^5.2.0",
-        "@ethersproject/bytes": "5.2.0",
-        "@ethersproject/contracts": "^5.2.0",
-        "@ethersproject/providers": "5.2.0",
+        "@ethersproject/abi": "5.3.0",
+        "@ethersproject/abstract-signer": "5.3.0",
+        "@ethersproject/bignumber": "^5.3.0",
+        "@ethersproject/bytes": "5.3.0",
+        "@ethersproject/contracts": "^5.3.0",
+        "@ethersproject/providers": "5.3.0",
+        "@ethersproject/units": "^5.3.0",
+        "@ethersproject/wallet": "^5.3.0",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
@@ -36,7 +37,8 @@
         "hash.js": "1.1.7",
         "homepage": "^1.0.0",
         "jazzicon": "^1.5.0",
-        "lightweight-charts": "^3.3.0"
+        "lightweight-charts": "^3.3.0",
+        "metamask-provider": "workspace:*"
     },
     "devDependencies": {
         "copy-webpack-plugin": "^9.0.0",

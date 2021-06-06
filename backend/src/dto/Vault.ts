@@ -1,17 +1,12 @@
-import { Entity, Property, Type } from '@mikro-orm/core'
+import { Entity, Index, Property } from '@mikro-orm/core'
 import { BaseEntity } from './BaseEntity'
+import { NativeBigIntType } from './utils'
 
-
-export class NativeBigIntType extends Type<bigint, string> {
-  convertToDatabaseValue(value: bigint): string {
-    return value.toString()
-  }
-}
 
 
 export abstract class Position extends BaseEntity {
   @Property() key: string
-  @Property() account: string
+  @Index() @Property() account: string
   @Property() collateralToken: string
   @Property() indexToken: string
   @Property() isLong: boolean
@@ -45,16 +40,7 @@ export abstract class PositionMake extends Position {
   }
 }
 
-@Entity()
-export class PositionIncrease extends PositionMake {
-}
-
-@Entity()
-export class PositionDecrease extends PositionMake {
-}
-
-@Entity()
-export class PositionSettled extends Position {
+export abstract class PositionSettled extends Position {
   @Property({ type: NativeBigIntType }) reserveAmount: bigint
   @Property({ type: NativeBigIntType }) realisedPnl: bigint
   @Property({ type: NativeBigIntType }) collateral: bigint
@@ -69,8 +55,8 @@ export class PositionSettled extends Position {
   }
 }
 
-@Entity()
-export class PositionClose extends PositionSettled {
+
+export abstract class PositionBaseUpdate extends PositionSettled {
   @Property({ type: NativeBigIntType }) averagePrice: bigint
   @Property({ type: NativeBigIntType }) entryFundingRate: bigint
 
@@ -79,6 +65,24 @@ export class PositionClose extends PositionSettled {
     this.averagePrice = averagePrice
     this.entryFundingRate = entryFundingRate
   }
+}
+
+@Entity()
+export class PositionIncrease extends PositionMake {
+}
+
+@Entity()
+export class PositionDecrease extends PositionMake {
+}
+
+@Entity()
+export class PositionUpdate extends PositionBaseUpdate {
+
+}
+
+@Entity()
+export class PositionClose extends PositionBaseUpdate {
+
 }
 
 @Entity()

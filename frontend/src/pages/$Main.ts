@@ -11,6 +11,7 @@ import { $cubes } from '../elements/$cube'
 import { $MainMenu } from '../components/$MainMenu'
 import { $Leaderboard } from './$Leaderboard'
 import { $anchor } from '../elements/$common'
+import { $ButtonPrimary } from '../components/form/$Button'
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -57,8 +58,8 @@ export default ({ baseRoute = '' }: Website) => component((
           $row(style({ alignItems: 'center', width: '100%' }))(
             $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
               $text(style({  }))(`Interest-generating Stable Currency`),
-              $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '10px', color: pallete.message }))(`Gambit Community`),
-              $text(style({  }))(`Leveraging-Protocol on Zero slippage`),
+              $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`Gambit Community`),
+              $text(style({  }))(`Leveraging-Protocol with Zero slippage`),
 
               $node(),
               $node(),
@@ -67,7 +68,10 @@ export default ({ baseRoute = '' }: Website) => component((
 
               $row(style({ justifyContent: 'center' }))(
                 $anchor(attr({ href: 'https://gambit.financial' }), style({ textDecoration: 'none' }))(
-                  $Button({ $content: $text('https://gambit.financial'), buttonOp: style({ backgroundColor: pallete.primary, borderRadius: '30px', padding: '12px 24px', color: 'black', fontWeight: 'bold', fontSize: '0.6em', borderColor: pallete.background }) })({})
+
+                  $ButtonPrimary({
+                    $content: $text('https://gambit.financial')
+                  })({})
                 )
               )
             ),

@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "outDir": ".dist/esm",
+    "rootDir": "src",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": [
+      "node"
+    ],
+    "declarationDir": ".dist/types"
+  },
+  "references": [
+    {
+      "path": "../middleware"
+    }
+  ]
+}
