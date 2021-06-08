@@ -8,10 +8,11 @@ import { newDefaultScheduler } from '@most/scheduler'
 import { JsonRpcProvider } from '@ethersproject/providers'
 import { gambitContract } from 'gambit-middleware'
 
-import { leaderboardApi } from './api'
+import { accountApi, leaderboardApi } from './api'
 import path from 'path'
 import { bscNini } from './rpc'
 import { claimApi } from './api/claimAccount'
+import { PositionClose, PositionUpdate } from './dto/Vault'
 
 
 // const sessionParser = session({
@@ -153,7 +154,7 @@ const run = async () => {
         return
       }
 
-      const model = new dto.PositionClose(
+      const model = new dto.PositionUpdate(
         updatedPosition.averagePrice.toBigInt(),
         updatedPosition.entryFundingRate.toBigInt(),
         updatedPosition.reserveAmount.toBigInt(),
@@ -202,6 +203,7 @@ const run = async () => {
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', leaderboardApi)
   app.use('/api', claimApi)
+  app.use('/api', accountApi)
   app.use((req, res, next) => {
     
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {

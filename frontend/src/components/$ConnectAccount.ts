@@ -1,13 +1,13 @@
-import { $text, component, style, Behavior, $Node } from "@aelea/core"
-import { $icon, $row, layoutSheet } from "@aelea/ui-components"
+import { $text, component, style, Behavior, $Node, attr } from "@aelea/core"
+import { $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { Wallet } from "@ethersproject/wallet"
 import { combine, map, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { CHAIN } from "gambit-middleware"
-import { account, metamaskProvider, requestAccounts, network, InitMetamaskProvider } from "metamask-provider"
+import { account, metamaskProvider, requestAccounts, network, InitMetamaskProvider, getProvider } from "metamask-provider"
 import { $jazzicon } from "../common/gAvatar"
-import { $alert } from "../elements/$common"
+import { $alert, $anchor } from "../elements/$common"
 import { $alertIcon } from "../elements/$icons"
 import { $ButtonPrimary } from "./form/$Button"
 
@@ -39,7 +39,12 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
     ) 
   })
 
-  const $installMetamaskWarning = $text('installMetamask')
+  const $installMetamaskWarning = $alert(
+    $column(layoutSheet.spacingTiny)(
+      $text('No metamask detected. get it from '),
+      $anchor(attr({ href: 'https://metamask.io' }))($text('https://metamask.io'))
+    )
+  )
 
 
   return [
@@ -59,7 +64,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
             return config.$display
           }, network, account)
         )
-      }, metamaskProvider)
+      }, getProvider())
     ),
     { requestWallet }
   ]

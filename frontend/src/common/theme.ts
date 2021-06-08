@@ -23,17 +23,17 @@ const light: Theme = {
 const dark: Theme = {
   name: 'dark',
   pallete: {
-    primary: '#c910a1',
+    primary: '#e24183',
 
     message: '#ffffff',
 
     background: '#1f0a44',
     horizon: '#381a63',
-    middleground: '#2d363a',
+    middleground: '#502b86',
     foreground: '#bca4de',
 
     positive: '#a6f5a6',
-    negative: '#de3434',
+    negative: '#ff3e29',
     indeterminate: '#dccb07',
   }
 }

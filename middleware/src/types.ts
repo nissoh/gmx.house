@@ -1,14 +1,16 @@
-import { SYMBOL } from "./address"
+import { BSC_CONTRACTS, SYMBOL } from "./address"
 
 export type Address = string
 
-export interface IToken {
-  label: string
-  symbol: SYMBOL
+export interface Token {
+  name: string;
+  symbol: SYMBOL;
+  decimals: number;
+  address: BSC_CONTRACTS;
 }
 
-export interface ITransaction {
-  token: IToken,
+export interface Transaction {
+  token: Token,
   from: Address
   to: Address
   value: bigint

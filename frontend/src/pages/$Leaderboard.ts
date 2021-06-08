@@ -2,34 +2,25 @@ import { $text, Behavior, event, component, style, styleBehavior, StyleCSS } fro
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, merge, mergeArray, multicast, now, startWith, switchLatest, tap } from '@most/core'
-
-import {  formatFixed, readableUSD } from 'gambit-middleware'
+import { constant, map, multicast, startWith, switchLatest } from '@most/core'
+import { formatReadableUSD } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { Account, leaderBoard, SettledPosition } from '../logic/leaderboard'
+import { leaderBoard } from '../logic/leaderboard'
 import { $AccountProfile } from '../components/$AccountProfile'
-import { LeaderboardApiQueryParams } from 'gambit-backend'
+import { LeaderboardApi } from 'gambit-backend'
+import { Account } from '../logic/types'
 
 
-const USD_DECIMALS = 30
-
-
-
-// fetch('/api/claim-account', {
-//   method: 'POST', // *GET, POST, PUT, DELETE, etc.
-//   headers: {
-//     'Content-Type': 'application/json'
-//   },
-//   body: JSON.stringify({ tx: '0xc8842adcf564afaa616e4147030941d1841853062de8d6d5da52b724c0440c28' }) // body data type must match "Content-Type" header
-// })
 
 
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
+
+  parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
 }
 
 
@@ -40,7 +31,7 @@ enum TimeFrame {
   Month,
 }
 
-const timeFrameToRangeOp = map((xxx: TimeFrame): LeaderboardApiQueryParams => {
+const timeFrameToRangeOp = map((xxx: TimeFrame): LeaderboardApi => {
   const nowTime = new Date()
 
   const startTime = xxx === TimeFrame.Day
@@ -49,7 +40,7 @@ const timeFrameToRangeOp = map((xxx: TimeFrame): LeaderboardApiQueryParams => {
       ? nowTime.setMonth(nowTime.getMonth() - 1)
       : new Date(0).getTime()
 
-  return { startTime }
+  return { timeRange: [startTime, Date.now()] }
 })
 
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
@@ -58,16 +49,15 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const $header = $text(style({ fontSize: '1.45em', fontWeight: 'lighter', letterSpacing: '4px' }))
 
-  const rootStore = state.createLocalStorageChain('store')
 
 
-  const timeFrameStore = rootStore('timeframe', TimeFrame.Month)
+  const timeFrameStore = config.parentStore('timeframe', TimeFrame.Month)
 
   const timeFrameState = multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
   
   
-  const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApiQueryParams) => {
+  const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
     return map((list) => {
       const account = list.reduce((seed, pos) => {
         const account = seed[pos.account] ??= {
@@ -90,7 +80,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         return seed
       }, {} as {[account: string]: Account})
 
-      const allAccounts = Object.values(account).filter(a => a.realisedPnl > 0).sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
+      const allAccounts = Object.values(account)
+        // .filter(a => a.realisedPnl > 0)
+        .sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
 
       return { data: allAccounts }
     }, leaderBoard(params))
@@ -104,6 +96,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     $column(
       $column(layoutSheet.spacingBig)(
         $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $row(
+            $header(layoutSheet.flex)('Top Gambit'),
+          ),
           $row(layoutSheet.flex)(),
 
           $text(style({ color: pallete.foreground }))('Time Frame:'),
@@ -121,9 +116,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           )
         ),
         $card(layoutSheet.spacingBig, style({ padding: '46px' }))(
-          $row(
-            $header(layoutSheet.flex)('Top Gambit'),
-          ),
           $column(layoutSheet.spacing)(
 
             switchLatest(map((dataSource) => {
@@ -135,7 +127,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     $head: $text('Account'),
                     columnOp: style({ minWidth: '300px' }),
                     valueOp: map(x => {
-                      return $AccountProfile({ account: x })({
+                      return $AccountProfile({ ...x })({
                         claimSucceed: initializeLeaderboardTether(
                           constant(timeFrameStore.state)
                         )
@@ -158,9 +150,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   {
                     $head: $text('realisedPnl'),
                     valueOp: map(x => {
-                      const str = formatFixed(x.realisedPnl, USD_DECIMALS)
-
-                      return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(readableUSD(str))
+                      const str = formatReadableUSD(x.realisedPnl)
+                      return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
                     })
                   },
                 ],
@@ -448,63 +439,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
       //   $column(style({ flex: 1, position: 'relative', backgroundImage: `radial-gradient(at 126% center, ${pallete.foreground} 0vw, #0000 121vh)`, borderRadius: '25px' }))(
 
-      //     switchLatest(
-      //       map(({ data, klineWSData }) => {
-
-      //         return $CandleSticks({
-      //           initalData: data,
-      //           update: scan((prev, next): BarData => {
-
-      //             const prevTimespan = (prev.time as number) + intervalInMsMap['1m']
-      //             if (prevTimespan > next.T) {
-      //             // prev.open = Number(next.p)
-      //               prev.close = Number(next.p)
-
-      //               if (Number(next.p) > prev.high) {
-      //                 prev.high = Number(next.p)
-      //               }
-      //               if (Number(next.p) < prev.low) {
-      //                 prev.low = Number(next.p)
-      //               }
-
-      //               return prev
-      //             }
-
-      //             return {
-      //               close: Number(next.p),
-      //               time: next.T as UTCTimestamp,
-      //               high: Number(next.p),
-      //               open: Number(next.p),
-      //               low: Number(next.p),
-      //             }
-      //           }, data[data.length - 1], klineWSData),
-      //           chartConfig: {
-      //             timeScale: {
-      //               timeVisible: true,
-      //               secondsVisible: true,
-      //               borderVisible: true,
-      //               borderColor: pallete.foreground,
-      //             },
-      //             crosshair: {
-      //               mode: CrosshairMode.Normal,
-      //               horzLine: {
-      //                 color: pallete.foreground,
-      //                 width: 1,
-      //                 style: LineStyle.Dotted
-      //               },
-      //               vertLine: {
-      //                 color: pallete.foreground,
-      //                 width: 1,
-      //                 style: LineStyle.Dotted,
-      //               }
-      //             }
-      //           },
-      //         })({
-      //           crosshairMove: sampleChartCrosshair(),
-      //         // click: sampleClick()
-      //         })
-      //       }, selectedTokenHistoricKline)
-      //     ),
 
       //     // $node(
       //     //   style({

@@ -17,7 +17,7 @@ export type InitMetamaskProvider = {
   signer: JsonRpcSigner
 }
 
-const getProvider = () => {
+export const getProvider = () => {
   return fromPromise(detectEthereumProvider())
 }
 

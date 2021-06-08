@@ -2,7 +2,7 @@ import { $Branch, $element, $Node, $text, style, stylePseudo } from "@aelea/core
 import { $ButtonIcon, $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty } from "@most/core"
-import { IToken } from "gambit-middleware"
+import { Token } from "gambit-middleware"
 import { $alertIcon, $caretDblDown, $trash } from "./$icons"
 
 export const $TrashBtn = $ButtonIcon($trash)
@@ -36,12 +36,12 @@ export const $labeledDivider = (label: string) => {
   )
 }
 
-export const $tokenLabel = (token: IToken, $label?: $Node) => {
+export const $tokenLabel = (token: Token, $label?: $Node) => {
   return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center' }))(
     // token.$icon,
     $column(layoutSheet.flex)(
       $text(style({ fontWeight: 'bold' }))(token.symbol),
-      $text(style({ fontSize: '75%', color: pallete.foreground }))(token.label)
+      $text(style({ fontSize: '75%', color: pallete.foreground }))(token.symbol)
     ),
     style({ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }, $label || empty())
   )

@@ -1,47 +1,105 @@
 import { Behavior, component } from '@aelea/core'
-import { pallete, theme } from '@aelea/ui-components-theme'
-import { empty } from '@most/core'
-import { Stream } from '@most/types'
-import { ChartOptions, DeepPartial, LineStyle, SeriesDataItemTypeMap, SeriesType } from 'lightweight-charts'
-import { $Chart } from './$Chart'
+import { pallete } from '@aelea/ui-components-theme'
+import { LineStyle, MouseEventParams, SeriesMarker, SeriesType } from 'lightweight-charts'
+import { $Chart, IChart } from './$Chart'
 
 
 
 
-interface ILine {
-  chartConfig?: DeepPartial<ChartOptions>
-  update?: Stream<SeriesDataItemTypeMap['Line']>
-  initalData?: SeriesDataItemTypeMap['Line'][]
+export interface ILine extends Omit<IChart<'Line'>, 'initializeSeries'> {
 }
 
-export const $Line = <T extends SeriesType>({ chartConfig, update: dataSource = empty(), initalData = [] }: ILine) => component((
-  [sampleData, data]: Behavior<any, any>
+export const $Line = (config: ILine) => component((
+  [sampleData, data]: Behavior<any, any>,
+  [crosshairMove, crosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>
 ) => {
 
   return [
     $Chart({
-      dataSource: dataSource,
+      ...config,
+      chartConfig: {
+        rightPriceScale: {
+          visible: false
+        },
+        grid: {
+          horzLines: {
+            visible: false,
+          },
+          vertLines: {
+            visible: false
+          },
+        },
+        overlayPriceScales: {
+          borderVisible: false,
+        },
+        leftPriceScale: {
+          visible: false
+        },
+        timeScale: {
+          secondsVisible: true,
+          timeVisible: true,
+          lockVisibleTimeRangeOnResize: true,
+          shiftVisibleRangeOnNewBar: true,
+          borderColor: pallete.background,
+        },
+        crosshair: {
+          horzLine: {
+            color: pallete.horizon,
+            width: 2,
+            visible: false,
+            style: LineStyle.Dashed,
+            labelBackgroundColor: pallete.background,
+          },
+          vertLine: {
+            labelBackgroundColor: pallete.background,
+            color: pallete.horizon,
+            width: 3,
+            style: LineStyle.Solid,
+          }
+        },
+
+        ...config.chartConfig
+      },
+      // historicalData: 
       initializeSeries: (api) => {
-        const series = api.addLineSeries({
+        const series = api.addAreaSeries({
           lineStyle: LineStyle.Solid,
-          color: pallete.message
+          lineWidth: 2,
+          baseLineVisible: false,
+          lastValueVisible: false,
+          priceLineVisible: false,
+
+          // crosshairMarkerVisible: false,
+          lineColor: pallete.primary,
+          topColor: pallete.background,	
+          bottomColor: 'transparent',
         })
 
-        series.setData(initalData)
+        const priceSacle = api.priceScale()
 
-        series.createPriceLine({
-          price: 57824,
-          color: '#be1238',
-          lineWidth: 1,
-          lineStyle: LineStyle.Solid,
-          axisLabelVisible: true,
-          title: 'minimum price',
-        })
+        // console.log(priceSacle.options())
+
+
+
+        // series.createPriceLine({
+        //   price: 57824,
+        //   color: '#be1238',
+        //   lineWidth: 2,
+        //   lineStyle: LineStyle.Solid,
+        //   axisLabelVisible: true,
+        //   title: 'minimum price',
+        // })
 
         return series
-      },
-      chartConfig
-    })({}),
+      }
+    })({
+      crosshairMove: crosshairMoveTether()
+    }),
+
+
+    {
+      crosshairMove
+    }
   ]
 })
 

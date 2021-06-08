@@ -1,5 +1,5 @@
-import { $node, $Node, Behavior, component, event, INode, style, styleBehavior } from "@aelea/core"
-import { O, combineArray } from '@aelea/utils'
+import { $node, $Node, Behavior, component, event, IBranch, INode, style, styleBehavior } from "@aelea/core"
+import { O, combineArray, Op } from '@aelea/utils'
 import { pallete } from "@aelea/ui-components-theme"
 import { constant, empty, map, merge, multicast, switchLatest, tap, until } from "@most/core"
 import { Stream } from "@most/types"
@@ -8,6 +8,7 @@ import { observer } from "@aelea/ui-components"
 
 
 interface IPocus {
+  containerOp?: Op<IBranch, IBranch>
   $$popContent: Stream<$Node>
   offset?: number
   padding?: number
@@ -17,7 +18,7 @@ interface IPocus {
   // overlayAlpha?: string
 }
 
-export const $Popover2 = ({ $$popContent, offset = 30, padding = 76, dismiss = empty() }: IPocus) => ($target: $Node) => component((
+export const $Popover2 = ({ $$popContent, offset = 30, padding = 76, dismiss = empty(), containerOp = O() }: IPocus) => ($target: $Node) => component((
   [overlayClick, overlayClickTether]: Behavior<any, any>,
   [targetIntersection, targetIntersectionTether]: Behavior<INode, IntersectionObserverEntry[]>,
   [popoverContentDimension, popoverContentDimensionTether]: Behavior<INode, ResizeObserverEntry[]>,
@@ -113,7 +114,7 @@ export const $Popover2 = ({ $$popContent, offset = 30, padding = 76, dismiss = e
   )
 
   return [
-    $node(map(node => ({ ...node, insertAscending: true })))(
+    $node(map(node => ({ ...node, insertAscending: true })), containerOp)(
       targetOp($target),
       $popover,
     ),

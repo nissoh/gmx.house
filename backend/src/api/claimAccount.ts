@@ -1,7 +1,7 @@
 import Router from 'express-promise-router'
 
 import { EM } from '../server'
-import { BSC_WALLET, hex2asc, txHashRegxp } from 'gambit-middleware'
+import { BSC_WALLET, hex2asc, TX_HASH_REGEX } from 'gambit-middleware'
 import { bscNini } from '../rpc'
 import { Claim } from '../dto/Account'
 
@@ -50,7 +50,7 @@ claimApi.get('/claim-list', async (req, res) => {
 
 claimApi.post<string>('/claim-account', async (req, res) => {
   const tx = req.body?.tx
-  const isValidTx = txHashRegxp.test(tx)
+  const isValidTx = TX_HASH_REGEX.test(tx)
 
   if (isValidTx === false) {
     return res.status(403).json({ message: 'Invalid transaction' })

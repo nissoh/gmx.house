@@ -1,7 +1,9 @@
+import { USD_DECIMALS } from "./constant"
 import { CHAIN } from "./provider"
 
-const zXAdressRegxp = /^(0x)?[0-9a-fA-F]{40}$/
-const validFractionalNumberRegxp = /^-?(0|[1-9]\d*)(\.\d+)?$/
+export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/
+export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/
+export const VALID_FRACTIONAL_NUMBER_REGEXP = /^-?(0|[1-9]\d*)(\.\d+)?$/
 
 const EMPTY_MESSAGE = '-'
 
@@ -13,21 +15,20 @@ export const EXPLORER_URL = {
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
 } as const
 
-export const txHashRegxp = /^0x([A-Fa-f0-9]{64})$/
 
 // Constant to pull zeros from for multipliers
 let zeros = "0"
 while (zeros.length < 256) { zeros += zeros }
 
 export function isAddress(address: string) {
-  return zXAdressRegxp.test(address)
+  return ETH_ADDRESS_REGEXP.test(address)
 }
 
 export function shortenAddress(address: string, padRight = 4, padLeft = 6) {
   return address.slice(0, padLeft) + "..." + address.slice(address.length -padRight, address.length)
 }
 
-export function readableUSD(ammount: string) {
+export function readableUSD(ammount: string, dollarSign = false) {
   const parts = ammount.split('.')
   const [whole = '', decimal = ''] = parts
 
@@ -41,6 +42,11 @@ export function readableUSD(ammount: string) {
   }
 
   return whole
+}
+
+export function formatReadableUSD(ammount: bigint) {
+  const str = formatFixed(ammount, USD_DECIMALS).toLocaleString()
+  return readableUSD(str)
 }
 
 export function shortenTxAddress(address: string) {
@@ -59,7 +65,7 @@ function getMultiplier(decimals: number): string {
   throw new Error("invalid decimal size")
 }
 
-export function formatFixed(value: bigint, decimals = 18): string {
+export function formatFixed(value: bigint, decimals = 18): number {
   const multiplier = getMultiplier(decimals)
   const multiplierBn = BigInt(multiplier)
   let parsedValue = ''
@@ -86,14 +92,14 @@ export function formatFixed(value: bigint, decimals = 18): string {
     parsedValue = "-" + parsedValue
   }
 
-  return Number(parsedValue).toLocaleString()
+  return Number(parsedValue)
 }
 
 export function parseFixed (value: string, decimals = 18) {
   const multiplier = getMultiplier(decimals)
   const multiplierLength = multiplier.length
 
-  if (!validFractionalNumberRegxp.test(value)) {
+  if (!VALID_FRACTIONAL_NUMBER_REGEXP.test(value)) {
     throw new Error('invalid fractional value')
   }
 
@@ -217,5 +223,17 @@ export function hex2asc(pStr: string) {
     tempstr = tempstr + String.fromCharCode(parseInt(pStr.substr(b, 2), 16))
   }
   return tempstr
+}
+
+export declare type Nominal<T, Name extends string> = T & {
+  [Symbol.species]: Name
+}
+
+export type UTCTimestamp = Nominal<number, "UTCTimestamp">
+
+const tzOffset = new Date().getTimezoneOffset() * 60000
+
+export function TimeTzOffset(ms: number): UTCTimestamp {
+  return Math.floor((ms - tzOffset) / 1000) as UTCTimestamp
 }
 

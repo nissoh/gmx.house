@@ -32,13 +32,13 @@ export const $MainMenu = ({ parentRoute, containerOp = O() }: MainMenu) => compo
       //   click: sampleLinkClick()
       // }),
 
-      $Link({ $content: $text('Portfolio'), url: '/p/examples/theme', disabled: now(true), route: examplesRoute })({
+      $Link({ $content: $text('Portfolio'), url: '/p/account', route: examplesRoute })({
         click: routeChangeTether()
       }),
       $Link({ $content: $text('Leaderboard'), url: '/p/leaderboard', route: guideRoute })({
         click: routeChangeTether()
       }),
-      $Link({ $content: $text('Protocol API'), disabled: now(true), url: '/p/examples/theme', route: examplesRoute })({
+      $Link({ $content: $text('API(WIP)'), disabled: now(true), url: '/p/examples/theme', route: examplesRoute })({
         click: routeChangeTether()
       }),
 

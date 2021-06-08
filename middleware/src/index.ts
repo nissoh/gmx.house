@@ -5,3 +5,5 @@ export * from './utils'
 export * from './address'
 export * from './gambit'
 export * from './transaction'
+export * from './constant'
+
