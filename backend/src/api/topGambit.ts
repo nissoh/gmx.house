@@ -2,29 +2,27 @@ import Router from 'express-promise-router'
 
 import { EM } from '../server'
 import { dto } from '../dto'
+import { HistoricalDataApi } from './types'
 
 
 export const leaderboardApi = Router()
 
 
-const inceptionTime = new Date(0)
 
-export interface LeaderboardApiQueryParams {
-  startTime?: number
-  endTime?: number
+export interface LeaderboardApi extends HistoricalDataApi {
 }
 
 leaderboardApi.post('/leaderboard', async (req, res) => {
-  const queryParams: LeaderboardApiQueryParams = req.body
-  const startTime = queryParams.startTime ? new Date(Number(queryParams.startTime)) : inceptionTime
-  const endTime = queryParams.endTime ? new Date(Number(queryParams.endTime)) : new Date()
+  const queryParams: LeaderboardApi = req.body
 
   const modelList = await EM.find(
     dto.PositionClose, {
-      createdAt: {
-        $gt: startTime,
-        $lt: endTime,
-      },
+      createdAt: queryParams.timeRange
+        ? {
+          $gt: new Date(queryParams.timeRange[0]),
+          $lt: new Date(queryParams.timeRange[1]),
+        }
+        : null,
     })
   res.json(modelList)
 })

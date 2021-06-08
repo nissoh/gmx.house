@@ -1,53 +1,43 @@
 import { $wrapNativeElement, Behavior, component, INode, style, styleBehavior } from '@aelea/core'
 import { observer } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { fromCallback } from '@aelea/utils'
-import { chain, map, multicast, never } from '@most/core'
+import { fromCallback, O, Op } from '@aelea/utils'
+import { chain, empty, map, mergeArray, multicast } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
-import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, SeriesDataItemTypeMap, SeriesType, TimeRange } from 'lightweight-charts'
+import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, Nominal, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange, UTCTimestamp } from 'lightweight-charts'
+import { intervalInMsMap } from '../../logic/constant'
 
+export interface IMarker extends SeriesMarker<Time> {
 
-interface IChart<T extends SeriesType> {
+}
+
+export interface IChart<T extends SeriesType> {
   chartConfig?: DeepPartial<ChartOptions>
-  dataSource: Stream<SeriesDataItemTypeMap[T]>
+  realtimeSource?: Stream<SeriesDataItemTypeMap[T]>
+  historicalData?: SeriesDataItemTypeMap[T][]
+
+  containerOp?: Op<INode, INode>
+
+  markers?: Stream<IMarker[]>
+
   initializeSeries: (api: IChartApi) => ISeriesApi<T>
 }
 
-export const $Chart = <T extends SeriesType>({ chartConfig, dataSource, initializeSeries }: IChart<T>) => component((
+export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, initializeSeries, historicalData, containerOp = O(), markers = empty() }: IChart<T>) => component((
   // [sampleCrosshairMove, crosshairMove]: Behavior<MouseEventParams, MouseEventParams>,
   [containerDimension, sampleContainerDimension]: Behavior<INode, ResizeObserverEntry[]>
 ) => {
 
   const containerEl = document.createElement('chart')
 
- 
+
   const api = createChart(containerEl, {
-    handleScale: {
-    },
-    layout: {
-      textColor: pallete.message,
-      backgroundColor: 'transparent',
-    },
-    leftPriceScale: {
-      // autoScale: true,
-    },
     rightPriceScale: {
-      // autoScale: true,
-      drawTicks: false,
-      alignLabels: false,
-      // scaleMargins: {
-      //   top: 0.3,
-      //   bottom: 0.3,
-      // },
-      borderVisible: false,
+      visible: false
     },
-    timeScale: {
-      visible: false,
-      timeVisible: true,
-      secondsVisible: true,
-      borderColor: pallete.foreground,
-      borderVisible: false,
+    handleScale: {
+          
     },
     grid: {
       horzLines: {
@@ -56,53 +46,93 @@ export const $Chart = <T extends SeriesType>({ chartConfig, dataSource, initiali
       },
       vertLines: {
         color: 'transparent',
+        visible: false
       },
     },
+    overlayPriceScales: {
+      borderVisible: false,
+    },
+    leftPriceScale: {
+      visible: false
+    },
+    layout: {
+      textColor: pallete.message,
+      backgroundColor: 'transparent',
+      fontFamily: 'Work Sans'
+    },
+    timeScale: {
+      secondsVisible: true,
+      timeVisible: true,
+      lockVisibleTimeRangeOnResize: true
+    },
     crosshair: {
-      // mode: CrosshairMode.Normal,
       horzLine: {
-        color: pallete.primary,
-        width: 1,
-        style: LineStyle.Solid,
-        // labelVisible: false
+        color: pallete.horizon,
+        width: 2,
+        visible: false,
+        style: LineStyle.Dashed,
       },
       vertLine: {
-        visible: false,
+        color: pallete.horizon,
+        width: 3,
+        style: LineStyle.Solid,
       }
     },
     ...chartConfig
   })
 
-  const toolTipWidth = 80
-  const toolTipHeight = 80
-  const toolTipMargin = 15
 
-  const toolTip = document.createElement('div')
-  toolTip.className = 'floating-tooltip-2'
-  containerEl.appendChild(toolTip)
-
+  
   const seriesApi = initializeSeries(api)
 
+  console.log(
+    api.timeScale().getVisibleLogicalRange(),
+    api.timeScale().getVisibleRange()
+  )
 
-  const sty = styleBehavior(map(enties => {
-    const entry = enties[0]
-    const { width, height } = entry.contentRect
+  if (historicalData) {
+    seriesApi.setData(historicalData)
+  }
+  
+  // api.timeScale().resetTimeScale()
 
-    const targetContent: HTMLElement = entry.target.querySelector('.tv-lightweight-charts')!
+  // setTimeout(() => {
+  // api.timeScale().scrollToRealTime()
+  // }, 1000)
 
-    targetContent.style.position = 'absolute'
-    timeScale.scrollToPosition(0, false)
-
-    api.resize(width, height)
-    return {}
-  }, containerDimension))
+  const now = Date.now()
 
 
-  const crosshairMove = multicast(
-    fromCallback<MouseEventParams>(cb => {
+
+  // api.timeScale().setVisibleLogicalRange({
+  //   from: 0,
+  //   to: 677,
+  // })
+
+  const sty = styleBehavior(
+    map(enties => {
+      const entry = enties[0]
+      const { width, height } = entry.contentRect
+
+      const targetContent: HTMLElement = entry.target.querySelector('.tv-lightweight-charts')!
+      console.log(width, height)
+
+      // targetContent.style.position = 'absolute'
+      // timeScale.scrollToPosition(0, false)
+
+      api.resize(width, height)
+      api.timeScale().fitContent()
+
+      return {}
+    }, containerDimension)
+  )
+
+
+  const crosshairMove = fromCallback<MouseEventParams>(
+    cb => {
       api.subscribeCrosshairMove(cb)
       disposeWith(handler => api.unsubscribeCrosshairMove(handler), cb)
-    })
+    }
   )
   const click = multicast(
     fromCallback<MouseEventParams>(cb => {
@@ -112,6 +142,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, dataSource, initiali
   )
 
   const timeScale = api.timeScale()
+
   timeScale.subscribeVisibleLogicalRangeChange(range => {
     console.log(range)
   })
@@ -131,33 +162,45 @@ export const $Chart = <T extends SeriesType>({ chartConfig, dataSource, initiali
   )
 
 
-
-
-  // api.subscribeCrosshairMove(function(param) {
-  //   if (param.point === undefined || !param.time || param.point.x < 0 || param.point.x > containerEl.clientWidth || param.point.y < 0 || param.point.y > containerEl.clientHeight) {
-  //     toolTip.style.display = 'none'
-  //   } else {
-  //     toolTip.style.display = 'block'
-  //     const price = param.seriesPrices.get(seriesApi) as BarPrices
-  //     toolTip.innerHTML = '<div style="color: #009688">Apple Inc.</div><div style="font-size: 24px; margin: 4px 0px; color: #21384d">' + Math.round(100 * price.close) / 100 + '</div><div style="color: #21384d">' + param.time + '</div>'
-  //     const coordinate = seriesApi.priceToCoordinate(price.close)
-  //     let shiftedCoordinate = param.point.x - 50
-  //     if (coordinate === null) {
-  //       return
-  //     }
-  //     shiftedCoordinate = Math.max(0, Math.min(containerEl.clientWidth - toolTipWidth, shiftedCoordinate))
-  //     const coordinateY = coordinate - toolTipHeight - toolTipMargin > 0 ? coordinate - toolTipHeight - toolTipMargin : Math.max(0, Math.min(containerEl.clientHeight - toolTipHeight - toolTipMargin, coordinate + toolTipMargin))
-  //     toolTip.style.left = shiftedCoordinate + 'px'
-  //     toolTip.style.top = coordinateY + 'px'
-  //   }
-  // })
-
   return [
-    $wrapNativeElement(containerEl)(sty, style({ position: 'relative', flex: 1, }), sampleContainerDimension(observer.resize({ box: "content-box" })))(
-      chain(data => {
-        seriesApi.update(data)
-        return never()
-      }, dataSource)
+    $wrapNativeElement(containerEl)(
+      sty,
+      style({ position: 'relative', minHeight: '30px' }), sampleContainerDimension(observer.resize({ box: "content-box" })),
+      containerOp
+    )(
+      mergeArray([
+        realtimeSource
+          ? chain(data => {
+            seriesApi.update(data)
+            return empty()
+          }, realtimeSource)
+          : empty(),
+
+        chain(s => {
+          seriesApi.setMarkers(s)
+          return empty()
+        }, markers),
+        
+        // historicalData
+        //   ? chain(data => {
+        //     seriesApi.setData(data)
+        //     // api.timeScale().resetTimeScale()
+
+        //     // api.timeScale().fitContent()
+        //     // setTimeout(() => {
+        //     //   api.timeScale().scrollToRealTime()
+        //     // }, 1000)
+
+        //     const now = Date.now()
+
+        //     api.timeScale().setVisibleRange({
+        //       from: (now - intervalInMsMap.DAY * 7) / 1000 as Time,
+        //       to: now / 1000 as Time,
+        //     })
+        //     return empty()
+        //   }, historicalData)
+        //   : empty()
+      ])
     ),
 
     {

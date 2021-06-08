@@ -1,7 +1,7 @@
 import { $element, $node, $text, attr, Behavior, component, eventElementTarget, style } from '@aelea/core'
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
-import { $Button, $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
+import { $Button, $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
 import { map, merge, multicast, now } from '@most/core'
 import { $logo } from '../elements/$icons'
 import { designSheet } from '@aelea/ui-components'
@@ -12,6 +12,7 @@ import { $MainMenu } from '../components/$MainMenu'
 import { $Leaderboard } from './$Leaderboard'
 import { $anchor } from '../elements/$common'
 import { $ButtonPrimary } from '../components/form/$Button'
+import { $Portfolio } from './$Portfolio'
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -45,8 +46,9 @@ export default ({ baseRoute = '' }: Website) => component((
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
-  const examplesRoute = pagesRoute.create({ fragment: 'examples', title: 'Examples' })
+  const portfolioRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
+  const rootStore = state.createLocalStorageChain('store')
 
 
   return [
@@ -103,22 +105,22 @@ export default ({ baseRoute = '' }: Website) => component((
 
       router.contains(pagesRoute)(
         $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-          $row(style({ placeContent: 'space-between', padding: '20px 15px' }))(
+          $row(style({ placeContent: 'space-between', padding: '34px 15px' }))(
             $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
               click: linkClickTether()
             }),
-            $MainMenu({ parentRoute: pagesRoute })({
+            $MainMenu({ parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
               routeChange: linkClickTether()
             })
           ),
           router.match(leaderboardRoute)(
-            $Leaderboard({ parentRoute: rootRoute })({})
+            $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore })({})
           ),
-          // router.contains(examplesRoute)(
-          //   // $Examples({ router: examplesRoute })({
-          //   //   routeChanges: linkClickTether()
-          //   // })
-          // )
+          router.contains(portfolioRoute)(
+            $Portfolio({ parentRoute: portfolioRoute, parentStore: rootStore })({
+              routeChanges: linkClickTether()
+            })
+          )
         )
       ),
 

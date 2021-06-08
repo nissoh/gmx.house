@@ -4,5 +4,9 @@ export enum SYMBOL {
   SUSHI = 'SUSHI',
   USDC = 'USDC',
   USDT = 'USDT',
-  ETH = 'ETH'
+  ETH = 'ETH',
+  BTC = "BTC",
+  WBNB = "WBNB",
+  USDG = "USDG",
+  BUSD = "BUSD"
 }

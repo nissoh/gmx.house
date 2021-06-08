@@ -1,25 +1,12 @@
 import { http } from "@aelea/ui-components"
 import { fromPromise } from "@most/core"
-import type { dto, LeaderboardApiQueryParams } from "gambit-backend"
-
-export type SettledPosition = InstanceType<typeof dto.PositionClose>
-export type Claim = InstanceType<typeof dto.Claim>
+import { LeaderboardApi } from "gambit-backend"
+import { SettledPosition } from "./types"
 
 
 
-export interface Account {
-  address: string
-  settledPositionCount: number
-  profitablePositionsCount: number
-  realisedPnl: bigint
-  claim: Claim | null
-  settledPositions: SettledPosition[]
-}
 
-
-new URLSearchParams({ dd: 'ddÎ' })
-
-export const leaderBoard = (params: LeaderboardApiQueryParams) => fromPromise(
+export const leaderBoard = (params: LeaderboardApi) => fromPromise(
   http.fetchJson<SettledPosition[]>(`/api/leaderboard`,
     {
       method: 'POST',
@@ -29,8 +16,9 @@ export const leaderBoard = (params: LeaderboardApiQueryParams) => fromPromise(
       parseJson: jsonList => {
         return jsonList.map((json) => {
           const realisedPnl = BigInt(json.realisedPnl)
+          const createdAt = new Date(json.createdAt)
 
-          return { ...json, realisedPnl }
+          return { ...json, realisedPnl, createdAt }
         })
       },
       body: JSON.stringify(params)
