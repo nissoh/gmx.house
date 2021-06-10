@@ -1,5 +1,5 @@
 import { $text, Behavior, event, component, style, styleBehavior, StyleCSS } from '@aelea/core'
-import { O, } from '@aelea/utils'
+import { combineArray, O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { constant, map, multicast, startWith, switchLatest } from '@most/core'
@@ -8,10 +8,11 @@ import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { leaderBoard } from '../logic/leaderboard'
+import { leaderBoardQuery, liquidationsQuery } from '../logic/leaderboard'
 import { $AccountProfile } from '../components/$AccountProfile'
 import { LeaderboardApi } from 'gambit-backend'
-import { Account } from '../logic/types'
+import { Account, Claim } from '../logic/types'
+import { intervalInMsMap } from '../logic/constant'
 
 
 
@@ -19,47 +20,37 @@ import { Account } from '../logic/types'
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
+  claimList: Stream<Claim[]>
 
   parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
 }
 
 
 
-enum TimeFrame {
-  None,
-  Day,
-  Month,
-}
 
-const timeFrameToRangeOp = map((xxx: TimeFrame): LeaderboardApi => {
-  const nowTime = new Date()
+const timeFrameToRangeOp = map((timeSpan: intervalInMsMap): LeaderboardApi => {
+  const now = Date.now()
 
-  const startTime = xxx === TimeFrame.Day
-    ? nowTime.setHours(nowTime.getHours() - 24)
-    : xxx === TimeFrame.Month
-      ? nowTime.setMonth(nowTime.getMonth() - 1)
-      : new Date(0).getTime()
-
-  return { timeRange: [startTime, Date.now()] }
+  return { timeRange: [now - timeSpan, now] }
 })
 
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
-  [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, TimeFrame>,
+  [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
 ) => {
 
   const $header = $text(style({ fontSize: '1.45em', fontWeight: 'lighter', letterSpacing: '4px' }))
 
-
-
-  const timeFrameStore = config.parentStore('timeframe', TimeFrame.Month)
+  const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
   const timeFrameState = multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
   
   
   const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
-    return map((list) => {
-      const account = list.reduce((seed, pos) => {
+
+    return combineArray((settled, liqs) => {
+
+      const topMap = settled.reduce((seed, pos) => {
         const account = seed[pos.account] ??= {
           address: pos.account,
           settledPositionCount: 0,
@@ -80,12 +71,22 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         return seed
       }, {} as {[account: string]: Account})
 
-      const allAccounts = Object.values(account)
-        // .filter(a => a.realisedPnl > 0)
-        .sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
+      const allAccounts = Object.values(topMap)
+      // .filter(a => a.realisedPnl > 0)
+        
+      
+      liqs.forEach(liq => {
+        const liqqedTopAccount = topMap[liq.account]
+        if (liqqedTopAccount) {
+          liqqedTopAccount.realisedPnl -= liq.collateral
+          liqqedTopAccount.settledPositionCount++
 
-      return { data: allAccounts }
-    }, leaderBoard(params))
+          console.log(liq.account)
+        }
+      })
+
+      return { data: allAccounts.sort((a, b) => Number(b.realisedPnl - a.realisedPnl)) }
+    }, leaderBoardQuery(params), liquidationsQuery(params))
   }, timeFrame)
 
 
@@ -103,16 +104,22 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
           $text(style({ color: pallete.foreground }))('Time Frame:'),
           $anchor(
-            styleBehavior(map(tf => TimeFrame.Day === tf ? activeTimeframe : null, timeFrameState)),
-            initializeLeaderboardTether(event('click'), constant(TimeFrame.Day))
+            styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(event('click'), constant(intervalInMsMap.DAY))
           )(
-            $text('24hr')
+            $text('24Hrs')
           ),
           $anchor(
-            styleBehavior(map(tf => TimeFrame.Month === tf ? activeTimeframe : null, timeFrameState)),
-            initializeLeaderboardTether(event('click'), constant(TimeFrame.Month))
+            styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(event('click'), constant(intervalInMsMap.WEEK))
           )(
-            $text('1Mon')
+            $text('Week')
+          ),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(event('click'), constant(intervalInMsMap.MONTH))
+          )(
+            $text('Month')
           )
         ),
         $card(layoutSheet.spacingBig, style({ padding: '46px' }))(
@@ -125,14 +132,19 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 columns: [
                   {
                     $head: $text('Account'),
-                    columnOp: style({ minWidth: '300px' }),
+                    columnOp: style({ minWidth: '400px' }),
                     valueOp: map(x => {
-                      return $AccountProfile({ ...x })({
-                        claimSucceed: initializeLeaderboardTether(
-                          constant(timeFrameStore.state)
-                        )
-                      })
-                      // return $text(shortenTxAddress(x.account))
+                      return switchLatest(
+                        map(claimList => {
+                          const claim = claimList.find(c => c.address === x.address) || null
+
+                          return $AccountProfile({ address: x.address, claim, tempFix: false })({
+                            claimSucceed: initializeLeaderboardTether(
+                              constant(timeFrameStore.state)
+                            )
+                          })
+                        }, config.claimList)
+                      )
                     })
                   },
                   {

@@ -9,5 +9,7 @@ export enum intervalInMsMap {
   MIN15 = 900000,
   HR = 3600000,
   DAY = 86400000,
+  WEEK = 604800000,
+  MONTH = 2628000000,
 }
 

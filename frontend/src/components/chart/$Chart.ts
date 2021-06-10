@@ -2,11 +2,10 @@ import { $wrapNativeElement, Behavior, component, INode, style, styleBehavior } 
 import { observer } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromCallback, O, Op } from '@aelea/utils'
-import { chain, empty, map, mergeArray, multicast } from '@most/core'
+import { chain, debounce, empty, filter, map, mergeArray, multicast, now, sample, snapshot, switchLatest, take } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
 import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, Nominal, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange, UTCTimestamp } from 'lightweight-charts'
-import { intervalInMsMap } from '../../logic/constant'
 
 export interface IMarker extends SeriesMarker<Time> {
 
@@ -15,16 +14,15 @@ export interface IMarker extends SeriesMarker<Time> {
 export interface IChart<T extends SeriesType> {
   chartConfig?: DeepPartial<ChartOptions>
   realtimeSource?: Stream<SeriesDataItemTypeMap[T]>
-  historicalData?: SeriesDataItemTypeMap[T][]
 
   containerOp?: Op<INode, INode>
 
   markers?: Stream<IMarker[]>
 
-  initializeSeries: (api: IChartApi) => ISeriesApi<T>
+  initializeSeries: Op<IChartApi, ISeriesApi<T>>
 }
 
-export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, initializeSeries, historicalData, containerOp = O(), markers = empty() }: IChart<T>) => component((
+export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, initializeSeries, containerOp = O(), markers = empty() }: IChart<T>) => component((
   // [sampleCrosshairMove, crosshairMove]: Behavior<MouseEventParams, MouseEventParams>,
   [containerDimension, sampleContainerDimension]: Behavior<INode, ResizeObserverEntry[]>
 ) => {
@@ -32,6 +30,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
   const containerEl = document.createElement('chart')
 
 
+  
   const api = createChart(containerEl, {
     rightPriceScale: {
       visible: false
@@ -67,6 +66,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
     },
     crosshair: {
       horzLine: {
+        labelBackgroundColor: pallete.background,
         color: pallete.horizon,
         width: 2,
         visible: false,
@@ -74,59 +74,15 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
       },
       vertLine: {
         color: pallete.horizon,
+        labelBackgroundColor: pallete.background,
         width: 3,
         style: LineStyle.Solid,
       }
     },
     ...chartConfig
   })
-
-
   
-  const seriesApi = initializeSeries(api)
-
-  console.log(
-    api.timeScale().getVisibleLogicalRange(),
-    api.timeScale().getVisibleRange()
-  )
-
-  if (historicalData) {
-    seriesApi.setData(historicalData)
-  }
   
-  // api.timeScale().resetTimeScale()
-
-  // setTimeout(() => {
-  // api.timeScale().scrollToRealTime()
-  // }, 1000)
-
-  const now = Date.now()
-
-
-
-  // api.timeScale().setVisibleLogicalRange({
-  //   from: 0,
-  //   to: 677,
-  // })
-
-  const sty = styleBehavior(
-    map(enties => {
-      const entry = enties[0]
-      const { width, height } = entry.contentRect
-
-      const targetContent: HTMLElement = entry.target.querySelector('.tv-lightweight-charts')!
-      console.log(width, height)
-
-      // targetContent.style.position = 'absolute'
-      // timeScale.scrollToPosition(0, false)
-
-      api.resize(width, height)
-      api.timeScale().fitContent()
-
-      return {}
-    }, containerDimension)
-  )
-
 
   const crosshairMove = fromCallback<MouseEventParams>(
     cb => {
@@ -143,10 +99,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
 
   const timeScale = api.timeScale()
 
-  timeScale.subscribeVisibleLogicalRangeChange(range => {
-    console.log(range)
-  })
-
+  
   const visibleLogicalRangeChange = multicast(
     fromCallback(cb => {
       timeScale.subscribeVisibleLogicalRangeChange(cb)
@@ -162,45 +115,55 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
   )
 
 
+  const initialRender = take(1, map(entries => {
+    const entry = entries[0]
+    const { width, height } = entry.contentRect
+
+    api.resize(width, height)
+
+  }, containerDimension))
+  const newLocal = chain(x => initializeSeries(now(api)), initialRender)
+  
+  const ignoreAll = filter(() => false)
   return [
     $wrapNativeElement(containerEl)(
-      sty,
-      style({ position: 'relative', minHeight: '30px' }), sampleContainerDimension(observer.resize({ box: "content-box" })),
-      containerOp
+      style({ position: 'relative', minHeight: '30px', flex: 1 }),
+      sampleContainerDimension(observer.resize()),
+      containerOp,
     )(
-      mergeArray([
-        realtimeSource
-          ? chain(data => {
-            seriesApi.update(data)
-            return empty()
-          }, realtimeSource)
-          : empty(),
 
-        chain(s => {
-          seriesApi.setMarkers(s)
-          return empty()
-        }, markers),
+      switchLatest(
+        map((seriesApi) => {
+
+          return ignoreAll(
+            mergeArray([
+
+              map(entries => {
+                const entry = entries[0]
+                const { width, height } = entry.contentRect
+
+                api.resize(width, height)
+
+              }, containerDimension),
+
+              realtimeSource
+                ? map(data => {
+                  seriesApi.update(data)
+                  return empty()
+                }, realtimeSource)
+                : empty(),
+
+              // chain(s => {
+              //   seriesApi.setMarkers(s)
+              //   return empty()
+              // }, map),
+            ])
+          )
         
-        // historicalData
-        //   ? chain(data => {
-        //     seriesApi.setData(data)
-        //     // api.timeScale().resetTimeScale()
-
-        //     // api.timeScale().fitContent()
-        //     // setTimeout(() => {
-        //     //   api.timeScale().scrollToRealTime()
-        //     // }, 1000)
-
-        //     const now = Date.now()
-
-        //     api.timeScale().setVisibleRange({
-        //       from: (now - intervalInMsMap.DAY * 7) / 1000 as Time,
-        //       to: now / 1000 as Time,
-        //     })
-        //     return empty()
-        //   }, historicalData)
-        //   : empty()
-      ])
+        }, newLocal)
+      )
+      
+      
     ),
 
     {

@@ -1,11 +1,11 @@
 import { component, $node, style, $text, attr, event, styleBehavior, Behavior } from "@aelea/core"
 import { $column, $icon, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, fromPromise, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
 import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
-import { $external, $twitter } from "../elements/$icons"
+import { $ethScan, $external, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
 import { $Popover2 } from "./$Popover"
 import { $Transaction } from "./$TransactionDetails"
@@ -14,12 +14,11 @@ import * as provider from 'metamask-provider'
 import { combineObject } from "@aelea/utils"
 import { Claim } from "../logic/types"
 
-
-type IProfileClaim = Pick<Claim, 'identity'> | null
+type IMaybeClaimIdentity = Pick<Claim, 'identity'> | null
 
 export interface IProfile {
   address: string
-  claim: IProfileClaim
+  claim: IMaybeClaimIdentity
 
   tempFix?: boolean
 }
@@ -27,43 +26,60 @@ export interface IProfile {
 
 
 
-const $photoContainer = $node(style({ display: 'block', backgroundSize: 'cover', width: '42px', height: '42px', borderRadius: '50%' }))
+const $photoContainer = $node(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
 
-export const $AccountPhoto = (address: string, claim: IProfileClaim, size = 42) => {
+export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = 42) => {
   const identity = claim?.identity.split(/^@/)
   const isTwitter = identity?.length === 2
 
   if (isTwitter) {
     const username = identity![1]
     const imageUrl = fromPromise(
-      fetch(`https://unavatar.vercel.app/twitter/${username}`).then(async x => {
-        return URL.createObjectURL(await x.blob())
-      })
+      fetch(`https://unavatar.vercel.app/twitter/${username}`).then(async x => URL.createObjectURL(await x.blob()))
     )
-    return $photoContainer(styleBehavior(map(url => ({ backgroundImage: `url(${url})` }), imageUrl)))()
+    return $photoContainer(style({ width: size + 'px', height: size + 'px' }), styleBehavior(map(url => ({ backgroundImage: `url(${url})` }), imageUrl)))()
   }
 
   return $jazzicon(address, size)
 }
 
-export const $AccountLabel = (address: string, claim: IProfileClaim) => {
+export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity) => {
+  if (claim) {
+    const identity = extractClaimIdentityName(address, claim)
+
+    return $text(claim.identity.startsWith('@') ? '@' + identity : identity)
+  }
+
+  return $text(shortenAddress(address))
+}
+
+function extractClaimIdentityName(address: string, claim: IMaybeClaimIdentity) {
   if (claim) {
     const identity = claim.identity.split(/^@/)
     const isTwitter = identity.length === 2
 
-    if (isTwitter) {
-      const username = identity![1]
-      const $twitterAnchor = $anchor(attr({ href: `https://twitter.com/${username}` }))(
-        $icon({ $content: $twitter, width: '12px', viewBox: `0 0 24 24` })
-      )
-      
-      return $row(layoutSheet.spacingSmall)($text(username), $twitterAnchor)
-    }
-
-    return $text(identity[0])
+    return isTwitter ? identity[1] : identity[0]
   }
+  
+  return shortenAddress(address)
+}
 
-  return $text(shortenAddress(address))
+export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
+  const name = extractClaimIdentityName(address, claim)
+  const isTwitter = claim?.identity.startsWith('@')
+
+  const $twitterAnchor = isTwitter
+    ? $anchor(attr({ href: `https://twitter.com/${name}` }))(
+      $icon({ $content: $twitter, width: '12px', viewBox: `0 0 24 24` })
+    )
+    : empty()
+
+  return $row(layoutSheet.spacingSmall)(
+    $twitterAnchor,
+    $anchor(attr({ href: getAccountUrl(CHAIN.BSC, address) }))(
+      $icon({ $content: $ethScan, width: '12px', viewBox: '0 0 24 24' })
+    )
+  )
 }
 
 
@@ -141,7 +157,7 @@ const $ClaimForm = (address: string) => component((
   ]
 })
 
-export const $AccountProfile = ({ claim, address, tempFix = false }: IProfile) => component((
+export const $AccountProfile = ({ claim, address }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [claimSucceed, claimSucceedTether]: Behavior<any, string>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
@@ -150,11 +166,13 @@ export const $AccountProfile = ({ claim, address, tempFix = false }: IProfile) =
 
 ) => {
 
-  const accountWithDisplayReplaced = mergeArray([
+
+  const profileDisplay = mergeArray([
     now(claim),
     map(identity => ({ ...claim, identity, address }), display),
     constant(claim, dismissPopover)
   ])
+
 
   return [
     $Popover2({
@@ -177,13 +195,15 @@ export const $AccountProfile = ({ claim, address, tempFix = false }: IProfile) =
       }, clickPopoverClaim),
     })(
       $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-        $anchor(attr({ href: tempFix ? '' : `/p/account/${address}` }), layoutSheet.row, layoutSheet.spacing, style({ alignItems: 'center' }))(
-          switchLatest(map(claimChange => $AccountPhoto(address, claimChange), accountWithDisplayReplaced)),
-          switchLatest(map(claimChange => $AccountLabel(address, claimChange), accountWithDisplayReplaced)),
-        ),
-        $anchor(attr({ href: getAccountUrl(CHAIN.BSC, address) }))(
-          $icon({ $content: $external, width: '12px', viewBox: '0 0 24 24' })
-        ),
+        switchLatest(map(claimChange => {
+          return mergeArray([
+            $ProfileLinks(address, claimChange),
+            $anchor(attr({ href: `/p/account/${address}` }), layoutSheet.row, layoutSheet.spacing, style({ alignItems: 'center' }))(
+              $AccountPhoto(address, claimChange),
+              $AccountLabel(address, claimChange),
+            ),
+          ])
+        }, profileDisplay)),
         $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
         $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
           $text('Claim')
