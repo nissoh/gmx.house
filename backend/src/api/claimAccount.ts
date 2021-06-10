@@ -4,6 +4,7 @@ import { EM } from '../server'
 import { BSC_WALLET, hex2asc, TX_HASH_REGEX } from 'gambit-middleware'
 import { bscNini } from '../rpc'
 import { Claim } from '../dto/Account'
+import { wrap } from '@mikro-orm/core'
 
 
 export const claimApi = Router()
@@ -30,10 +31,10 @@ claimApi.post<string>('/claim-account', async (req, res) => {
   }
 
   let currentClaim = await EM.findOne(Claim, {
-    address: { $gt: txRecpt.from },
+    address: { $eq: txRecpt.from },
   })
 
-  if (txRecpt.blockNumber === undefined) {
+  if (!txRecpt.blockNumber) {
     return res.status(403).json({ message: 'unable to get tx block number' })
   }
 
@@ -43,22 +44,21 @@ claimApi.post<string>('/claim-account', async (req, res) => {
     currentClaim = new Claim(txRecpt.from, identity, txRecpt.blockNumber)
     await EM.persist(currentClaim).flush()
 
-    return res.json({ message: 'claimed' })
+    return res.json(currentClaim)
   }
 
 
-  if (currentClaim && txRecpt.blockNumber > currentClaim.latestClaimBlockNumber ) {
+  if (currentClaim && currentClaim.latestClaimBlockNumber > txRecpt.blockNumber  ) {
     return res.status(403).json({ message: 'Already claimed by a previous block' })
   }
 
   const identity = hex2asc(txRecpt.data).substr(3)
 
+  wrap(currentClaim).assign({ identity, latestClaimBlockNumber: txRecpt.blockNumber })
 
-  currentClaim.identity = identity
+  await EM.flush()
 
-  await EM.persist(currentClaim).flush()
-
-  res.json({ message: 'claimed' })
+  res.json(currentClaim)
 
 })
 

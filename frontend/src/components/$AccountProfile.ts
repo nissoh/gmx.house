@@ -1,4 +1,4 @@
-import { component, $node, style, $text, attr, event, styleBehavior, Behavior } from "@aelea/core"
+import { component, $node, style, $text, attr, event, styleBehavior, Behavior, INode } from "@aelea/core"
 import { $column, $icon, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
@@ -13,6 +13,7 @@ import { $ButtonPrimary } from "./form/$Button"
 import * as provider from 'metamask-provider'
 import { combineObject } from "@aelea/utils"
 import { Claim } from "../logic/types"
+import { TransactionReceipt } from "@ethersproject/providers"
 
 type IMaybeClaimIdentity = Pick<Claim, 'identity'> | null
 
@@ -84,15 +85,14 @@ export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
 
 
 const $ClaimForm = (address: string) => component((
-  [display, displayTether]: Behavior<any, string>,
-  [claimTx, claimTxTether]: Behavior<any, string>,
-  [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<any, string>,
+  [display, displayTether]: Behavior<string, string>,
+  [claimTx, claimTxTether]: Behavior<PointerEvent, string>,
+  [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<string, string>,
+  [claimSucceed, claimSucceedTether]: Behavior<TransactionReceipt, Claim>,
 ) => {
 
   const claimBehavior = claimTxTether(
-    event('click'),
-    snapshot(async (state, _) => {
-
+    snapshot(async (state) => {
       const metamask = state.metamaskProvider.metamask
       const acct = await state.metamaskProvider.signer.getAddress()
 
@@ -107,15 +107,6 @@ const $ClaimForm = (address: string) => component((
           value: bnToHex(0n)
         }],
       })
-
-      const response = await fetch('/api/claim-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tx: txHash })
-      })
-
       
       return txHash as string
     }, combineObject({ display, metamaskProvider: provider.metamaskProvider })),
@@ -123,85 +114,100 @@ const $ClaimForm = (address: string) => component((
   )
 
   return [
-    $column(layoutSheet.spacing, style({ width: '400px' }))(
-      $text('Claim Account'),
-      $text(style({ color: pallete.foreground, fontSize: '.75em' }))(`Claiming account will make your name appear on the leaderboard`),
-      $node(),
-      // chain(x => $text(String(x)), wallet),
-      $TextField({
-        label: 'Display',
-        hint: `Label starting with "@" will result in link to a twitter profile with twitter's profile photo`,
-        value: now('')
-      })({
-        change: displayTether()
-      }),
-      $node(),
-      $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
-        $IntermediateDisplay({
-          $display: switchLatest(
-            map(providerAddress => {
-              return providerAddress && address.toLowerCase() === providerAddress?.toLowerCase()
-                ? $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                  $column(style({ color: pallete.foreground, fontSize: '.65em' }))(
-                    $text(`Sends 0(BNB) to`),
-                    $text(`Gambit-Community's`)
-                  ),
-                  $ButtonPrimary({
-                    disabled: merge(now(true), map(x => x.length === 0, display)),
-                    $content: $text(claimBehavior)('Claim')
-                  })({})
-                )
-                : $alert($text(`Connect a wallet matching this address`))
-            }, walletConnectedSucceed)
-          )
-        })({
-          connectedWalletSucceed: walletConnectedSucceedTether()
-        })
+    $column(
+      switchLatest(
+        mergeArray([
+          now(
+            $column(layoutSheet.spacing, style({ width: '400px' }))(
+              $text('Claim Account'),
+              $text(style({ color: pallete.foreground, fontSize: '.75em' }))(`Claiming account will make your name appear on the leaderboard`),
+              $node(),
+              // chain(x => $text(String(x)), wallet),
+              $TextField({
+                label: 'Display',
+                hint: `Label starting with "@" will result in link to a twitter profile with twitter's profile photo`,
+                value: now('')
+              })({
+                change: displayTether()
+              }),
+              $node(),
+              $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
+                $IntermediateDisplay({
+                  $display: switchLatest(
+                    map(providerAddress => {
+                      return providerAddress && address.toLowerCase() === providerAddress?.toLowerCase()
+                        ? $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
+                          $column(style({ color: pallete.foreground, fontSize: '.65em' }))(
+                            $text(`Sends 0(BNB) to`),
+                            $text(`Gambit-Community's`)
+                          ),
+                          $ButtonPrimary({
+                            disabled: merge(now(true), map(x => x.length === 0, display)),
+                            $content: $text('Claim')
+                          })({
+                            click: claimBehavior
+                          })
+                        )
+                        : $alert($text(`Connect a wallet matching this address`))
+                    }, walletConnectedSucceed)
+                  )
+                })({
+                  connectedWalletSucceed: walletConnectedSucceedTether()
+                })
+              ),
+            ),
+          ),
+          map(tx => styleBehavior(now({ opacity: '1' }), $Transaction(tx)({
+            txSucceeded: claimSucceedTether(
+              map(async (txRecpt) => {
+                const claim: Claim = await (await fetch('/api/claim-account', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ tx: txRecpt.transactionHash })
+                })).json()
+                return claim
+              }),
+              awaitPromises
+            )
+          })), claimTx)
+        ])
       ),
     ),
-
     {
       claimTx,
-      display
+      display,
+      claimSucceed
     }
   ]
 })
 
 export const $AccountProfile = ({ claim, address }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
-  [claimSucceed, claimSucceedTether]: Behavior<any, string>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
-  [claimTx, claimTxTether]: Behavior<any, string>,
   [display, displayTether]: Behavior<any, string>,
+  [claimedAccount, claimedAccountTether]: Behavior<Claim, Claim>
 
 ) => {
 
 
   const profileDisplay = mergeArray([
     now(claim),
+    claimedAccount,
     map(identity => ({ ...claim, identity, address }), display),
     constant(claim, dismissPopover)
-  ])
+])
 
 
   return [
     $Popover2({
+      dismiss: claimedAccount,
       $$popContent: map(() => {
-        return $column(
-          switchLatest(
-            mergeArray([
-              now(
-                $ClaimForm(address)({
-                  claimTx: claimTxTether(),
-                  display: displayTether()
-                }),
-              ),
-              map(tx => styleBehavior(now({ opacity: '1' }), $Transaction(tx)({
-                txSucceeded: claimSucceedTether()
-              })), claimTx)
-            ])
-          ),
-        )
+        return $ClaimForm(address)({
+          display: displayTether(),
+          claimSucceed: claimedAccountTether()
+        })
       }, clickPopoverClaim),
     })(
       $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
@@ -224,7 +230,6 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
     }),
 
     {
-      claimSucceed
     }
   ]
 })

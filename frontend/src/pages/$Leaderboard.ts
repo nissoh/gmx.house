@@ -16,7 +16,6 @@ import { intervalInMsMap } from '../logic/constant'
 
 
 
-
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
@@ -135,12 +134,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                       return switchLatest(
                         map(claimList => {
                           const claim = claimList.find(c => c.address === x.address) || null
-
-                          return $AccountProfile({ address: x.address, claim, tempFix: false })({
-                            claimSucceed: initializeLeaderboardTether(
-                              constant(timeFrameStore.state)
-                            )
-                          })
+                          return $AccountProfile({ address: x.address, claim })({})
                         }, config.claimList)
                       )
                     })
