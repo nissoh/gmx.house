@@ -26,7 +26,7 @@ export const $MainMenu = ({ parentRoute, containerOp = O() }: MainMenu) => compo
   const $seperator = $text(style({ color: pallete.foreground, pointerEvents: 'none' }))('|')
   
   return [
-    $row(layoutSheet.spacingBig, style({ alignItems: 'center', fontSize: '.9em', placeContent: 'center' }), containerOp)(
+    $row(layoutSheet.spacingBig, style({ fontSize: '.9em' }), containerOp)(
 
       // $Link({ $content: $text('Why?!'), href: '/drag-and-sort', route: guideRoute })({
       //   click: sampleLinkClick()
@@ -41,11 +41,6 @@ export const $MainMenu = ({ parentRoute, containerOp = O() }: MainMenu) => compo
       $Link({ $content: $text('API(WIP)'), disabled: now(true), url: '/p/examples/theme', route: examplesRoute })({
         click: routeChangeTether()
       }),
-
-      $anchor(layoutSheet.displayFlex, style({ padding: '0 4px' }), attr({ href: 'https://github.com/nissoh/gambit-community' }))(
-        $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
-      ),
-
     ),
 
 

@@ -1,14 +1,14 @@
 import { $text, Behavior, component, style, StyleCSS } from '@aelea/core'
 import { $column, layoutSheet, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { map, multicast, startWith } from '@most/core'
 
 import {  ETH_ADDRESS_REGEXP } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
 import * as router from '@aelea/router'
-import { $Account } from '../components/$Account'
+import { $Profile } from '../components/$Profile'
+import { Claim } from '../logic/types'
 
 
 const USD_DECIMALS = 30
@@ -24,9 +24,10 @@ const USD_DECIMALS = 30
 // })
 
 
-export interface ILeaderboard<T extends BaseProvider> {
+export interface IPortfolio<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
+  claimList: Stream<Claim[]>
 
   parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
 
@@ -52,7 +53,7 @@ enum TimeFrame {
 //   return { startTime }
 // })
 
-export const $Portfolio = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
+export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => component((
   [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, TimeFrame>,
 ) => {
 
@@ -64,19 +65,14 @@ export const $Portfolio = <T extends BaseProvider>(config: ILeaderboard<T>) => c
     title: 'Account'
   })
 
-  
-
-  // const timeFrame = timeFrameToRangeOp(timeFrameState)
-  
-  const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
 
   return [
     $column(
       $column(layoutSheet.spacingBig)(
         router.match(accountRoute)(
-          $Account({
-            settledPositions: [],
-            parentStore: config.parentStore
+          $Profile({
+            parentStore: config.parentStore,
+            claimList: config.claimList
           })({})
         ),
 

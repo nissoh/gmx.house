@@ -3,6 +3,7 @@ import type { dto } from "gambit-backend"
 export type SettledPosition = InstanceType<typeof dto.PositionClose>
 export type Claim = InstanceType<typeof dto.Claim>
 export type PositionIncrease = InstanceType<typeof dto.PositionIncrease>
+export type PositionLiquidated = InstanceType<typeof dto.PositionLiquidated>
 
 
 export interface Account {

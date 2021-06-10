@@ -63,8 +63,8 @@ export const network = merge(networkChange, currentNetwork)
 
 export const currentAccount: Stream<string> = awaitPromises(map(async wallet => (await wallet.w3p.listAccounts())[0], metamaskProvider))
 
-export const accountChange = metamaskEvent('accountsChanged', (account: string) => {
-  return account
+export const accountChange = metamaskEvent('accountsChanged', (account: string[]) => {
+  return account[0]
 })
 
 export const account = merge(accountChange, currentAccount)

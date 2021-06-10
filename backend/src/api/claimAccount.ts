@@ -8,39 +8,6 @@ import { Claim } from '../dto/Account'
 
 export const claimApi = Router()
 
-// async function WW() {
-//   const settledPositions = await EM.find(dto.PositionClose, {}) // { createdAt: {} }
-
-//   const account = settledPositions.reduce((seed, pos) => {
-//     seed[pos.account] ??= new Account(
-//       pos.account,
-//       null,
-//       0,
-//       0,
-//       0n
-//     )
-
-
-//     const account = seed[pos.account]
-
-//     account.settledPositionCount++
-
-//     if (pos.realisedPnl > 0n) {
-//       account.profitablePositionsCount++
-//     }
-
-
-//     account.realisedPnl += pos.realisedPnl
-
-//     return seed
-//   }, {} as {[account: string]: Account})
-
-//   const allAccounts = Object.values(account)
-
-//   EM.persistAndFlush(allAccounts)
-
-// }
-
 
 claimApi.get('/claim-list', async (req, res) => {
   const claimList = await EM.find(Claim, {})
