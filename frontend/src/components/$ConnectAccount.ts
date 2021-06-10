@@ -2,7 +2,7 @@ import { $text, component, style, Behavior, $Node, attr } from "@aelea/core"
 import { $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { Wallet } from "@ethersproject/wallet"
-import { combine, map, switchLatest } from "@most/core"
+import { combine, map, merge, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { CHAIN } from "gambit-middleware"
 import { account, metamaskProvider, requestAccounts, network, InitMetamaskProvider, getProvider } from "metamask-provider"
@@ -13,14 +13,14 @@ import { $ButtonPrimary } from "./form/$Button"
 
 
 
-const $userConnectionStatus = (address: string) => $row(style({ backgroundColor: pallete.foreground, borderRadius: '12px', alignItems: 'center', overflow: 'hidden' }))(
-  $row(style({ borderRadius: '12px', alignItems: 'center', padding: '0 10px' }))(
-    $text(address.slice(0, 6) + '...' + address.slice(-4))
-  ),
-  $row(style({ backgroundColor: pallete.foreground, height: '40px', alignItems: 'center', padding: '0 6px' }))(
-    $jazzicon(address)
-  )
-)
+// const $userConnectionStatus = (address: string) => $row(style({ backgroundColor: pallete.foreground, borderRadius: '12px', alignItems: 'center', overflow: 'hidden' }))(
+//   $row(style({ borderRadius: '12px', alignItems: 'center', padding: '0 10px' }))(
+//     $text(address.slice(0, 6) + '...' + address.slice(-4))
+//   ),
+//   $row(style({ backgroundColor: pallete.foreground, height: '40px', alignItems: 'center', padding: '0 6px' }))(
+//     $jazzicon(address)
+//   )
+// )
 
 
 export interface IIntermediateDisplay {
@@ -29,13 +29,16 @@ export interface IIntermediateDisplay {
 }
 
 export const $IntermediateDisplay = (config: IIntermediateDisplay) => component((
-  [requestWallet, sampleRequestWallet]: Behavior<any, any>
+  [connectedWalletSucceed, connectedWalletSucceedTether]: Behavior<any, string>,
 ) => {
 
   const $connectButton = $ButtonPrimary({ $content: $text('Connect Wallet'), buttonOp: style({ zoom: .75 }) })({
-    click: sampleRequestWallet(
+    click: connectedWalletSucceedTether(
       map(() => requestAccounts),
-      switchLatest
+      switchLatest,
+      map(list => {
+        return list[0]
+      })
     ) 
   })
 
@@ -66,25 +69,28 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
         )
       }, getProvider())
     ),
-    { requestWallet }
+
+    {
+      connectedWalletSucceed: merge(account, connectedWalletSucceed)
+    }
   ]
 })
 
-export const $AccountButton = (config: IIntermediateDisplay) => component((
-  [requestWallet, sampleRequestWallet]: Behavior<any, any>
-) => {
+// export const $AccountButton = (config: IIntermediateDisplay) => component((
+//   [requestWallet, sampleRequestWallet]: Behavior<any, any>
+// ) => {
 
 
-  const $installMetamaskWarning = $text('installMetamask')
+//   const $installMetamaskWarning = $text('installMetamask')
 
 
-  return [
-    $IntermediateDisplay({
-      $display: $userConnectionStatus('d')
-    })({}),
-    {  }
-  ]
-})
+//   return [
+//     $IntermediateDisplay({
+//       $display: $userConnectionStatus('d')
+//     })({}),
+//     {  }
+//   ]
+// })
 
 
 

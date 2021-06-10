@@ -107,7 +107,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
       router.contains(pagesRoute)(
         $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-          $row(style({ padding: '34px 15px', alignItems: 'center' }))(
+          $row(layoutSheet.spacing, style({ padding: '34px 15px', alignItems: 'center' }))(
             $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
               click: linkClickTether()
             }),

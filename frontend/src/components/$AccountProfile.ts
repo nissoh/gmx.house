@@ -5,7 +5,7 @@ import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, ne
 import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
-import { $ethScan, $external, $twitter } from "../elements/$icons"
+import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
 import { $Popover2 } from "./$Popover"
 import { $Transaction } from "./$TransactionDetails"
@@ -86,6 +86,7 @@ export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
 const $ClaimForm = (address: string) => component((
   [display, displayTether]: Behavior<any, string>,
   [claimTx, claimTxTether]: Behavior<any, string>,
+  [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<any, string>,
 ) => {
 
   const claimBehavior = claimTxTether(
@@ -108,11 +109,11 @@ const $ClaimForm = (address: string) => component((
       })
 
       const response = await fetch('/api/claim-account', {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tx: txHash }) // body data type must match "Content-Type" header
+        body: JSON.stringify({ tx: txHash })
       })
 
       
@@ -120,7 +121,6 @@ const $ClaimForm = (address: string) => component((
     }, combineObject({ display, metamaskProvider: provider.metamaskProvider })),
     awaitPromises
   )
-
 
   return [
     $column(layoutSheet.spacing, style({ width: '400px' }))(
@@ -140,13 +140,23 @@ const $ClaimForm = (address: string) => component((
         $IntermediateDisplay({
           $display: switchLatest(
             map(providerAddress => {
-              return address === providerAddress ? $ButtonPrimary({
-                disabled: merge(now(true), map(x => x.length === 0, display)),
-                $content: $text(claimBehavior)('Claim')
-              })({}) : $alert($text(`Connect a wallet matching this address`))
-            }, provider.account)
+              return providerAddress && address.toLowerCase() === providerAddress?.toLowerCase()
+                ? $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
+                  $column(style({ color: pallete.foreground, fontSize: '.65em' }))(
+                    $text(`Sends 0(BNB) to`),
+                    $text(`Gambit-Community's`)
+                  ),
+                  $ButtonPrimary({
+                    disabled: merge(now(true), map(x => x.length === 0, display)),
+                    $content: $text(claimBehavior)('Claim')
+                  })({})
+                )
+                : $alert($text(`Connect a wallet matching this address`))
+            }, walletConnectedSucceed)
           )
-        })({  })
+        })({
+          connectedWalletSucceed: walletConnectedSucceedTether()
+        })
       ),
     ),
 

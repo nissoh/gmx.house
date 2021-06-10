@@ -80,8 +80,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         if (liqqedTopAccount) {
           liqqedTopAccount.realisedPnl -= liq.collateral
           liqqedTopAccount.settledPositionCount++
-
-          console.log(liq.account)
         }
       })
 
