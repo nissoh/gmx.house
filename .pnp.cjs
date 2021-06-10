@@ -27,10 +27,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         "reference": "workspace:backend"
       },
       {
-        "name": "gambit-dto",
-        "reference": "workspace:dto"
-      },
-      {
         "name": "gambit-frontend",
         "reference": "workspace:frontend"
       },
@@ -47,7 +43,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
     "ignorePatternData": "(^(?:\\.yarn\\/sdks(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$)",
     "fallbackExclusionList": [
       ["gambit-backend", ["workspace:backend"]],
-      ["gambit-dto", ["workspace:dto"]],
       ["gambit-frontend", ["workspace:frontend"]],
       ["gambit-middleware", ["workspace:middleware"]],
       ["metamask-provider", ["workspace:metamask-provider"]],
@@ -731,51 +726,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             "@types/mikro-orm__sqlite"
           ],
           "linkType": "HARD",
-        }],
-        ["virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5", {
-          "packageLocation": "./.yarn/__virtual__/@mikro-orm-core-virtual-c652c5ce8d/0/cache/@mikro-orm-core-npm-4.5.5-4d65c94f1b-fe27d61d2a.zip/node_modules/@mikro-orm/core/",
-          "packageDependencies": [
-            ["@mikro-orm/core", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
-            ["@mikro-orm/entity-generator", null],
-            ["@mikro-orm/mariadb", null],
-            ["@mikro-orm/migrations", null],
-            ["@mikro-orm/mongodb", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
-            ["@mikro-orm/mysql", null],
-            ["@mikro-orm/postgresql", null],
-            ["@mikro-orm/sqlite", null],
-            ["@types/mikro-orm__entity-generator", null],
-            ["@types/mikro-orm__mariadb", null],
-            ["@types/mikro-orm__migrations", null],
-            ["@types/mikro-orm__mongodb", null],
-            ["@types/mikro-orm__mysql", null],
-            ["@types/mikro-orm__postgresql", null],
-            ["@types/mikro-orm__sqlite", null],
-            ["ansi-colors", "npm:4.1.1"],
-            ["clone", "npm:2.1.2"],
-            ["dotenv", "npm:8.2.0"],
-            ["escaya", "npm:0.0.61"],
-            ["fs-extra", "npm:9.1.0"],
-            ["globby", "npm:11.0.3"],
-            ["reflect-metadata", "npm:0.1.13"],
-            ["strip-json-comments", "npm:3.1.1"]
-          ],
-          "packagePeers": [
-            "@mikro-orm/entity-generator",
-            "@mikro-orm/mariadb",
-            "@mikro-orm/migrations",
-            "@mikro-orm/mongodb",
-            "@mikro-orm/mysql",
-            "@mikro-orm/postgresql",
-            "@mikro-orm/sqlite",
-            "@types/mikro-orm__entity-generator",
-            "@types/mikro-orm__mariadb",
-            "@types/mikro-orm__migrations",
-            "@types/mikro-orm__mongodb",
-            "@types/mikro-orm__mysql",
-            "@types/mikro-orm__postgresql",
-            "@types/mikro-orm__sqlite"
-          ],
-          "linkType": "HARD",
         }]
       ]],
       ["@mikro-orm/mongo-highlighter", [
@@ -816,21 +766,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@mikro-orm/mongodb", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:4.5.5"],
             ["@mikro-orm/core", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:4.5.5"],
-            ["@types/mikro-orm__core", null],
-            ["@types/mongodb", "npm:3.6.12"],
-            ["mongodb", "virtual:28572d0d4b68f96a1d9a26e3f37e5f592a2f5ac84daf21f84d557e69106a3a7f2fe2b3d67402ac9191f5ee31cf3957c45ce9178f2b4e944f61462bb3047610ce#npm:3.6.6"]
-          ],
-          "packagePeers": [
-            "@mikro-orm/core",
-            "@types/mikro-orm__core"
-          ],
-          "linkType": "HARD",
-        }],
-        ["virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5", {
-          "packageLocation": "./.yarn/__virtual__/@mikro-orm-mongodb-virtual-c1d75b7873/0/cache/@mikro-orm-mongodb-npm-4.5.5-51a37ace0a-1ca32068d5.zip/node_modules/@mikro-orm/mongodb/",
-          "packageDependencies": [
-            ["@mikro-orm/mongodb", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
-            ["@mikro-orm/core", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
             ["@types/mikro-orm__core", null],
             ["@types/mongodb", "npm:3.6.12"],
             ["mongodb", "virtual:28572d0d4b68f96a1d9a26e3f37e5f592a2f5ac84daf21f84d557e69106a3a7f2fe2b3d67402ac9191f5ee31cf3957c45ce9178f2b4e944f61462bb3047610ce#npm:3.6.6"]
@@ -4502,30 +4437,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["ts-node", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:10.0.0"],
             ["ts-node-dev", "virtual:e0a02ef88b63c2d588c36960ecb4c86aeb0214c4f448a0dc8e62a2bf2da36a4360eec7c2108d36141f0c3ce464b456c0c660e0ed597dd6c8670a3397a6757aec#npm:1.1.6"],
             ["ws", "virtual:00312477651c73db9c06a8dfc30e97ddab980abcdaf7c95846e02a67f289fbe17568b9fce1ae83d2bc82a42dc21bf2abeba04e7d0b07c6cab829dae21b02cf88#npm:7.4.6"]
-          ],
-          "linkType": "SOFT",
-        }]
-      ]],
-      ["gambit-dto", [
-        ["workspace:dto", {
-          "packageLocation": "./dto/",
-          "packageDependencies": [
-            ["gambit-dto", "workspace:dto"],
-            ["@aelea/utils", "npm:1.1.0"],
-            ["@ethersproject/abi", "npm:5.3.0"],
-            ["@ethersproject/abstract-signer", "npm:5.3.0"],
-            ["@ethersproject/bignumber", "npm:5.3.0"],
-            ["@ethersproject/bytes", "npm:5.3.0"],
-            ["@ethersproject/contracts", "npm:5.3.0"],
-            ["@ethersproject/providers", "npm:5.3.0"],
-            ["@mikro-orm/core", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
-            ["@mikro-orm/mongodb", "virtual:e3de40f97508e9d6d2a975c71ec3e6fcb0e0ea7ec216eb16e370bf43c9ae5f9c4c081b179c07a93f7584b1a61055490391549dd51aebc150db13e04e4603c8f2#npm:4.5.5"],
-            ["@most/core", "npm:1.6.1"],
-            ["@most/disposable", "npm:1.3.0"],
-            ["@most/prelude", "npm:1.8.0"],
-            ["@most/scheduler", "npm:1.3.0"],
-            ["@most/types", "npm:1.1.0"],
-            ["@types/node", "npm:15.6.1"]
           ],
           "linkType": "SOFT",
         }]
