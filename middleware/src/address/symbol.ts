@@ -7,6 +7,7 @@ export enum SYMBOL {
   ETH = 'ETH',
   BTC = "BTC",
   WBNB = "WBNB",
+  BNB = "BNB",
   USDG = "USDG",
   BUSD = "BUSD"
 }

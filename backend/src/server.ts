@@ -6,7 +6,7 @@ import config from './mikro-orm.config'
 import { awaitPromises, debounce, map, mergeArray } from '@most/core'
 import { newDefaultScheduler } from '@most/scheduler'
 import { JsonRpcProvider } from '@ethersproject/providers'
-import { gambitContract } from 'gambit-middleware'
+import { BSC_CONTRACTS, gambitContract } from 'gambit-middleware'
 
 import { accountApi, leaderboardApi } from './api'
 import path from 'path'
@@ -84,7 +84,7 @@ const run = async () => {
         pos.key,
         pos.account,
         pos.isLong,
-        pos.indexToken,
+        pos.indexToken as BSC_CONTRACTS,
         pos.collateralToken
       )
 
@@ -99,7 +99,7 @@ const run = async () => {
         pos.key,
         pos.account,
         pos.isLong,
-        pos.indexToken,
+        pos.indexToken as BSC_CONTRACTS,
         pos.collateralToken
       )
 
@@ -116,7 +116,7 @@ const run = async () => {
         liqPos.key,
         liqPos.account,
         liqPos.isLong,
-        liqPos.indexToken,
+        liqPos.indexToken as BSC_CONTRACTS,
         liqPos.collateralToken
       )
 
@@ -124,7 +124,9 @@ const run = async () => {
     }, vaultActions.liquidatePosition),
 
     map(async (closePosition) => {
-      const position = await EM.findOne(dto.PositionIncrease, { key: closePosition.key }) || await EM.findOne(dto.PositionDecrease, { key: closePosition.key })
+      const position = await EM.findOne(dto.PositionIncrease, { key: closePosition.key })
+        || await EM.findOne(dto.PositionDecrease, { key: closePosition.key })
+        || await EM.findOne(dto.PositionLiquidated, { key: closePosition.key })
 
       if (position === null) {
         return
@@ -148,7 +150,9 @@ const run = async () => {
     }, vaultActions.closePosition),
 
     map(async (updatedPosition) => {
-      const position = await EM.findOne(dto.PositionUpdate, { key: updatedPosition.key }) || await EM.findOne(dto.PositionDecrease, { key: updatedPosition.key })
+      const position = await EM.findOne(dto.PositionUpdate, { key: updatedPosition.key })
+        || await EM.findOne(dto.PositionDecrease, { key: updatedPosition.key })
+        || await EM.findOne(dto.PositionLiquidated, { key: updatedPosition.key })
 
       if (position === null) {
         return

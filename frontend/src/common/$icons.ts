@@ -1,6 +1,7 @@
 import { $Node, $svg, attr } from "@aelea/core"
 import { mergeArray } from "@most/core"
 import { curry2 } from "@most/prelude"
+import { BSC_CONTRACTS } from "gambit-middleware"
 
 
 interface Icon {
@@ -41,5 +42,9 @@ export const $eth = $svg('g')(
 )
 
 
-
+export const $tokenIconMap = {
+  [BSC_CONTRACTS.BTC]: $btc,
+  [BSC_CONTRACTS.ETH]: $eth,
+  [BSC_CONTRACTS.WBNB]: $bnb,
+}
 

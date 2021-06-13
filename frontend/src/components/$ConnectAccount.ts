@@ -60,7 +60,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
           combine((chain, account) => {
             if (account === undefined)
               return $connectButton
-            if (chain !== CHAIN.BSC && chain !== CHAIN.ETH_ROPSTEN)
+            if (chain !== CHAIN.BSC)
               return $alert(
                 $text('Switch to BSC Network')
               )

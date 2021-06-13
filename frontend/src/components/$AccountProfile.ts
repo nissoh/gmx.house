@@ -11,9 +11,10 @@ import { $Popover2 } from "./$Popover"
 import { $Transaction } from "./$TransactionDetails"
 import { $ButtonPrimary } from "./form/$Button"
 import * as provider from 'metamask-provider'
-import { combineObject } from "@aelea/utils"
+import { combineArray, combineObject } from "@aelea/utils"
 import { Claim } from "../logic/types"
 import { TransactionReceipt } from "@ethersproject/providers"
+import { account } from "metamask-provider"
 
 type IMaybeClaimIdentity = Pick<Claim, 'identity'> | null
 
@@ -197,7 +198,7 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
     claimedAccount,
     map(identity => ({ ...claim, identity, address }), display),
     constant(claim, dismissPopover)
-])
+  ])
 
 
   return [
@@ -214,16 +215,26 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
         switchLatest(map(claimChange => {
           return mergeArray([
             $ProfileLinks(address, claimChange),
-            $anchor(attr({ href: `/p/account/${address}` }), layoutSheet.row, layoutSheet.spacing, style({ alignItems: 'center' }))(
+            $anchor(attr({ href: `/p/account/${address}` }), layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
               $AccountPhoto(address, claimChange),
               $AccountLabel(address, claimChange),
             ),
           ])
         }, profileDisplay)),
-        $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
-        $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
-          $text('Claim')
-        ),  
+
+        switchLatest(
+          combineArray((claim, account) => {
+            return account && claim?.address === account
+              ? empty()
+              : mergeArray([
+                $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
+                  $text('Claim')
+                ),
+                $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
+              ])
+          }, profileDisplay, account)
+        ),
+        
       )
     )({
       overlayClick: dismissPopoverTether()

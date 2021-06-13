@@ -1,8 +1,7 @@
-import { $node, $wrapNativeElement, animationFrames, attr, style } from "@aelea/core"
-import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { never, tap } from "@most/core"
+import { $node, $wrapNativeElement, style } from "@aelea/core"
+import { colorAlpha, pallete, theme } from "@aelea/ui-components-theme"
+import { tap } from "@most/core"
 import { disposeWith } from "@most/disposable"
-import { map } from "@most/prelude"
 
 interface IPosition{
   x: number;
@@ -70,18 +69,34 @@ const template = document.getElementById("cube-template") as HTMLTemplateElement
 const directions = ["x", "y"] as const
 // rgb(39 38 38)
 const palette = {
-  background: {
-    color: [31, 10, 68], // rgb(56 26 99)
-    shading: [0, 0, 0] // rgb(39 38 38)
-  },
-  middleground: {
-    color: [12, 12, 17],
-    shading: [0, 0, 0] // rgb(12 12 17)
-  },
-  primary: {
-    color: [255, 54, 191], // rgb(255 54 191)
-    shading: [86, 16, 64] // rgb(86 16 64)
-  }
+  background: theme.name === 'dark'
+    ? {
+      color: [31, 10, 68], // rgb(56 26 99)
+      shading: [0, 0, 0] // rgb(39 38 38)
+    }
+    : {
+      color: [255, 255, 255], // rgb(56 26 99)
+      shading: [154, 156, 160] // rgb(39 38 38)
+    },
+  // 181 115 255
+  middleground: theme.name === 'dark'
+    ?  {
+      color: [12, 12, 17],
+      shading: [0, 0, 0]
+    }
+    : {
+      color: [67, 80, 88], // 67 80 88
+      shading: [0, 35, 0]
+    },
+  primary: theme.name === 'dark'
+    ?  {
+      color: [255, 54, 191], // rgb(255 54 191)
+      shading: [86, 16, 64] // rgb(86 16 64)
+    }
+    : {
+      color: [181, 115, 255],
+      shading: [77, 35, 123]
+    }
 }
 
 

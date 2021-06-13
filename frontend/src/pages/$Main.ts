@@ -1,7 +1,7 @@
 import { $element, $node, $text, attr, Behavior, component, eventElementTarget, style } from '@aelea/core'
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
-import { $Button, $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
+import { $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
 import { map, merge, multicast, now } from '@most/core'
 import { $github, $logo } from '../elements/$icons'
 import { designSheet } from '@aelea/ui-components'
@@ -12,7 +12,7 @@ import { $MainMenu } from '../components/$MainMenu'
 import { $Leaderboard } from './$Leaderboard'
 import { $anchor } from '../elements/$common'
 import { $ButtonPrimary } from '../components/form/$Button'
-import { $Portfolio } from './$Portfolio'
+import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 
 
@@ -29,7 +29,7 @@ interface Website {
 }
 
 export default ({ baseRoute = '' }: Website) => component((
-  [routeChanges, linkClickTether]: Behavior<any, string>
+  [routeChanges, linkClickTether]: Behavior<any, string>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -54,7 +54,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const claimList = claimListQuery()
 
   return [
-    $node(designSheet.main, style({ fontFamily: `'Work Sans'`, backgroundImage: `radial-gradient(at center center, ${pallete.horizon} 50%, ${pallete.background})`, alignItems: 'center', placeContent: 'center' }))(
+    $node(designSheet.main, style({ fontFamily: `'Nunito'`, fontWeight: 300, backgroundImage: `radial-gradient(at center center, ${pallete.horizon} 50%, ${pallete.background})`, alignItems: 'center', placeContent: 'center' }))(
       router.match(rootRoute)(
         $column(style({ minHeight: '100vh', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
@@ -95,7 +95,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
               ),
               $node(),
-              $MainMenu({ parentRoute: pagesRoute })({
+              $MainMenu({ parentRoute: pagesRoute, claimList })({
                 routeChange: linkClickTether()
               })
             ),
@@ -106,8 +106,8 @@ export default ({ baseRoute = '' }: Website) => component((
       ),
 
       router.contains(pagesRoute)(
-        $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-          $row(layoutSheet.spacing, style({ padding: '34px 15px', alignItems: 'center' }))(
+        $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
+          $row(layoutSheet.spacing, style({ padding: '34px 15px', zIndex: 30, alignItems: 'center' }))(
             $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
               click: linkClickTether()
             }),
@@ -115,7 +115,7 @@ export default ({ baseRoute = '' }: Website) => component((
               $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
             ),
             $node(layoutSheet.flex)(),
-            $MainMenu({ parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
+            $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
               routeChange: linkClickTether()
             })
           ),

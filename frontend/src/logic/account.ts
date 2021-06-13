@@ -1,12 +1,13 @@
 import { http } from "@aelea/ui-components"
 import { fromPromise } from "@most/core"
 import { AccountHistoricalDataApi } from "gambit-backend"
-import { SettledPosition, PositionIncrease } from "./types"
+import { SettledPosition, PositionIncrease, PositionLiquidated } from "./types"
 
 
 interface AccountHistorical {
   closedPositions: SettledPosition[];
   increasePositions: PositionIncrease[];
+  liquidatedPositions: PositionLiquidated[];
 }
 
 export const accountHistoricalPnLApi = (params: AccountHistoricalDataApi) => fromPromise(
@@ -29,7 +30,15 @@ export const accountHistoricalPnLApi = (params: AccountHistoricalDataApi) => fro
 
           return { ...json, createdAt }
         })
-        return { closedPositions, increasePositions }
+
+        const liquidatedPositions = jsonList.liquidatedPositions.map((json) => {
+          const collateral = BigInt(json.collateral)
+          const markPrice = BigInt(json.markPrice)
+          const createdAt = new Date(json.createdAt)
+
+          return { ...json, collateral, markPrice, createdAt }
+        })
+        return { closedPositions, increasePositions, liquidatedPositions }
       },
       body: JSON.stringify(params)
     }

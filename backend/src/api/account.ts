@@ -19,15 +19,22 @@ accountApi.post('/account-historical-pnl', async (req, res) => {
     dto.PositionClose, {
       account: params.account,
     })
+
   const increasePositionsQuery = EM.find(
     dto.PositionIncrease, {
       account: params.account,
     })
 
+  const liquidatedPositionsQuery = EM.find(
+    dto.PositionLiquidated, {
+      account: params.account,
+    })
+
   const closedPositions = await closedPositionsQuery
   const increasePositions = await increasePositionsQuery
+  const liquidatedPositions = await liquidatedPositionsQuery
 
-  res.json({ closedPositions, increasePositions })
+  res.json({ closedPositions, increasePositions, liquidatedPositions })
 })
 
 

@@ -1,6 +1,6 @@
 import { http } from "@aelea/ui-components"
 import { filter, fromPromise, map, merge, multicast, now, skipRepeatsWith, switchLatest, throttle } from "@most/core"
-import { TimeTzOffset } from "gambit-middleware"
+import { timeTzOffset } from "gambit-middleware"
 import { BarData, UTCTimestamp } from "lightweight-charts"
 import { intervalInMsMap } from "./logic/constant"
 
@@ -41,29 +41,49 @@ type kineEvent = [openTime: number, open: string, high: string, low: string, clo
 
 const intervampMap = {
   [intervalInMsMap.MIN]: '1m',
+  [intervalInMsMap.MIN5]: '5m',
   [intervalInMsMap.MIN15]: '15m',
   [intervalInMsMap.HR]: '1h',
+  [intervalInMsMap.HR4]: '4h',
+  [intervalInMsMap.HR8]: '8h',
   [intervalInMsMap.DAY]: '1d',
+  [intervalInMsMap.WEEK]: '1w',
 }
 
-export async function fetchHistoricKline(symbol: string, intervalMs: intervalInMsMap) {
-  const interval = intervampMap[intervalMs as keyof typeof intervampMap]
-  const params = new URLSearchParams({
-    // endTime: Date.now().toString(),
-    // startTime: (Date.now() - 25000).toString(),
+export interface IBinanceApiParams {
+  interval: intervalInMsMap
+  startTime?: number
+  endTime?: number
+  limit: number
+}
+
+// https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
+export async function fetchHistoricKline(symbol: string, params: IBinanceApiParams) {
+  const interval = intervampMap[params.interval as keyof typeof intervampMap]
+  const queryParams = new URLSearchParams({
     symbol,
     interval,
-    limit: '190'
+    limit: String(params.limit)
   })
 
-  const kLineData: kineEvent[] = await http.fetchJson(`https://api.binance.com/api/v3/klines?${params.toString()}`)
-  const klineBars: BarData[] = kLineData.map(([time, open, high, low, close]) => {
+  if (params.startTime) {
+    queryParams.set('startTime', String(params.startTime))
+  }
+
+  if (params.endTime) {
+    queryParams.set('endTime', String(params.endTime))
+  }
+
+
+
+  const kLineData: kineEvent[] = await http.fetchJson(`https://api.binance.com/api/v3/klines?${queryParams.toString()}`)
+  const klineBars = kLineData.map(([time, open, high, low, close]) => {
 
     return {
       low: Number(low),
       close: Number(close),
       open: Number(open),
-      time: TimeTzOffset(time),
+      time,
       high: Number(high),
     }
   })

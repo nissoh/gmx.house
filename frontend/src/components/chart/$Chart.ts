@@ -57,7 +57,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
     layout: {
       textColor: pallete.message,
       backgroundColor: 'transparent',
-      fontFamily: 'Work Sans'
+      fontFamily: 'Nunito'
     },
     timeScale: {
       secondsVisible: true,

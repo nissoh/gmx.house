@@ -14,12 +14,15 @@ export interface LeaderboardApi extends HistoricalDataApi {
 
 
 function getTimespanParams(params: HistoricalDataApi) {
-  return params.timeRange
-    ? {
-      $gt: new Date(params.timeRange[0]),
-      $lt: new Date(params.timeRange[1]),
-    }
-    : null
+  if (params.timeRange) {
+    const [start, end] = params.timeRange
+    const startDate = new Date(start)
+    const endDate = new Date(end)
+
+    return { $gt: startDate, $lt: endDate, }
+  }
+
+  return {}
 }
 
 leaderboardApi.post('/leaderboard', async (req, res) => {

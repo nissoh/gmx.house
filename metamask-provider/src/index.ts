@@ -54,9 +54,7 @@ export const metamaskEvent = <Args extends any[], C>(eventName: string, mapFn: (
 )
 
 
-export const networkChange: Stream<CHAIN> = metamaskEvent('chainChanged', (network: Network) => {
-  return network.chainId
-})
+export const networkChange: Stream<CHAIN> = metamaskEvent('chainChanged', (network: string) => Number(network))
 export const currentNetwork: Stream<CHAIN> = awaitPromises(map(async wallet => (await wallet.w3p.getNetwork()).chainId, metamaskProvider))
 export const network = merge(networkChange, currentNetwork)
 

@@ -20,7 +20,7 @@ export const TOKENS_BSC = [
   },
   {
     name: "Binance Coin",
-    symbol: SYMBOL.WBNB,
+    symbol: SYMBOL.BNB,
     decimals: 18,
     address: BSC_CONTRACTS.WBNB,
   },
@@ -37,6 +37,17 @@ export const TOKENS_BSC = [
     address: BSC_CONTRACTS.BUSD
   }
 ] as Token[]
+
+export function groupByMapMany<A, B extends keyof any>(list: A[], keyGetter: (v: A) => B) {
+  const map = list.reduce((previous, currentItem) => {
+    const group = keyGetter(currentItem)
+    if (!previous[group]) previous[group] = []
+    previous[group].push(currentItem)
+    return previous
+  }, {} as Record<B, A[]>)
+  return map
+}
+
 
 export const TOKEN_ADDRESS_MAP = groupByMap(TOKENS_BSC, (x) => x.address)
 

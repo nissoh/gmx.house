@@ -1,4 +1,5 @@
 import { Entity, Index, Property } from '@mikro-orm/core'
+import { BSC_CONTRACTS } from 'gambit-middleware'
 import { BaseEntity } from './BaseEntity'
 import { NativeBigIntType } from './utils'
 
@@ -8,14 +9,14 @@ export abstract class Position extends BaseEntity {
   @Property() key: string
   @Index() @Property() account: string
   @Property() collateralToken: string
-  @Property() indexToken: string
+  @Property() indexToken: BSC_CONTRACTS
   @Property() isLong: boolean
 
   constructor(
     key: string,
     account: string,
     isLong: boolean,
-    indexToken: string,
+    indexToken: BSC_CONTRACTS,
     collateralToken: string,
   ) {
     super()

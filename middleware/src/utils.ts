@@ -28,7 +28,7 @@ export function shortenAddress(address: string, padRight = 4, padLeft = 6) {
   return address.slice(0, padLeft) + "..." + address.slice(address.length -padRight, address.length)
 }
 
-export function readableUSD(ammount: string, dollarSign = false) {
+export function readableUSD(ammount: string) {
   const parts = ammount.split('.')
   const [whole = '', decimal = ''] = parts
 
@@ -231,9 +231,9 @@ export declare type Nominal<T, Name extends string> = T & {
 
 export type UTCTimestamp = Nominal<number, "UTCTimestamp">
 
-const tzOffset = new Date().getTimezoneOffset() * 60000
+export const tzOffset = new Date().getTimezoneOffset() * 60000
 
-export function TimeTzOffset(ms: number): UTCTimestamp {
+export function timeTzOffset(ms: number): UTCTimestamp {
   return Math.floor((ms - tzOffset) / 1000) as UTCTimestamp
 }
 

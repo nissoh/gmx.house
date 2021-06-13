@@ -5,17 +5,17 @@ import type { Theme } from '@aelea/ui-components-theme'
 const light: Theme = {
   name: 'light',
   pallete: {
-    primary: '#f00',
+    primary: '#b573ff',
 
     message: '#000000',
 
     background: '#ffffff',
-    horizon: '#dcdcdc',
-    middleground: '#e0d0ab',
-    foreground: '#7b7b7b',
+    horizon: '#e1e5f1',
+    middleground: '#b7daff',
+    foreground: '#3b565f',
 
-    positive: '#0fd25e',
-    negative: '#b70636',
+    positive: '#0cab00',
+    negative: '#ea004c',
     indeterminate: '#dccb07',
   }
 }

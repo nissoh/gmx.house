@@ -7,8 +7,8 @@ import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
 import * as router from '@aelea/router'
-import { $Profile } from '../components/$Profile'
-import { Claim } from '../logic/types'
+import { $Profile } from './$Profile'
+import { Claim } from '../../logic/types'
 
 
 const USD_DECIMALS = 30
