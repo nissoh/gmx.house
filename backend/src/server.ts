@@ -24,7 +24,6 @@ import { PositionClose, PositionUpdate } from './dto/Vault'
 // })
 
 
-
 const vaultActions = gambitContract(bscNini)
 
 
