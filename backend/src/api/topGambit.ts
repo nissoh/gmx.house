@@ -45,17 +45,21 @@ leaderboardApi.get('/tournament/0', async (req, res) => {
   const start = Date.UTC(2021, 5, 14, 12, 0, 0, 0)
   const end = Date.UTC(2021, 5, 30, 12, 0, 0, 0)
 
-
-  const closedPositions = await EM.find(
-    dto.PositionClose, {
+  const initPositions = await EM.find(
+    dto.PositionIncrease, {
       createdAt: getTimespanParams({timeRange: [start, end]}),
   })
+
+  const closedPositions = (await EM.find(
+    dto.PositionClose, {
+      createdAt: getTimespanParams({timeRange: [start, end]}),
+  })).filter(pos => initPositions.find(ip => ip.key === pos.key))
   
 
-  const liquidatedPositions = await EM.find(
+  const liquidatedPositions = (await EM.find(
     dto.PositionLiquidated, {
     createdAt: getTimespanParams({timeRange: [start, end]}),
-  })
+  })).filter(pos => initPositions.find(ip => ip.key === pos.key))
   
   const tournament: Tournament = {
     closedPositions, liquidatedPositions
