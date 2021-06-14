@@ -4,6 +4,7 @@ import { EM } from '../server'
 import { dto } from '../dto'
 import { HistoricalDataApi } from './types'
 import { PositionClose, PositionLiquidated } from '../dto/Vault'
+import { timeTzOffset } from 'gambit-middleware'
 
 
 export const leaderboardApi = Router()
@@ -42,8 +43,8 @@ export interface Tournament {
 }
 
 leaderboardApi.get('/tournament/0', async (req, res) => {
-  const start = Date.UTC(2021, 6, 14, 10, 0, 0, 0)
-  const end = Date.UTC(2021, 6, 30, 12, 0, 0, 0)
+  const start = timeTzOffset(Date.UTC(2021, 6, 14, 10, 0, 0, 0))
+  const end = timeTzOffset(Date.UTC(2021, 6, 30, 12, 0, 0, 0))
 
   const closedPositions = await EM.find(
     dto.PositionClose, {
