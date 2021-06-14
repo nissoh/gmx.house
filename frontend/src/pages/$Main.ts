@@ -14,6 +14,7 @@ import { $anchor } from '../elements/$common'
 import { $ButtonPrimary } from '../components/form/$Button'
 import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
+import { $Tournament } from './tournament/$tournament'
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -47,6 +48,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
+  const tournamentRoute = pagesRoute.create({ fragment: 'tournament', title: 'Gambit Tournament' })
   const portfolioRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   const rootStore = state.createLocalStorageChain('store')
@@ -121,6 +123,9 @@ export default ({ baseRoute = '' }: Website) => component((
           ),
           router.match(leaderboardRoute)(
             $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore, claimList })({})
+          ),
+          router.match(tournamentRoute)(
+            $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList })({})
           ),
           router.contains(portfolioRoute)(
             $Portfolio({ parentRoute: portfolioRoute, parentStore: rootStore, claimList  })({

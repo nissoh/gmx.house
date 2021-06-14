@@ -3,6 +3,7 @@ import Router from 'express-promise-router'
 import { EM } from '../server'
 import { dto } from '../dto'
 import { HistoricalDataApi } from './types'
+import { PositionClose, PositionLiquidated } from '../dto/Vault'
 
 
 export const leaderboardApi = Router()
@@ -35,6 +36,31 @@ leaderboardApi.post('/leaderboard', async (req, res) => {
   res.json(modelList)
 })
 
+export interface Tournament {
+  closedPositions: PositionClose[]
+  liquidatedPositions: PositionLiquidated[]
+}
+
+leaderboardApi.get('/tournament/0', async (req, res) => {
+  const start = Date.UTC(2021, 6, 14, 10, 0, 0, 0)
+  const end = Date.UTC(2021, 6, 30, 12, 0, 0, 0)
+
+  const closedPositions = await EM.find(
+    dto.PositionClose, {
+      createdAt: getTimespanParams({timeRange: [start, end]}),
+  })
+
+    const liquidatedPositions = await EM.find(
+    dto.PositionLiquidated, {
+      createdAt: getTimespanParams({timeRange: [start, end]}),
+    })
+  
+  const tournament: Tournament = {
+    closedPositions, liquidatedPositions
+  }
+  res.json(tournament)
+})
+
 leaderboardApi.post('/liquidations', async (req, res) => {
   const queryParams: HistoricalDataApi = req.body
 
@@ -45,9 +71,5 @@ leaderboardApi.post('/liquidations', async (req, res) => {
   res.json(modelList)
 })
 
-// leaderboardApi.get('/liquidations', async (req, res) => {
-//   const modelList = await EM.find(dto.PositionClose, {})
-//   res.json(modelList)
-// })
 
 

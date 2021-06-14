@@ -1,18 +1,20 @@
-import { $text, Behavior, event, component, style, styleBehavior, StyleCSS, attr } from '@aelea/core'
-import { combineArray, O, } from '@aelea/utils'
+import { $text, Behavior, event, component, style, styleBehavior, StyleCSS } from '@aelea/core'
+import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { constant, map, multicast, startWith, switchLatest } from '@most/core'
 import { formatReadableUSD } from 'gambit-middleware'
 import { Route } from '@aelea/router'
-import { $alert, $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { leaderBoardQuery, liquidationsQuery } from '../logic/leaderboard'
-import { $AccountProfile } from '../components/$AccountProfile'
 import { LeaderboardApi } from 'gambit-backend'
-import { Account, Claim } from '../logic/types'
-import { intervalInMsMap } from '../logic/constant'
+import { Claim } from 'gambit-backend/src/dto/Account'
+import { $AccountProfile } from '../../components/$AccountProfile'
+import { $alert, $anchor } from '../../elements/$common'
+import { intervalInMsMap } from '../../logic/constant'
+import { tournament1Query } from '../../logic/leaderboard'
+import { Account } from '../../logic/types'
+
 
 
 
@@ -33,7 +35,7 @@ const timeFrameToRangeOp = map((timeSpan: intervalInMsMap): LeaderboardApi => {
   return { timeRange: [now - timeSpan, now] }
 })
 
-export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
+export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
   [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
 ) => {
 
@@ -47,9 +49,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   
   const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
 
-    return combineArray((settled, liqs) => {
-
-      const topMap = settled.reduce((seed, pos) => {
+    return map(({liquidatedPositions, closedPositions}) => {
+      const topMap = closedPositions.reduce((seed, pos) => {
         const account = seed[pos.account] ??= {
           address: pos.account,
           settledPositionCount: 0,
@@ -72,7 +73,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
       const allAccounts = Object.values(topMap)
       
-      liqs.forEach(liq => {
+      liquidatedPositions.forEach(liq => {
         const liqqedTopAccount = topMap[liq.account]
         if (liqqedTopAccount) {
           liqqedTopAccount.realisedPnl -= liq.collateral
@@ -85,7 +86,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           .sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
           // .filter(a => a.realisedPnl > 0)
       }
-    }, leaderBoardQuery(params), liquidationsQuery(params))
+    }, tournament1Query())
   }, timeFrame)
 
 
@@ -94,12 +95,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacingSmall)(
-        $text('Gambit Kickoff Tournament Has started!'),
-        $anchor(attr({ href: '/p/tournament' }))(
-          $text('Tournament Ladder')
-        ),
-      ),
       $row(style({ placeContent: 'center' }))(
         $alert(
           $text(`Fees are unaccounted in Realised PnL (WIP)`)
@@ -107,29 +102,13 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       ),
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
-          $header(layoutSheet.flex)('Top Gambit'),
+          $header(layoutSheet.flex)('Tournament Season 1'),
         ),
         $row(layoutSheet.flex)(),
 
         $text(style({ color: pallete.foreground }))('Time Frame:'),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.DAY))
-        )(
-          $text('24Hrs')
-        ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.WEEK))
-        )(
-          $text('Week')
-        ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.MONTH))
-        )(
-          $text('Month')
-        )
+        $text('14 June 2021, 12:00 - 30 June 2021, 12:00'),
+        $text(style({ color: pallete.foreground}))('UTC'),
       ),
       $card(layoutSheet.spacingBig, style({ padding: '46px' }))(
         $column(layoutSheet.spacing)(

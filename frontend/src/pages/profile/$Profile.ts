@@ -219,7 +219,7 @@ export const $Profile = (config: IAccount) => component((
           ),
 
  
-          $row(style({ position: 'relative', width: '100%', height: '126px', maxWidth: '280px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
+          $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '280px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
             switchLatest(map(data => $Chart({
               initializeSeries: map((api) => {
                 const series = api.addAreaSeries({
