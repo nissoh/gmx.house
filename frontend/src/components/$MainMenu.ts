@@ -26,39 +26,36 @@ export const $MainMenu = ({ parentRoute, containerOp = O(), claimList }: MainMen
   [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<string, string>,
 ) => {
 
-  const guideRoute = parentRoute.create({ fragment: 'guide', title: 'Guide' })
+  const leaderboardRoute = parentRoute.create({ fragment: 'guide', title: 'Guide' })
   const examplesRoute = parentRoute.create({ fragment: 'examples', title: 'Examples' })
   
+  const $accountDisplay = $IntermediateDisplay({
+    $display: switchLatest(
+      combineArray((address, claimList) => {
+        const claim = claimList.find(c => c.address === address) || null
+
+        return $AccountProfile({ address, claim })({})
+        // return $Link({ $content: $text('Portfolio'), url: '/p/account', route: examplesRoute })({
+        //   click: routeChangeTether()
+        // })
+      }, walletConnectedSucceed, claimList)
+    )
+  })({
+    connectedWalletSucceed: walletConnectedSucceedTether()
+  })
   return [
     $row(layoutSheet.spacingBig, style({ fontSize: '.9em', alignItems: 'center' }), containerOp)(
-
       $Picker([light, dark])({}),
-
       // $Link({ $content: $text('Why?!'), href: '/drag-and-sort', route: guideRoute })({
       //   click: sampleLinkClick()
       // }),
       $Link({ $content: $text('API(WIP)'), disabled: now(true), url: '/p/examples/theme', route: examplesRoute })({
         click: routeChangeTether()
       }),
-      $Link({ $content: $text('Leaderboard'), url: '/p/leaderboard', route: guideRoute })({
+      $Link({ $content: $text('Leaderboard'), url: '/p/leaderboard', route: leaderboardRoute })({
         click: routeChangeTether()
       }),
-
-      $IntermediateDisplay({
-        $display: switchLatest(
-          combineArray((address, claimList) => {
-            const claim = claimList.find(c => c.address === address) || null
-
-            return $AccountProfile({ address, claim })({})
-            // return $Link({ $content: $text('Portfolio'), url: '/p/account', route: examplesRoute })({
-            //   click: routeChangeTether()
-            // })
-          }, walletConnectedSucceed, claimList)
-        )
-      })({
-        connectedWalletSucceed: walletConnectedSucceedTether()
-      })
-
+      $accountDisplay
     ),
 
 

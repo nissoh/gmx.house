@@ -13,6 +13,7 @@ import { $AccountProfile } from '../components/$AccountProfile'
 import { LeaderboardApi } from 'gambit-backend'
 import { Account, Claim } from '../logic/types'
 import { intervalInMsMap } from '../logic/constant'
+import { isMobileScreen } from '../common/utils'
 
 
 
@@ -21,7 +22,7 @@ export interface ILeaderboard<T extends BaseProvider> {
   provider?: Stream<T>
   claimList: Stream<Claim[]>
 
-  parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
+  parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
 
@@ -93,8 +94,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacingSmall, style({placeContent: 'center'}))(
+    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
+      $row(layoutSheet.spacingSmall, style({ placeContent: 'center' }))(
         $text('Gambit Kickoff Tournament Has started!'),
         $anchor(attr({ href: '/p/tournament' }))(
           $text('Ladder Tournament')
@@ -131,7 +132,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $text('Month')
         )
       ),
-      $card(layoutSheet.spacingBig, style({ padding: '46px' }))(
+      $card(layoutSheet.spacingBig, style({ padding: isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
         $column(layoutSheet.spacing)(
 
           switchLatest(map((dataSource) => {

@@ -4,7 +4,6 @@ import { EM } from '../server'
 import { dto } from '../dto'
 import { HistoricalDataApi } from './types'
 import { PositionClose, PositionLiquidated } from '../dto/Vault'
-import { timeTzOffset } from 'gambit-middleware'
 
 export const leaderboardApi = Router()
 
@@ -47,19 +46,19 @@ leaderboardApi.get('/tournament/0', async (req, res) => {
 
   const initPositions = await EM.find(
     dto.PositionIncrease, {
-      createdAt: getTimespanParams({timeRange: [start, end]}),
-  })
+      createdAt: getTimespanParams({ timeRange: [start, end] }),
+    })
 
   const closedPositions = (await EM.find(
     dto.PositionClose, {
-      createdAt: getTimespanParams({timeRange: [start, end]}),
-  })).filter(pos => initPositions.find(ip => ip.key === pos.key))
+      createdAt: getTimespanParams({ timeRange: [start, end] }),
+    })).filter(pos => initPositions.find(ip => ip.key === pos.key))
   
 
   const liquidatedPositions = (await EM.find(
     dto.PositionLiquidated, {
-    createdAt: getTimespanParams({timeRange: [start, end]}),
-  })).filter(pos => initPositions.find(ip => ip.key === pos.key))
+      createdAt: getTimespanParams({ timeRange: [start, end] }),
+    })).filter(pos => initPositions.find(ip => ip.key === pos.key))
   
   const tournament: Tournament = {
     closedPositions, liquidatedPositions

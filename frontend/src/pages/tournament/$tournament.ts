@@ -1,8 +1,8 @@
-import { $text, Behavior, event, component, style, styleBehavior, StyleCSS } from '@aelea/core'
+import { $text, Behavior, component, style, StyleCSS } from '@aelea/core'
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, startWith, switchLatest } from '@most/core'
+import { map, multicast, startWith, switchLatest } from '@most/core'
 import { formatReadableUSD } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
@@ -10,10 +10,11 @@ import { BaseProvider } from '@ethersproject/providers'
 import { LeaderboardApi } from 'gambit-backend'
 import { Claim } from 'gambit-backend/src/dto/Account'
 import { $AccountProfile } from '../../components/$AccountProfile'
-import { $alert, $anchor } from '../../elements/$common'
+import { $alert } from '../../elements/$common'
 import { intervalInMsMap } from '../../logic/constant'
 import { tournament1Query } from '../../logic/leaderboard'
 import { Account } from '../../logic/types'
+import { isMobileScreen } from '../../common/utils'
 
 
 
@@ -23,7 +24,7 @@ export interface ILeaderboard<T extends BaseProvider> {
   provider?: Stream<T>
   claimList: Stream<Claim[]>
 
-  parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
+  parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
 
@@ -49,7 +50,7 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
   
   const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
 
-    return map(({liquidatedPositions, closedPositions}) => {
+    return map(({ liquidatedPositions, closedPositions }) => {
       const topMap = closedPositions.reduce((seed, pos) => {
         const account = seed[pos.account] ??= {
           address: pos.account,
@@ -90,11 +91,8 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
   }, timeFrame)
 
 
-
-
-  const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', alignSelf: 'center' }))(
+    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
       $row(style({ placeContent: 'center' }))(
         $alert(
           $text(`Fees are unaccounted in Realised PnL (WIP)`)
@@ -108,9 +106,9 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
 
         $text(style({ color: pallete.foreground }))('Time Frame:'),
         $text('14 June 2021, 12:00 - 30 June 2021, 12:00'),
-        $text(style({ color: pallete.foreground}))('UTC'),
+        $text(style({ color: pallete.foreground }))('UTC'),
       ),
-      $card(layoutSheet.spacingBig, style({ padding: '46px' }))(
+      $card(layoutSheet.spacingBig, style({ padding: isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
         $column(layoutSheet.spacing)(
 
           switchLatest(map((dataSource) => {

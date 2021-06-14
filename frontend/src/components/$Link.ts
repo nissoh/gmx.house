@@ -1,6 +1,6 @@
-import { component, Behavior, styleBehavior, StyleCSS, $Branch, $element, attr, style } from "@aelea/core"
+import { component, Behavior, styleBehavior, StyleCSS, $Branch, $element, style } from "@aelea/core"
 import { IAnchor, $RouterAnchor } from "@aelea/router"
-import { combine, empty, map } from "@most/core"
+import { empty, map } from "@most/core"
 import { pallete } from "@aelea/ui-components-theme"
 import { Stream } from "@most/types"
 import { combineArray } from "@aelea/utils"

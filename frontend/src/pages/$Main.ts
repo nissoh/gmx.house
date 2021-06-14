@@ -2,7 +2,7 @@ import { $element, $node, $text, attr, Behavior, component, eventElementTarget, 
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
-import { map, merge, multicast, now } from '@most/core'
+import { empty, map, merge, multicast, now } from '@most/core'
 import { $github, $logo } from '../elements/$icons'
 import { designSheet } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
@@ -15,6 +15,7 @@ import { $ButtonPrimary } from '../components/form/$Button'
 import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 import { $Tournament } from './tournament/$tournament'
+import { isDesktopScreen } from '../common/utils'
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -56,9 +57,9 @@ export default ({ baseRoute = '' }: Website) => component((
   const claimList = claimListQuery()
 
   return [
-    $node(designSheet.main, style({ fontFamily: `'Nunito'`, fontWeight: 300, backgroundImage: `radial-gradient(at center center, ${pallete.horizon} 50%, ${pallete.background})`, alignItems: 'center', placeContent: 'center' }))(
+    $node(designSheet.main, style({ fontFamily: `'Nunito'`,  fontWeight: 300, backgroundImage: `radial-gradient(at center center, ${pallete.horizon} 50%, ${pallete.background})`, alignItems: 'center', placeContent: 'center' }))(
       router.match(rootRoute)(
-        $column(style({ minHeight: '100vh', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
+        $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
           $row(style({ alignItems: 'center', width: '100%' }))(
             $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
@@ -109,14 +110,13 @@ export default ({ baseRoute = '' }: Website) => component((
 
       router.contains(pagesRoute)(
         $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-          $row(layoutSheet.spacing, style({ padding: '34px 15px', zIndex: 30, alignItems: 'center' }))(
-            $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
-              click: linkClickTether()
-            }),
-            $anchor(layoutSheet.displayFlex, style({ padding: '0 4px' }), attr({ href: 'https://github.com/nissoh/gambit-community' }))(
-              $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
-            ),
-            $node(layoutSheet.flex)(),
+          $row(layoutSheet.spacing, style({ padding: isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
+            isDesktopScreen
+              ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
+                click: linkClickTether()
+              })
+              : empty(),
+            isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
             $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
               routeChange: linkClickTether()
             })

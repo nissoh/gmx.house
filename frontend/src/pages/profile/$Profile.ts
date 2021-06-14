@@ -1,11 +1,11 @@
 import { $text, Behavior, component, style, styleBehavior, event, StyleCSS, $node, motion, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/core"
-import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
+import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
 import { accountHistoricalPnLApi } from "../../logic/account"
 import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { intervalInMsMap } from "../../logic/constant"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, zipArray, now, debounce, tap } from "@most/core"
+import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
 import { $alert, $anchor, $seperator, $tokenLabel } from "../../elements/$common"
@@ -15,12 +15,12 @@ import { $Chart } from "../../components/chart/$Chart"
 import { Stream } from "@most/types"
 import { Claim } from "../../logic/types"
 import { $tokenIconMap } from "../../common/$icons"
-import { $Popover2 } from "../../components/$Popover"
 import { $caretDown } from "../../elements/$icons"
+import { isDesktopScreen } from "../../common/utils"
 
 
 export interface IAccount {
-  parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>
+  parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   claimList: Stream<Claim[]>
 }
 
@@ -181,10 +181,26 @@ export const $Profile = (config: IAccount) => component((
     ])
   )
 
+
+  const $container = isDesktopScreen
+    ? $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))
+    : $column
+
+  const chartContainerStyle = style({
+    backgroundImage: `radial-gradient(at right center, ${pallete.background} 50%, transparent)`,
+    background: pallete.background
+  })
+  const $chartContainer = isDesktopScreen
+    ? $node(
+      chartContainerStyle, style({
+        position: 'fixed', top: 0, right: 0, left: 0, bottom:0, height: '100vh', width: 'calc(50vw)', display: 'flex',
+      })
+    )
+    : $column(chartContainerStyle)
   
   
   return [
-    $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))(
+    $container(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
         $row(style({ placeContent: 'center' }))(
@@ -194,8 +210,6 @@ export const $Profile = (config: IAccount) => component((
         ),
 
         $row(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-          // $AccountPhoto({ address: accountAddress, claim: null }, 64),
-
           switchLatest(
             map(claimList => {
               const claim = claimList.find(c => c.address === accountAddress) || null
@@ -218,7 +232,6 @@ export const $Profile = (config: IAccount) => component((
             }, config.claimList)
           ),
 
- 
           $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '280px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
             switchLatest(map(data => $Chart({
               initializeSeries: map((api) => {
@@ -317,7 +330,6 @@ export const $Profile = (config: IAccount) => component((
               )
             )
           ),
-
         ),
 
         $node(),
@@ -344,7 +356,7 @@ export const $Profile = (config: IAccount) => component((
             $text('4 Hour')
           ),
           $seperator,
-          $Popover2({
+          $Popover({
             $$popContent: map(x => {
               return $column(layoutSheet.spacingSmall)(
                 $anchor(
@@ -421,7 +433,9 @@ export const $Profile = (config: IAccount) => component((
               )
             })
 
-            return $column(layoutSheet.spacing)(
+            const $container = isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
+
+            return $container(layoutSheet.spacing)(
               ...$tokenChooser
             )
           }, accountHistoryPnL, selectedToken)
@@ -431,11 +445,7 @@ export const $Profile = (config: IAccount) => component((
 
 
       $column(style({ position: 'relative', flex: 1 }))(
-        $node(style({
-          position: 'fixed', top: 0, right: 0, left: 0, bottom:0, height: '100vh', width: 'calc(50vw)', display: 'flex',
-          backgroundImage: `radial-gradient(at right center, ${pallete.background} 50%, transparent)`,
-          background: pallete.background
-        }))(
+        $chartContainer(
           switchLatest(snapshot(({ chartInterval, selectedToken, accountHistoryPnL }, historicKline) => {
             return $Chart({
               initializeSeries: map(api => {
@@ -473,10 +483,15 @@ export const $Profile = (config: IAccount) => component((
                 const priceScale = api.priceScale()
 
                 priceScale.applyOptions({
-                  scaleMargins: {
-                    top: 0.46,
-                    bottom: 0.2
-                  }
+                  scaleMargins: isDesktopScreen
+                    ? {
+                      top:  0.3,
+                      bottom: 0.3
+                    }
+                    : {
+                      top:  0.1,
+                      bottom: 0.1
+                    }
                 })
 
                 const timescale = api.timeScale()

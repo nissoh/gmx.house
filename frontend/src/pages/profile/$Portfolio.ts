@@ -29,7 +29,7 @@ export interface IPortfolio<T extends BaseProvider> {
   provider?: Stream<T>
   claimList: Stream<Claim[]>
 
-  parentStore: <T>(key: string, intitialState: T) => state.BrowserStore<T>;
+  parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 
 }
 

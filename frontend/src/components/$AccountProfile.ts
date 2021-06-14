@@ -1,5 +1,5 @@
 import { component, $node, style, $text, attr, event, styleBehavior, Behavior, INode } from "@aelea/core"
-import { $column, $icon, $row, $TextField, layoutSheet } from "@aelea/ui-components"
+import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
 import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET } from "gambit-middleware"
@@ -7,7 +7,6 @@ import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
-import { $Popover2 } from "./$Popover"
 import { $Transaction } from "./$TransactionDetails"
 import { $ButtonPrimary } from "./form/$Button"
 import * as provider from 'metamask-provider'
@@ -120,8 +119,8 @@ const $ClaimForm = (address: string) => component((
         mergeArray([
           now(
             $column(layoutSheet.spacing, style({ width: '400px' }))(
-              $text('Claim Account'),
-              $text(style({ color: pallete.foreground, fontSize: '.75em' }))(`Claiming account will make your name appear on the leaderboard`),
+              $text(style({ fontSize: '1.25em' }))('Claim Account'),
+              $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`Claiming account will make your name appear on the leaderboard`),
               $node(),
               // chain(x => $text(String(x)), wallet),
               $TextField({
@@ -202,7 +201,7 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
 
 
   return [
-    $Popover2({
+    $Popover({
       dismiss: claimedAccount,
       $$popContent: map(() => {
         return $ClaimForm(address)({
