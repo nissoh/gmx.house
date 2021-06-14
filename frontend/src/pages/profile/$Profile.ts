@@ -5,7 +5,7 @@ import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMA
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { intervalInMsMap } from "../../logic/constant"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, zipArray, now } from "@most/core"
+import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, zipArray, now, debounce, tap } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
 import { $alert, $anchor, $seperator, $tokenLabel } from "../../elements/$common"
@@ -158,26 +158,9 @@ export const $Profile = (config: IAccount) => component((
     }, accountHistoryPnL, chartInterval)
   )
 
-  const historicLes = zipArray((historicKline, historicalPnl) => ({ historicKline, historicalPnl }), [historicKline, historicalPnl])
-  const combinedState = combineArray(({ historicKline, historicalPnl }, accountHistoryPnL) => {
-    return { historicKline, historicalPnl, accountHistoryPnL }
-  }, historicLes, accountHistoryPnL)
+
 
   
-  // const combinedState = multicast(
-  //   snapshot(
-  //     ({ selectedToken, chartInterval }, state) => {
-  //       return { ...state, selectedToken, chartInterval }
-  //     },
-  //     combineObject({ chartInterval, selectedToken }),
-  //     multicast(combineObject({
-  //       accountHistoryPnL,
-  //       historicKline,
-  //       historicalPnl
-  //     }))
-  //   )
-  // )
-
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
 
   const timeframePnLCounter: Stream<number> = combineArray(
@@ -198,13 +181,15 @@ export const $Profile = (config: IAccount) => component((
     ])
   )
 
+  
+  
   return [
     $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
         $row(style({ placeContent: 'center' }))(
           $alert(
-            $text(`Fees are unaccounted in Realised P/L (WIP)`)
+            $text(`Fees are unaccounted in Realised PnL (WIP)`)
           ),
         ),
 
@@ -451,7 +436,7 @@ export const $Profile = (config: IAccount) => component((
           backgroundImage: `radial-gradient(at right center, ${pallete.background} 50%, transparent)`,
           background: pallete.background
         }))(
-          switchLatest(snapshot(({ chartInterval, selectedToken }, data) => {
+          switchLatest(snapshot(({ chartInterval, selectedToken, accountHistoryPnL }, historicKline) => {
             return $Chart({
               initializeSeries: map(api => {
 
@@ -481,7 +466,7 @@ export const $Profile = (config: IAccount) => component((
                   wickUpColor: pallete.foreground,
                 })
 
-                series.setData(data.historicKline.map(d => ({ ...d, time: timeTzOffset(d.time) })))
+                series.setData(historicKline.map(d => ({ ...d, time: timeTzOffset(d.time) })))
 
 
 
@@ -500,8 +485,8 @@ export const $Profile = (config: IAccount) => component((
 
 
                 setTimeout(() => {
-                  const fstTick = data.historicKline[0]
-                  const increasePosMarkers = data.accountHistoryPnL.increasePositions
+                  const fstTick = historicKline[0]
+                  const increasePosMarkers = accountHistoryPnL.increasePositions
                     .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
                     .map((pos): SeriesMarker<Time> => {
                       return {
@@ -511,7 +496,7 @@ export const $Profile = (config: IAccount) => component((
                         time: timeTzOffset(pos.createdAt.getTime()),
                       }
                     })
-                  const closePosMarkers = data.accountHistoryPnL.closedPositions
+                  const closePosMarkers = accountHistoryPnL.closedPositions
                     .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
                     .map((pos): SeriesMarker<Time> => {
                       return {
@@ -522,7 +507,7 @@ export const $Profile = (config: IAccount) => component((
                         time: timeTzOffset(pos.createdAt.getTime()),
                       }
                     })
-                  const liquidatedPosMarkers = data.accountHistoryPnL.liquidatedPositions
+                  const liquidatedPosMarkers = accountHistoryPnL.liquidatedPositions
                     .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
                     .map((pos): SeriesMarker<Time> => {
                       return {
@@ -583,7 +568,7 @@ export const $Profile = (config: IAccount) => component((
             // crosshairMove: sampleChartCrosshair(),
             // click: sampleClick()
             })
-          }, combineObject({ chartInterval, selectedToken }), combinedState))
+          }, combineObject({ chartInterval, selectedToken, accountHistoryPnL }), historicKline))
         ),
       )
     ),

@@ -224,14 +224,14 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
 
         switchLatest(
           combineArray((claim, account) => {
-            return account && claim?.address === account
-              ? empty()
-              : mergeArray([
+            return !account || account && account === address
+              ? mergeArray([
                 $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
-                  $text('Claim')
+                  $text(claim && claim.address === account ? 'Rename' : 'Claim')
                 ),
                 $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
               ])
+              : empty()
           }, profileDisplay, account)
         ),
         

@@ -202,6 +202,8 @@ const run = async () => {
   
 
   const publicDir = __dirname + './../../../frontend/dist'
+
+  // @ts-ignore
   app.use(express.json())
   app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))

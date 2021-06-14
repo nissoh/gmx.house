@@ -96,7 +96,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', alignSelf: 'center' }))(
       $row(style({ placeContent: 'center' }))(
         $alert(
-          $text(`Fees are unaccounted in Realised P/L (WIP)`)
+          $text(`Fees are unaccounted in Realised PnL (WIP)`)
         ),
       ),
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
@@ -135,7 +135,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               columns: [
                 {
                   $head: $text('Account'),
-                  columnOp: style({  }),
+                  columnOp: style({ flex: 4 }),
                   valueOp: map(x => {
                     return switchLatest(
                       map(claimList => {
@@ -147,21 +147,21 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
                 {
                   $head: $text('Wins'),
-                  columnOp: style({ maxWidth: '100px', placeContent: 'center' }),
+                  columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
                     return $text(String(x.profitablePositionsCount))
                   })
                 },
                 {
                   $head: $text('Losses'),
-                  columnOp: style({ maxWidth: '100px', placeContent: 'center' }),
+                  columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
                     return $text(String(x.settledPositionCount - x.profitablePositionsCount))
                   })
                 },
                 {
-                  $head: $text('realisedPnl'),
-                  columnOp: style({ placeContent: 'flex-end', maxWidth: '160px' }),
+                  $head: $text('Realised PnL'),
+                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)
                     return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
