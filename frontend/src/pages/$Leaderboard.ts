@@ -97,7 +97,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       $row(layoutSheet.spacingSmall, style({placeContent: 'center'}))(
         $text('Gambit Kickoff Tournament Has started!'),
         $anchor(attr({ href: '/p/tournament' }))(
-          $text('Tournament Ladder')
+          $text('Ladder Tournament')
         ),
       ),
       $row(style({ placeContent: 'center' }))(
