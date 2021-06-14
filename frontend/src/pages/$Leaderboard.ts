@@ -94,7 +94,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacingSmall)(
+      $row(layoutSheet.spacingSmall, style({placeContent: 'center'}))(
         $text('Gambit Kickoff Tournament Has started!'),
         $anchor(attr({ href: '/p/tournament' }))(
           $text('Tournament Ladder')
