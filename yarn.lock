@@ -811,6 +811,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/express-serve-static-core@npm:^4.17.21":
+  version: 4.17.21
+  resolution: "@types/express-serve-static-core@npm:4.17.21"
+  dependencies:
+    "@types/node": "*"
+    "@types/qs": "*"
+    "@types/range-parser": "*"
+  checksum: 27a95fa85dfbc5c7e6aa6e2fbd27eb621fe4e49d38be89b9bfa0b6c1defd30e6f9a5109f14ebfa0c7de967950e742d36cd0354158443b684032974c0abf7308d
+  languageName: node
+  linkType: hard
+
 "@types/express-session@npm:^1.17.3":
   version: 1.17.3
   resolution: "@types/express-session@npm:1.17.3"
@@ -894,7 +905,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
+"@types/node@npm:*, @types/node@npm:15.6.1":
   version: 15.6.1
   resolution: "@types/node@npm:15.6.1"
   checksum: 8ed16d4f7404203d3aade0b73e58c969fab4a721cfe637eff9b739f6b25a35e33dfe9e0961b9ac5994d629302faa977f8ee8931d09187a136875f966332cc552
@@ -3666,8 +3677,9 @@ fsevents@~2.3.1:
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
     "@types/express": ^4.17.12
+    "@types/express-serve-static-core": ^4.17.21
     "@types/express-session": ^1.17.3
-    "@types/node": ^15.12.2
+    "@types/node": 15.6.1
     "@types/ws": ^7.4.4
     concurrently: ^6.2.0
     dotenv: ^10.0.0

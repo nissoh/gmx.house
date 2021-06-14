@@ -1055,6 +1055,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/range-parser", "npm:1.2.3"]
           ],
           "linkType": "HARD",
+        }],
+        ["npm:4.17.21", {
+          "packageLocation": "./.yarn/cache/@types-express-serve-static-core-npm-4.17.21-a9ca773254-27a95fa85d.zip/node_modules/@types/express-serve-static-core/",
+          "packageDependencies": [
+            ["@types/express-serve-static-core", "npm:4.17.21"],
+            ["@types/node", "npm:15.6.1"],
+            ["@types/qs", "npm:6.9.6"],
+            ["@types/range-parser", "npm:1.2.3"]
+          ],
+          "linkType": "HARD",
         }]
       ]],
       ["@types/express-session", [
@@ -4448,8 +4458,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@most/scheduler", "npm:1.3.0"],
             ["@most/types", "npm:1.1.0"],
             ["@types/express", "npm:4.17.12"],
+            ["@types/express-serve-static-core", "npm:4.17.21"],
             ["@types/express-session", "npm:1.17.3"],
-            ["@types/node", "npm:15.12.2"],
+            ["@types/node", "npm:15.6.1"],
             ["@types/ws", "npm:7.4.4"],
             ["concurrently", "npm:6.2.0"],
             ["dotenv", "npm:10.0.0"],
@@ -8973,7 +8984,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@tsconfig/node12", "npm:1.0.7"],
             ["@tsconfig/node14", "npm:1.0.0"],
             ["@tsconfig/node16", "npm:1.0.1"],
-            ["@types/node", "npm:15.12.2"],
+            ["@types/node", "npm:15.6.1"],
             ["@types/swc__core", null],
             ["@types/swc__wasm", null],
             ["@types/typescript", null],

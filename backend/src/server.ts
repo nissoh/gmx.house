@@ -1,5 +1,6 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM, RequestContext } from '@mikro-orm/core'
-import express from 'express'
+import express, { RequestHandler } from 'express'
+
 import http from 'http'
 import { dto } from './dto'
 import config from './mikro-orm.config'
@@ -203,8 +204,7 @@ const run = async () => {
 
   const publicDir = __dirname + './../../../frontend/dist'
 
-  // @ts-ignore
-  app.use(express.json())
+  app.use(express.json());   
   app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', leaderboardApi)
