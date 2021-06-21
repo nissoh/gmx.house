@@ -6,6 +6,10 @@ export class NativeBigIntType extends Type<bigint, string> {
   }
 
   convertToJSValue(value: string): bigint {
+    if (value.indexOf('n') > -1) {
+      return BigInt(value.slice(0, value.length - 1))
+    }
+
     return BigInt(value)
   }
 

@@ -13,7 +13,6 @@ import { accountApi, leaderboardApi } from './api'
 import path from 'path'
 import { bscNini } from './rpc'
 import { claimApi } from './api/claimAccount'
-import { PositionClose, PositionUpdate } from './dto/Vault'
 
 
 // const sessionParser = session({
@@ -66,7 +65,6 @@ const server = http.createServer(app)
     
 //   })
 // })
-
 
 const run = async () => {
   ORM = await MikroORM.init(config)
@@ -203,7 +201,7 @@ const run = async () => {
 
   const publicDir = __dirname + './../../../frontend/dist'
 
-  app.use(express.json());   
+  app.use(express.json())
   app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', leaderboardApi)

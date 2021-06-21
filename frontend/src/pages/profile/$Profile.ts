@@ -1,7 +1,7 @@
 import { $text, Behavior, component, style, styleBehavior, event, StyleCSS, $node, motion, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/core"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
 import { accountHistoricalPnLApi } from "../../logic/account"
-import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token } from "gambit-middleware"
+import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token, getPositionFee } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { intervalInMsMap } from "../../logic/constant"
 import { pallete } from "@aelea/ui-components-theme"
@@ -118,7 +118,11 @@ export const $Profile = (config: IAccount) => component((
       const initialDataStartTime = now - interval * INTERVAL_TICKS
 
       const increasePosList = historicalData.increasePositions.map(x => ({ value: 0, time: x.createdAt.getTime() }))
-      const closedPosList = historicalData.closedPositions.map(x => ({ value: formatFixed(x.realisedPnl, USD_DECIMALS), time: x.createdAt.getTime() }))
+      const closedPosList = historicalData.closedPositions.map(x => {
+        const fee = getPositionFee(x.size, x.entryFundingRate, x.entryFundingRate)
+
+        return { value: formatFixed(x.realisedPnl - fee, USD_DECIMALS), time: x.createdAt.getTime() }
+      })
       const liquidatedPosList = historicalData.liquidatedPositions.map(x => ({ value: formatFixed(-x.collateral, USD_DECIMALS), time: x.createdAt.getTime() }))
 
       const sortedParsed = [...increasePosList, ...closedPosList, ...liquidatedPosList]

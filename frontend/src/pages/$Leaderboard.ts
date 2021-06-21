@@ -3,7 +3,7 @@ import { combineArray, O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { constant, map, multicast, startWith, switchLatest } from '@most/core'
-import { formatReadableUSD } from 'gambit-middleware'
+import { formatReadableUSD, getPositionFee } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $alert, $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -62,7 +62,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
         account.settledPositions.push(pos)
         account.settledPositionCount++
-        account.realisedPnl += pos.realisedPnl
+
+        const fee = getPositionFee(pos.size, pos.entryFundingRate, pos.entryFundingRate)
+        
+        account.realisedPnl += pos.realisedPnl + -fee
 
         if (pos.realisedPnl > 0n) {
           account.profitablePositionsCount++

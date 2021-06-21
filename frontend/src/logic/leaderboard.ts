@@ -2,8 +2,7 @@ import { http } from "@aelea/ui-components"
 import { fromPromise } from "@most/core"
 import { LeaderboardApi } from "gambit-backend"
 import { SettledPosition, PositionLiquidated, Tournament } from "./types"
-
-
+import { positionLiquidatedJson, positonCloseJson } from "./utils"
 
 
 export const leaderBoardQuery = (params: LeaderboardApi) => fromPromise(
@@ -14,12 +13,7 @@ export const leaderBoardQuery = (params: LeaderboardApi) => fromPromise(
         'Content-Type': 'application/json'
       },
       parseJson: jsonList => {
-        return jsonList.map((json) => {
-          const realisedPnl = BigInt(json.realisedPnl)
-          const createdAt = new Date(json.createdAt)
-
-          return { ...json, realisedPnl, createdAt }
-        })
+        return jsonList.map(positonCloseJson)
       },
       body: JSON.stringify(params)
     }
@@ -30,21 +24,10 @@ export const tournament1Query = () => fromPromise(
   http.fetchJson<Tournament>(`/api/tournament/0`,
     {
       parseJson: jsonList => {
-        const closedPositions = jsonList.closedPositions.map((json) => {
-          const realisedPnl = BigInt(json.realisedPnl)
-          const createdAt = new Date(json.createdAt)
+        const closedPositions = jsonList.closedPositions.map(positonCloseJson)
+        const liquidatedPositions = jsonList.liquidatedPositions.map(positionLiquidatedJson)
 
-          return { ...json, realisedPnl, createdAt }
-        })
-
-        const liquidatedPositions = jsonList.liquidatedPositions.map((json) => {
-          const collateral = BigInt(json.collateral)
-          const createdAt = new Date(json.createdAt)
-
-          return { ...json, collateral, createdAt }
-        })
-
-        return { closedPositions, liquidatedPositions}
+        return { closedPositions, liquidatedPositions }
       }
     }
   )
@@ -58,12 +41,7 @@ export const liquidationsQuery = (params: LeaderboardApi) => fromPromise(
         'Content-Type': 'application/json'
       },
       parseJson: jsonList => {
-        return jsonList.map((json) => {
-          const collateral = BigInt(json.collateral)
-          const createdAt = new Date(json.createdAt)
-
-          return { ...json, collateral, createdAt }
-        })
+        return jsonList.map(positionLiquidatedJson)
       },
       body: JSON.stringify(params)
     }

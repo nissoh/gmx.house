@@ -11,17 +11,7 @@ import { $Profile } from './$Profile'
 import { Claim } from '../../logic/types'
 
 
-const USD_DECIMALS = 30
 
-
-
-// fetch('/api/claim-account', {
-//   method: 'POST', // *GET, POST, PUT, DELETE, etc.
-//   headers: {
-//     'Content-Type': 'application/json'
-//   },
-//   body: JSON.stringify({ tx: '0xc8842adcf564afaa616e4147030941d1841853062de8d6d5da52b724c0440c28' }) // body data type must match "Content-Type" header
-// })
 
 
 export interface IPortfolio<T extends BaseProvider> {

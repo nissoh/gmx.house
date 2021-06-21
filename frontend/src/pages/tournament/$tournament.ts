@@ -1,9 +1,9 @@
-import { $text, Behavior, component, style, StyleCSS } from '@aelea/core'
+import { $text, Behavior, component, style } from '@aelea/core'
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { map, multicast, startWith, switchLatest } from '@most/core'
-import { formatReadableUSD } from 'gambit-middleware'
+import { formatReadableUSD, getPositionFee } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
@@ -63,7 +63,11 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
 
         account.settledPositions.push(pos)
         account.settledPositionCount++
-        account.realisedPnl += pos.realisedPnl
+
+
+        const fee = getPositionFee(pos.size, pos.entryFundingRate, pos.entryFundingRate)
+        
+        account.realisedPnl += pos.realisedPnl + -fee
 
         if (pos.realisedPnl > 0n) {
           account.profitablePositionsCount++
