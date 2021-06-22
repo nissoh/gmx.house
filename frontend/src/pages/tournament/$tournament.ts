@@ -97,11 +97,6 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
 
   return [
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
-      $row(style({ placeContent: 'center' }))(
-        $alert(
-          $text(`Fees are unaccounted in Realised PnL (WIP)`)
-        ),
-      ),
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
           $header(layoutSheet.flex)('Tournament Season 1'),

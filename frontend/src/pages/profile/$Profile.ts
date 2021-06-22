@@ -1,7 +1,7 @@
 import { $text, Behavior, component, style, styleBehavior, event, StyleCSS, $node, motion, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/core"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
 import { accountHistoricalPnLApi } from "../../logic/account"
-import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token, getPositionFee } from "gambit-middleware"
+import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token, getPositionFee, getPositionMarginFee } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { intervalInMsMap } from "../../logic/constant"
 import { pallete } from "@aelea/ui-components-theme"
@@ -206,12 +206,6 @@ export const $Profile = (config: IAccount) => component((
   return [
     $container(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
-
-        $row(style({ placeContent: 'center' }))(
-          $alert(
-            $text(`Fees are unaccounted in Realised PnL (WIP)`)
-          ),
-        ),
 
         $row(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
           switchLatest(
@@ -518,11 +512,13 @@ export const $Profile = (config: IAccount) => component((
                   const closePosMarkers = accountHistoryPnL.closedPositions
                     .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
                     .map((pos): SeriesMarker<Time> => {
+                      const fee = getPositionMarginFee(pos.size)
+
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(pos.realisedPnl),
+                        text: '$' + formatReadableUSD(pos.realisedPnl + -fee),
                         time: timeTzOffset(pos.createdAt.getTime()),
                       }
                     })

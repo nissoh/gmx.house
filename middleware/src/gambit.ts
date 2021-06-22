@@ -26,7 +26,8 @@ function getPositionCumulativeFundingFee(size: bigint, entryFundingRate: bigint,
 }
 
 export function getPositionMarginFee(size: bigint) {
-  return size - size * (BASIS_POINTS_DIVISOR - MARGIN_FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR
+  const fee = size - size * (BASIS_POINTS_DIVISOR - MARGIN_FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR
+  return fee * 2n // TODO properly calculate cumulative fees
 }
 
 
@@ -36,5 +37,4 @@ export function getPositionFee(size: bigint, entryFundingRate: bigint, cumulativ
 
   return marginFee + fundingFee
 }
-
 

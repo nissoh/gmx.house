@@ -1,26 +1,11 @@
 import { $text, component, style, Behavior, $Node, attr } from "@aelea/core"
-import { $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
-import { pallete } from "@aelea/ui-components-theme"
-import { Wallet } from "@ethersproject/wallet"
+import { $column, layoutSheet } from "@aelea/ui-components"
 import { combine, map, merge, switchLatest } from "@most/core"
-import { Stream } from "@most/types"
 import { CHAIN } from "gambit-middleware"
-import { account, metamaskProvider, requestAccounts, network, InitMetamaskProvider, getProvider } from "metamask-provider"
-import { $jazzicon } from "../common/gAvatar"
+import { account, requestAccounts, network, getProvider } from "metamask-provider"
 import { $alert, $anchor } from "../elements/$common"
-import { $alertIcon } from "../elements/$icons"
 import { $ButtonPrimary } from "./form/$Button"
 
-
-
-// const $userConnectionStatus = (address: string) => $row(style({ backgroundColor: pallete.foreground, borderRadius: '12px', alignItems: 'center', overflow: 'hidden' }))(
-//   $row(style({ borderRadius: '12px', alignItems: 'center', padding: '0 10px' }))(
-//     $text(address.slice(0, 6) + '...' + address.slice(-4))
-//   ),
-//   $row(style({ backgroundColor: pallete.foreground, height: '40px', alignItems: 'center', padding: '0 6px' }))(
-//     $jazzicon(address)
-//   )
-// )
 
 
 export interface IIntermediateDisplay {

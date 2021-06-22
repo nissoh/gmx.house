@@ -104,11 +104,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $text('Ladder Tournament')
         ),
       ),
-      $row(style({ placeContent: 'center' }))(
-        $alert(
-          $text(`Fees are unaccounted in Realised PnL (WIP)`)
-        ),
-      ),
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
           $header(layoutSheet.flex)('Top Gambit'),
