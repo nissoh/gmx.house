@@ -187,15 +187,15 @@ const run = async () => {
     }, modelChanges)
   )
 
-  // debounce(300, mode).run({
-  //   async event(time, val) {
-  //     EM.flush()
-  //   },
-  //   error(time, err) {
-  //     console.error(err)
-  //   },
-  //   end() {}
-  // }, scheduler)
+  debounce(300, mode).run({
+    async event(time, val) {
+      EM.flush()
+    },
+    error(time, err) {
+      console.error(err)
+    },
+    end() {}
+  }, scheduler)
 
   
 
