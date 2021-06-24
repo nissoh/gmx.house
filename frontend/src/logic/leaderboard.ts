@@ -1,7 +1,7 @@
 import { http } from "@aelea/ui-components"
 import { fromPromise } from "@most/core"
 import { LeaderboardApi } from "gambit-backend"
-import { SettledPosition, PositionLiquidated, Tournament } from "./types"
+import { SettledPosition, PositionLiquidated, Tournament, Account } from "./types"
 import { positionLiquidatedJson, positonCloseJson } from "./utils"
 
 
@@ -21,13 +21,13 @@ export const leaderBoardQuery = (params: LeaderboardApi) => fromPromise(
 )
 
 export const tournament1Query = () => fromPromise(
-  http.fetchJson<Tournament>(`/api/tournament/0`,
+  http.fetchJson<Account[]>(`/api/tournament/0`,
     {
       parseJson: jsonList => {
-        const closedPositions = jsonList.closedPositions.map(positonCloseJson)
-        const liquidatedPositions = jsonList.liquidatedPositions.map(positionLiquidatedJson)
-
-        return { closedPositions, liquidatedPositions }
+        const closedPositions = jsonList.map(acc => {
+          return { ...acc, realisedPnl: BigInt(acc.realisedPnl) }
+        })
+        return closedPositions
       }
     }
   )

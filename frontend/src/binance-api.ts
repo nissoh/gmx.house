@@ -1,8 +1,7 @@
 import { http } from "@aelea/ui-components"
 import { filter, fromPromise, map, merge, multicast, now, skipRepeatsWith, switchLatest, throttle } from "@most/core"
-import { timeTzOffset } from "gambit-middleware"
+import { intervalInMsMap, timeTzOffset } from "gambit-middleware"
 import { BarData, UTCTimestamp } from "lightweight-charts"
-import { intervalInMsMap } from "./logic/constant"
 
 
 
