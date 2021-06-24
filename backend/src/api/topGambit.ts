@@ -55,7 +55,7 @@ leaderboardApi.get('/tournament/0', async (req, res) => {
         createdAt: getTimespanParams({ timeRange: [start, end] }),
       })
   ).filter((pos, posIdx) => initPositions.find((ip, ipIdx) => {
-    return ip.key === pos.key && posIdx >= ipIdx && ip.createdAt.getTime() > pos.createdAt.getTime()
+    return ip.key === pos.key
   }))
   
 
