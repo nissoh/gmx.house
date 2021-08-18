@@ -83,7 +83,10 @@ const run = async () => {
 
   
 
-  const publicDir = path.resolve(__dirname, './../../frontend/dist')
+  const publicDir = path.resolve(process.cwd(), '.dist/cjs/public')
+
+  console.log('cwd', process.cwd())
+  console.log('dir', publicDir)
 
   app.use(express.json())
   app.use(express.static(publicDir))

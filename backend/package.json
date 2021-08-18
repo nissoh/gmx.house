@@ -16,7 +16,7 @@
         "clean": "yarn g:tsc:clean",
         "build:project": "yarn g:tsc:project",
         "build:cjs": "yarn g:tsc:cjs",
-        "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
+        "build": "yarn build:cjs"
     },
     "dependencies": {
         "@aelea/core": "0.18.0",
