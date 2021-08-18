@@ -2,7 +2,7 @@ import { BaseProvider } from "@ethersproject/providers"
 import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS } from "./constant"
 import { listen } from "./contract"
-import { Vault__factory } from "./contract/"
+import { Vault__factory } from "./contract/ethers-contracts/factories/Vault__factory"
 import { IAccountAggregatedSummary, IAggregateSettledTrade, IAggregateTrade } from "./types"
 
 

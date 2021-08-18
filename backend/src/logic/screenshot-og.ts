@@ -10,7 +10,7 @@ const exePath =
 
 async function runPuppeteer() {
   const browser = await puppeteer.launch({
-    args: [],
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
     executablePath: exePath,
     headless: true,
     defaultViewport: {

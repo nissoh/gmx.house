@@ -12,7 +12,7 @@ import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
 import { aggregatedTradeSettled, leaderboard, tournament } from './api'
 import { initAggTrades, modelChanges, openPositions } from './logic/positions'
-import { AggregatedTrade } from './dto/Vault'
+import { AggregatedTrade, AggregatedTradeSettled } from './dto/Vault'
 import { openGraphScreenshot } from './logic/linkOGShot'
 
 
@@ -40,12 +40,13 @@ const run = async () => {
   ORM = await MikroORM.init(config)
   EM = ORM.em
 
-  const openAggTrades = await EM.find(AggregatedTrade, {})
+  const aggregatedTrades = await EM.find(AggregatedTradeSettled, {})
 
-  if (openAggTrades.length === 0) {
+  if (aggregatedTrades.length === 0) {
     await initAggTrades()
   } else {
-    openAggTrades.forEach(agg => openPositions.set(agg.key, agg))
+    const aggregatedTrades = await EM.find(AggregatedTrade, {})
+    aggregatedTrades.forEach(agg => openPositions.set(agg.key, agg))
   }
 
   console.log(`Initiating with ${openPositions.size} open positions`)
@@ -87,7 +88,6 @@ const run = async () => {
   app.use(express.json())
   app.use(express.static(publicDir))
   app.use((req, res, next) => RequestContext.create(ORM.em, next))
-  // app.use('/api', leaderboardApi)
   app.use('/api', openGraphScreenshot)
   app.use('/api', claimApi)
   app.use('/api', accountApi)
