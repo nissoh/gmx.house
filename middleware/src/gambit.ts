@@ -1,9 +1,9 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS } from "./constant"
+import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { Vault__factory } from "./contract/ethers-contracts/factories/Vault__factory"
-import { IAccountAggregatedSummary, IAggregateSettledTrade, IAggregateTrade } from "./types"
+import { IAccountAggregatedSummary, IAggregateSettledTrade } from "./types"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {

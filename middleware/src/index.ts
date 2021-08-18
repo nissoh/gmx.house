@@ -1,4 +1,5 @@
 export * from './contract'
+export * from './contract/index'
 export * from './provider'
 export * from './types'
 export * from './utils'
