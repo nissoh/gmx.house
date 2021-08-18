@@ -1,12 +1,8 @@
-import { EtherscanProvider, JsonRpcProvider } from "@ethersproject/providers"
+import { WebSocketProvider } from "@ethersproject/providers"
 
 
-export const bscNini = new JsonRpcProvider(
-  "https://bsc-dataseed1.ninicoin.io/",
-  {
-    chainId: 56,
-    name: "bsc-mainnet",
-  }
+export const provider = new WebSocketProvider(
+  "wss://arb-mainnet.g.alchemy.com/v2/plN3HlsQHek6-EiZjJO9BmDcqNGbW7X4"
 )
 
 // const provider = new EtherscanProvider()

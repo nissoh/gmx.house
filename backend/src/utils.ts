@@ -1,18 +1,11 @@
 
 export const timespanPassedSinceInvoke = (timespan: number) => {
-  let lastTimePasses: null | number = null
+  let lastTimePasses = 0
 
   return () => {
     const now = Date.now()
 
-    if (lastTimePasses === null) {
-      lastTimePasses = now
-      return true
-    }
-
-    const timespannedSinceLastSuccess = now - lastTimePasses
-
-    if (timespannedSinceLastSuccess > timespan) {
+    if (now - lastTimePasses > timespan) {
       lastTimePasses = now
       return true
     }

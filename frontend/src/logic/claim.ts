@@ -1,10 +1,8 @@
 import { http } from "@aelea/ui-components"
 import { fromPromise } from "@most/core"
-import { Claim } from "./types"
-
-
+import { IClaim } from "gambit-middleware"
 
 
 export const claimListQuery = () => fromPromise(
-  http.fetchJson<Claim[]>(`/api/claim-list`)
+  http.fetchJson<IClaim[]>(`/api/claim-list`)
 )

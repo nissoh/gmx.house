@@ -1,8 +1,8 @@
-import { component, $node, style, $text, attr, event, styleBehavior, Behavior, INode } from "@aelea/core"
+import { component, $node, style, $text, attr, event, styleBehavior, Behavior, INode, $element } from "@aelea/core"
 import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
-import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET } from "gambit-middleware"
+import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET, IClaim, shortPostAdress } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
@@ -11,11 +11,10 @@ import { $Transaction } from "./$TransactionDetails"
 import { $ButtonPrimary } from "./form/$Button"
 import * as provider from 'metamask-provider'
 import { combineArray, combineObject } from "@aelea/utils"
-import { Claim } from "../logic/types"
 import { TransactionReceipt } from "@ethersproject/providers"
 import { account } from "metamask-provider"
 
-type IMaybeClaimIdentity = Pick<Claim, 'identity'> | null
+type IMaybeClaimIdentity = Pick<IClaim, 'identity'> | null
 
 export interface IProfile {
   address: string
@@ -27,7 +26,7 @@ export interface IProfile {
 
 
 
-const $photoContainer = $node(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
+const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
 
 export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = 42) => {
   const identity = claim?.identity.split(/^@/)
@@ -35,10 +34,11 @@ export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size 
 
   if (isTwitter) {
     const username = identity![1]
-    const imageUrl = fromPromise(
-      fetch(`https://unavatar.vercel.app/twitter/${username}`).then(async x => URL.createObjectURL(await x.blob()))
-    )
-    return $photoContainer(style({ width: size + 'px', height: size + 'px' }), styleBehavior(map(url => ({ backgroundImage: `url(${url})` }), imageUrl)))()
+
+    return $photoContainer(
+      style({ width: size + 'px', height: size + 'px' }),
+      attr({ src: `https://unavatar.vercel.app/twitter/${username}` })
+    )()
   }
 
   return $jazzicon(address, size)
@@ -51,7 +51,10 @@ export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity) => {
     return $text(claim.identity.startsWith('@') ? '@' + identity : identity)
   }
 
-  return $text(shortenAddress(address))
+  return $column(style({ alignItems: 'center' }))(
+    $text(style({ color: pallete.foreground, fontSize: '.7em' }))(address.slice(0, 6)),
+    $text(address.slice(address.length -4, address.length))
+  )
 }
 
 function extractClaimIdentityName(address: string, claim: IMaybeClaimIdentity) {
@@ -88,7 +91,7 @@ const $ClaimForm = (address: string) => component((
   [display, displayTether]: Behavior<string, string>,
   [claimTx, claimTxTether]: Behavior<PointerEvent, string>,
   [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<string, string>,
-  [claimSucceed, claimSucceedTether]: Behavior<TransactionReceipt, Claim>,
+  [claimSucceed, claimSucceedTether]: Behavior<TransactionReceipt, IClaim>,
 ) => {
 
   const claimBehavior = claimTxTether(
@@ -160,7 +163,7 @@ const $ClaimForm = (address: string) => component((
           map(tx => styleBehavior(now({ opacity: '1' }), $Transaction(tx)({
             txSucceeded: claimSucceedTether(
               map(async (txRecpt) => {
-                const claim: Claim = await (await fetch('/api/claim-account', {
+                const claim: IClaim = await (await fetch('/api/claim-account', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json'
@@ -187,7 +190,7 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
   [display, displayTether]: Behavior<any, string>,
-  [claimedAccount, claimedAccountTether]: Behavior<Claim, Claim>
+  [claimedAccount, claimedAccountTether]: Behavior<IClaim, IClaim>
 
 ) => {
 

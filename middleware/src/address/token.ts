@@ -1,6 +1,6 @@
 import { groupByMap } from "@aelea/utils"
 import { Token } from "../types"
-import { BSC_CONTRACTS } from "./contract"
+import { ARBITRUM_CONTRACTS } from "./contract"
 import { SYMBOL } from "./symbol"
 
 export const AddressZero = "0x0000000000000000000000000000000000000000"
@@ -10,31 +10,25 @@ export const TOKENS_BSC = [
     name: "Bitcoin",
     symbol: SYMBOL.BTC,
     decimals: 18,
-    address: BSC_CONTRACTS.BTC,
+    address: ARBITRUM_CONTRACTS.BTC,
   },
   {
     name: "Ethereum",
     symbol: SYMBOL.ETH,
     decimals: 18,
-    address: BSC_CONTRACTS.ETH,
-  },
-  {
-    name: "Binance Coin",
-    symbol: SYMBOL.BNB,
-    decimals: 18,
-    address: BSC_CONTRACTS.WBNB,
+    address: ARBITRUM_CONTRACTS.WETH,
   },
   {
     name: "USD Gambit",
     symbol: SYMBOL.USDG,
     decimals: 18,
-    address: BSC_CONTRACTS.USDG
+    address: ARBITRUM_CONTRACTS.USDG
   },
   {
-    name: "USD Binance",
+    name: "USD Coin",
     symbol: SYMBOL.BUSD,
-    decimals: 18,
-    address: BSC_CONTRACTS.BUSD
+    decimals: 6,
+    address: ARBITRUM_CONTRACTS.USDC
   }
 ] as Token[]
 

@@ -2,22 +2,21 @@ import { $text, component, style } from '@aelea/core'
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { map, switchLatest } from '@most/core'
-import { formatReadableUSD, getPositionFee } from 'gambit-middleware'
+import { map, now, switchLatest } from '@most/core'
+import { Account, formatReadableUSD, IClaim } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { Claim } from 'gambit-backend/src/dto/Account'
 import { $AccountProfile } from '../../components/$AccountProfile'
-import { tournament1Query } from '../../logic/leaderboard'
-import { Account } from '../../logic/types'
 import { isMobileScreen } from '../../common/utils'
 
 
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
-  claimList: Stream<Claim[]>
+  claimList: Stream<IClaim[]>
+
+  tournamentQuery: Stream<Account[]>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
@@ -31,7 +30,7 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
 
   const dataSource: Stream<TablePageResponse<Account>> = map((data) => {
     return { data }
-  }, tournament1Query())
+  }, config.tournamentQuery)
 
 
   return [
@@ -48,7 +47,6 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
       ),
       $card(layoutSheet.spacingBig, style({ padding: isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
         $column(layoutSheet.spacing)(
-
           $Table<Account>({
             bodyContainerOp: O(layoutSheet.spacing),
             dataSource,
@@ -90,9 +88,12 @@ export const $Tournament = <T extends BaseProvider>(config: ILeaderboard<T>) => 
             ],
           })({})
         ),
-
       ),
     ),
+
+    {
+      tournamentQuery: now('')
+    }
   ]
 })
 

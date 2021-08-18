@@ -1,17 +1,22 @@
 import { multicast } from "@most/core"
 import { fromCallback } from "@aelea/utils"
 import { Signer } from "@ethersproject/abstract-signer"
-import { BaseContract, Contract, ContractTransaction } from "@ethersproject/contracts"
+import { BaseContract, ContractTransaction } from "@ethersproject/contracts"
 
 import { Stream } from '@most/types'
 import { Address } from "./types"
 import { TypedEventFilter } from "./contract/ethers-contracts/commons"
 import { BaseProvider } from "@ethersproject/providers"
+import { BigNumber } from "@ethersproject/bignumber"
 
 
+export type ConvertTypeToBigInt<T> = {
+  [P in keyof T]: T[P] extends BigNumber ? bigint : T[P]
+}
 
 export type ConnectFactoryFn<T extends BaseContract> = (address: Address, signerOrProvider: Signer | BaseProvider) => T
 export type ExtractEventType<A extends BaseContract, B extends keyof A['filters']> = ReturnType<A['filters'][B]> extends TypedEventFilter<never, infer Z> ? Z : never
+export type ExtractAndParseEventType<A extends BaseContract, B extends keyof A['filters']> = ConvertTypeToBigInt<ReturnType<A['filters'][B]> extends TypedEventFilter<never, infer Z> ? Z : never>
 
 export interface IContractBase<T extends BaseContract> {
   contract: T
@@ -24,7 +29,6 @@ export interface IContract<T extends BaseContract> extends IContractBase<T> {
 }
 
 export const listen = <T extends BaseContract>(contract: T) => <EventName extends string>(eventName: EventName): Stream<ExtractEventType<T, EventName>> => {
-
   return multicast(
     fromCallback(
       cb => {

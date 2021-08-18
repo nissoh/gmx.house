@@ -6,4 +6,6 @@ export * from './address'
 export * from './gambit'
 export * from './transaction'
 export * from './constant'
+export * from './tether'
+export * from './comTypes'
 

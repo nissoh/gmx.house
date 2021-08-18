@@ -1,17 +1,14 @@
 import { $text, Behavior, event, component, style, styleBehavior, StyleCSS, attr } from '@aelea/core'
-import { combineArray, O, } from '@aelea/utils'
+import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, startWith, switchLatest } from '@most/core'
-import { formatReadableUSD, getPositionFee, intervalInMsMap } from 'gambit-middleware'
+import { constant, map, multicast, now, startWith, switchLatest, tap } from '@most/core'
+import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAccountAggregatedSummary } from 'gambit-middleware'
 import { Route } from '@aelea/router'
-import { $alert, $anchor } from '../elements/$common'
+import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { leaderBoardQuery, liquidationsQuery } from '../logic/leaderboard'
 import { $AccountProfile } from '../components/$AccountProfile'
-import { LeaderboardApi } from 'gambit-backend'
-import { Account, Claim } from '../logic/types'
 import { isMobileScreen } from '../common/utils'
 
 
@@ -19,7 +16,9 @@ import { isMobileScreen } from '../common/utils'
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
-  claimList: Stream<Claim[]>
+  claimList: Stream<IClaim[]>
+
+  leaderboardQuery: Stream<Account[]>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
@@ -41,68 +40,18 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
-  const timeFrameState = multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x))))
+  const timeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
   
-  
-  const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
 
-    return combineArray((settled, liqs) => {
-
-      const topMap = settled.reduce((seed, pos) => {
-        const account = seed[pos.account] ??= {
-          address: pos.account,
-          settledPositionCount: 0,
-          claim: null,
-          profitablePositionsCount: 0,
-          realisedPnl: 0n,
-          settledPositions: [],
-        }
-
-        account.settledPositions.push(pos)
-        account.settledPositionCount++
-
-        const fee = getPositionFee(pos.size, pos.entryFundingRate, pos.entryFundingRate)
-        
-        account.realisedPnl += pos.realisedPnl + -fee
-
-        if (pos.realisedPnl > 0n) {
-          account.profitablePositionsCount++
-        }
-
-        return seed
-      }, {} as {[account: string]: Account})
-
-      const allAccounts = Object.values(topMap)
-      
-      liqs.forEach(liq => {
-        const liqqedTopAccount = topMap[liq.account]
-        if (liqqedTopAccount) {
-          liqqedTopAccount.realisedPnl -= liq.collateral
-          liqqedTopAccount.settledPositionCount++
-        }
-      })
-
-      return {
-        data: allAccounts
-          .sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
-          // .filter(a => a.realisedPnl > 0)
-      }
-    }, leaderBoardQuery(params), liquidationsQuery(params))
-  }, timeFrame)
-
-
+  const topGambit: Stream<TablePageResponse<IAccountAggregatedSummary>> = map((tournament) => {
+    return { data: tournament }
+  }, config.leaderboardQuery)
 
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacingSmall, style({ placeContent: 'center' }))(
-        $text('Gambit Kickoff Tournament Has started!'),
-        $anchor(attr({ href: '/p/tournament' }))(
-          $text('Ladder Tournament')
-        ),
-      ),
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
           $header(layoutSheet.flex)('Top Gambit'),
@@ -133,9 +82,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         $column(layoutSheet.spacing)(
 
           switchLatest(map((dataSource) => {
-            return $Table<Account>({
+            return $Table<IAccountAggregatedSummary>({
               bodyContainerOp: O(layoutSheet.spacing),
-              dataSource,
+              dataSource: now(dataSource),
               columns: [
                 {
                   $head: $text('Account'),
@@ -150,21 +99,21 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })
                 },
                 {
-                  $head: $text('Wins'),
+                  $head: $text('Win/Loss'),
                   columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
-                    return $text(String(x.profitablePositionsCount))
+                    return $text(`${x.profitablePositionsCount}/${x.settledPositionCount - x.profitablePositionsCount}`)
                   })
                 },
                 {
-                  $head: $text('Losses'),
+                  $head: $text('Leverage'),
                   columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
-                    return $text(String(x.settledPositionCount - x.profitablePositionsCount))
+                    return $text(`${formatFixed(x.leverage, 4).toFixed(1)}x`)
                   })
                 },
                 {
-                  $head: $text('Realised PnL'),
+                  $head: $text('Settled P/L'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)
@@ -178,6 +127,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
       ),
     ),
+
+    {
+      leaderboardQuery: timeFrame
+    }
   ]
 })
 

@@ -20,7 +20,7 @@ export const $alert = ($contnet: $Branch) => $row(layoutSheet.spacingSmall, styl
 )
 
 export const $anchor = $element('a')(
-  stylePseudo(':hover', { color: pallete.primary, fill: pallete.primary }),
+  stylePseudo(':hover', { color: pallete.primary + '!important', fill: pallete.primary }),
   style({
     display: 'flex',
     cursor: 'pointer',

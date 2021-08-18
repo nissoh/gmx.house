@@ -11,8 +11,12 @@ export const EXPLORER_URL = {
   [CHAIN.ETH]: "https://etherscan.io/",
   [CHAIN.ETH_KOVAN]: "https://kovan.etherscan.io/",
   [CHAIN.ETH_ROPSTEN]: "https://ropsten.etherscan.io/",
+
   [CHAIN.BSC]: "https://bscscan.com/",
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
+
+  [CHAIN.ARBITRUM]: "https://explorer.arbitrum.io/",
+  [CHAIN.ARBITRUM_RINKBY]: "https://rinkeby-explorer.arbitrum.io/",
 } as const
 
 
@@ -26,6 +30,10 @@ export function isAddress(address: string) {
 
 export function shortenAddress(address: string, padRight = 4, padLeft = 6) {
   return address.slice(0, padLeft) + "..." + address.slice(address.length -padRight, address.length)
+}
+
+export function shortPostAdress(address: string) {
+  return address.slice(address.length -4, address.length)
 }
 
 export function readableUSD(ammount: string) {

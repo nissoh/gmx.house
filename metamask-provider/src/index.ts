@@ -1,12 +1,10 @@
-import { fromCallback, Pipe } from '@aelea/utils'
-import { ExternalProvider, JsonRpcSigner, Network, Web3Provider } from '@ethersproject/providers'
-import { awaitPromises, chain, filter, fromPromise, map, merge, multicast, now, startWith, switchLatest } from "@most/core"
+import { fromCallback } from '@aelea/utils'
+import { ExternalProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
+import { awaitPromises, chain, fromPromise, map, merge, now, switchLatest } from "@most/core"
 import { disposeWith } from "@most/disposable"
-import { Disposable, Scheduler, Sink, Stream } from "@most/types"
+import { Stream } from "@most/types"
 import detectEthereumProvider from '@metamask/detect-provider'
 import { awaitProvider, CHAIN, getTxDetails } from 'gambit-middleware'
-
-
 
 
 

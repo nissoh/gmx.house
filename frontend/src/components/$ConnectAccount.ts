@@ -45,9 +45,9 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
           combine((chain, account) => {
             if (account === undefined)
               return $connectButton
-            if (chain !== CHAIN.BSC)
+            if (chain !== CHAIN.ARBITRUM)
               return $alert(
-                $text('Switch to BSC Network')
+                $text('Switch to Arbitrum Network')
               )
             return config.$display
           }, network, account)

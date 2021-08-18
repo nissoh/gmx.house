@@ -2,8 +2,8 @@ import { $element, $node, $text, attr, Behavior, component, eventElementTarget, 
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
-import { empty, map, merge, multicast, now } from '@most/core'
-import { $github, $logo } from '../elements/$icons'
+import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
+import { $github } from '../elements/$icons'
 import { designSheet } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 
@@ -16,6 +16,11 @@ import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 import { $Tournament } from './tournament/$tournament'
 import { isDesktopScreen } from '../common/utils'
+import { helloBackend } from '../logic/leaderboard'
+import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateTrade, LeaderboardApi, toAggregatedSummary } from 'gambit-middleware'
+import { aggregatedSettledTradeJson, aggregatedTradeJson, leaderboardAccountJson } from '../logic/utils'
+import { $Card } from './$Card'
+import { $logo } from '../common/$icons'
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -32,6 +37,9 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
+  [leaderboard, leaderboardTether]: Behavior<LeaderboardApi, LeaderboardApi>,
+  [tournament, tournamentQueryTether]: Behavior<'', Account[]>,
+  [aggregatedTradeListQuery, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -52,93 +60,122 @@ export default ({ baseRoute = '' }: Website) => component((
   const tournamentRoute = pagesRoute.create({ fragment: 'tournament', title: 'Gambit Tournament' })
   const portfolioRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
+  const cardRoute = rootRoute.create({
+    fragment: 'card',
+    title: 'Card'
+  })
+
+
+
   const rootStore = state.createLocalStorageChain('store')
 
   const claimList = claimListQuery()
 
+  const clientApi = helloBackend({
+    aggregatedTradeSettled: aggregatedTradeListQuery,
+    leaderboard,
+    tournament,
+  })
+
   return [
-    $node(designSheet.main, style({ fontFamily: `'Nunito'`,  fontWeight: 300, backgroundImage: `radial-gradient(at center center, ${pallete.horizon} 50%, ${pallete.background})`, alignItems: 'center', placeContent: 'center' }))(
-      router.match(rootRoute)(
-        $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
-          $row(style({ alignItems: 'center', width: '100%' }))(
-            $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
-              $text(style({  }))(`Interest-generating Stable Currency`),
-              $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`Gambit Community`),
-              $text(style({  }))(`Leveraging-Protocol with Zero slippage`),
+    mergeArray([
+      $node(designSheet.main, style({ fontFamily: `'Nunito'`,  fontWeight: 300, backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
+        router.match(rootRoute)(
+          $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
-              $node(),
-              $node(),
-              $node(),
-              $node(),
+            $row(style({ alignItems: 'center', width: '100%' }))(
+              $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
+                $text(style({  }))(`Novel Perpetual Protocol`),
+                $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`Gambit Community`),
+                $text(style({  }))(`Leveraging-Protocol with Zero slippage`),
 
-              $row(style({ justifyContent: 'center' }))(
-                $anchor(attr({ href: 'https://gambit.financial' }), style({ textDecoration: 'none' }))(
+                $node(),
+                $node(),
+                $node(),
+                $node(),
 
-                  $ButtonPrimary({
-                    $content: $text('https://gambit.financial')
-                  })({})
+                $row(style({ justifyContent: 'center' }))(
+                  $anchor(attr({ href: 'https://gambit.financial' }), style({ textDecoration: 'none' }))(
+
+                    $ButtonPrimary({
+                      $content: $text('https://gambit.financial')
+                    })({})
+                  )
                 )
-              )
+              ),
+
+              $row(style({ flex: 1 }))()
             ),
 
-            $row(style({ flex: 1 }))()
-          ),
+            $node(),
+            $node(),
+            $node(),
 
-          $node(),
-          $node(),
-          $node(),
-
-          $row(style({ width: '100%', padding: '26px', alignItems: 'center', zIndex: 1000, borderRadius: '12px', backdropFilter: 'blur(8px)', backgroundColor: colorAlpha(pallete.background, 0.50) }))(
-            $row(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
-              $RouterAnchor({ url: '/', route: rootRoute, $anchor: $element('a')($icon({ $content: $logo, width: '45px', viewBox: '0 0 32 32' })) })({
-                click: linkClickTether()
-              }),
-              $anchor(layoutSheet.displayFlex, style({ padding: '0 4px' }), attr({ href: 'https://github.com/nissoh/gambit-community' }))(
-                $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
+            $row(style({ width: '100%', padding: '26px', alignItems: 'center', zIndex: 1000, borderRadius: '12px', backdropFilter: 'blur(8px)', backgroundColor: colorAlpha(pallete.background, 0.50) }))(
+              $row(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
+                $RouterAnchor({ url: '/', route: rootRoute, $anchor: $element('a')($icon({ $content: $logo, width: '45px', viewBox: '0 0 32 32' })) })({
+                  click: linkClickTether()
+                }),
+                $anchor(layoutSheet.displayFlex, style({ padding: '0 4px' }), attr({ href: 'https://github.com/nissoh/gambit-community' }))(
+                  $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
+                ),
+                $node(),
+                $MainMenu({ parentRoute: pagesRoute, claimList })({
+                  routeChange: linkClickTether()
+                })
               ),
-              $node(),
-              $MainMenu({ parentRoute: pagesRoute, claimList })({
+            ),
+            $cubes(),
+
+          )
+        ),
+
+        router.contains(pagesRoute)(
+          $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
+            $row(layoutSheet.spacing, style({ padding: isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
+              isDesktopScreen
+                ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
+                  click: linkClickTether()
+                })
+                : empty(),
+              isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
+              $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether()
               })
             ),
-          ),
-          $cubes(),
-
-        )
-      ),
-
-      router.contains(pagesRoute)(
-        $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-          $row(layoutSheet.spacing, style({ padding: isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
-            isDesktopScreen
-              ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
-                click: linkClickTether()
+            router.match(leaderboardRoute)(
+              $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore, claimList, leaderboardQuery: map(x => toAggregatedSummary(x.map(aggregatedSettledTradeJson)), clientApi.leaderboard) })({
+                leaderboardQuery: leaderboardTether()
               })
-              : empty(),
-            isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
-            $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
-              routeChange: linkClickTether()
-            })
-          ),
-          router.match(leaderboardRoute)(
-            $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore, claimList })({})
-          ),
-          router.match(tournamentRoute)(
-            $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList })({})
-          ),
-          router.contains(portfolioRoute)(
-            $Portfolio({ parentRoute: portfolioRoute, parentStore: rootStore, claimList  })({
-              routeChanges: linkClickTether()
-            })
+            ),
+            router.match(tournamentRoute)(
+              $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList, tournamentQuery: map(x => x.map(leaderboardAccountJson), clientApi.tournament) })({
+                tournamentQuery: tournamentQueryTether()
+              })
+            ),
+            router.contains(portfolioRoute)(
+              $Portfolio({
+                parentRoute: portfolioRoute, parentStore: rootStore, claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled) })({
+                aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+              })
+            )
           )
-        )
+        ),
       ),
+      
+      router.contains(cardRoute)(
+        $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
+          $Card({
+            parentRoute: cardRoute,
+            claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
+          })({
+            aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+          })
+        )
+      )
 
-
-      // $Picker([light, dark])({})
-    )
-
+    ])
   ]
 })
 

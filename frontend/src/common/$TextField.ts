@@ -1,8 +1,8 @@
-import { $element, $text, Behavior, component, INode, style, stylePseudo } from "@aelea/core"
-import { $column, $Field, $row, Field, layoutSheet } from "@aelea/ui-components"
-import { pallete, theme } from "@aelea/ui-components-theme"
+import { $element, $text, Behavior, component, style, stylePseudo } from "@aelea/core"
+import { $Field, Field, layoutSheet } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
 import { O } from "@aelea/utils"
-import { empty, map, merge } from "@most/core"
+import { empty } from "@most/core"
 
 
 export interface TextField extends Field {

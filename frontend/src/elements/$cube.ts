@@ -71,7 +71,7 @@ const directions = ["x", "y"] as const
 const palette = {
   background: theme.name === 'dark'
     ? {
-      color: [31, 10, 68], // rgb(56 26 99)
+      color: [22, 39, 58], // rgb(56 26 99)
       shading: [0, 0, 0] // rgb(39 38 38)
     }
     : {
@@ -81,7 +81,7 @@ const palette = {
   // 181 115 255
   middleground: theme.name === 'dark'
     ?  {
-      color: [12, 12, 17],
+      color: [22, 12, 17],
       shading: [0, 0, 0]
     }
     : {
@@ -90,8 +90,8 @@ const palette = {
     },
   primary: theme.name === 'dark'
     ?  {
-      color: [255, 54, 191], // rgb(255 54 191)
-      shading: [86, 16, 64] // rgb(86 16 64)
+      color: [7, 157, 250], // rgb(255 54 191)
+      shading: [16, 38, 51] // rgb(86 16 64)
     }
     : {
       color: [181, 115, 255],

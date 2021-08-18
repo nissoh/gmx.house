@@ -2,15 +2,14 @@ import { $text, Behavior, component, IBranch, style } from '@aelea/core'
 import { $row, layoutSheet } from '@aelea/ui-components'
 import { $Link } from '../components/$Link'
 import { Route } from '@aelea/router'
-import { pallete } from '@aelea/ui-components-theme'
 import { combineArray, O, Op } from '@aelea/utils'
-import { map, now, switchLatest } from '@most/core'
+import { now, switchLatest } from '@most/core'
 import { $IntermediateDisplay } from './$ConnectAccount'
 import { $AccountProfile } from './$AccountProfile'
-import { Claim } from '../logic/types'
 import { Stream } from '@most/types'
 import { $Picker } from './$ThemePicker'
 import { dark, light } from '../common/theme'
+import { IClaim } from 'gambit-middleware'
 
 
 
@@ -18,7 +17,7 @@ import { dark, light } from '../common/theme'
 interface MainMenu {
   parentRoute: Route
   containerOp?: Op<IBranch, IBranch>,
-  claimList: Stream<Claim[]>
+  claimList: Stream<IClaim[]>
 }
 
 export const $MainMenu = ({ parentRoute, containerOp = O(), claimList }: MainMenu) => component((

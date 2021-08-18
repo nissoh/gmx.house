@@ -1,5 +1,5 @@
 import { O, Op, fromCallback } from "@aelea/utils"
-import { BaseProvider } from "@ethersproject/providers"
+import { BaseProvider, EventType } from "@ethersproject/providers"
 import { awaitPromises, at, map, chain, recoverWith, continueWith, switchLatest, take, filter } from "@most/core"
 import { disposeWith } from "@most/disposable"
 import { Stream } from "@most/types"
@@ -8,8 +8,12 @@ export enum CHAIN {
   ETH = 1,
   ETH_ROPSTEN = 3,
   ETH_KOVAN = 42,
+
   BSC = 56,
-  BSC_TESTNET = 97
+  BSC_TESTNET = 97,
+
+  ARBITRUM = 42161,
+  ARBITRUM_RINKBY = 421611,
 }
 
 
@@ -47,11 +51,11 @@ export const providerAction = <T>(provider: Stream<BaseProvider>) => (interval: 
 }
 
 
-export const providerEvent = <A extends any[]>(provider: Stream<BaseProvider>) => (eventName: string) => map((provider: BaseProvider) => {
+export const providerEvent = <A extends any[]>(provider: Stream<BaseProvider>) => (eventType: EventType) => map((provider: BaseProvider) => {
   const eventChange: Stream<A> = fromCallback(
     cb => {
-      provider.on(eventName, cb)
-      return disposeWith(() => provider.removeListener(eventName, cb), null)
+      provider.on(eventType, cb)
+      return disposeWith(() => provider.removeListener(eventType, cb), null)
     },
     (...args) => {
       return args

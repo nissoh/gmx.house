@@ -1,64 +1,69 @@
 import { $text, Behavior, component, style, styleBehavior, event, StyleCSS, $node, motion, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/core"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { accountHistoricalPnLApi } from "../../logic/account"
-import { BSC_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, formatReadableUSD, groupByMapMany, Token, getPositionFee, getPositionMarginFee, intervalInMsMap } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, IAggregateTrade, HistoricalDataApi, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregateSettledTrade } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith } from "@most/core"
+import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
-import { $alert, $anchor, $seperator, $tokenLabel } from "../../elements/$common"
+import { $anchor, $seperator, $tokenLabel } from "../../elements/$common"
 import { state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
 import { $Chart } from "../../components/chart/$Chart"
 import { Stream } from "@most/types"
-import { Claim } from "../../logic/types"
 import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
-import { isDesktopScreen } from "../../common/utils"
+import { fillIntervalGap, isDesktopScreen } from "../../common/utils"
 
+
+// $('head').append('<meta property="og:type" content="profile"/>'); 
+// $('head').append('<meta property="og:url" content=""/>');
+// $('head').append("<meta property='og:title' content="+text+"'/>");
+// $('head').append("<meta property='og:image' content="+imageUrl+"'/>");
+
+// <!-- Facebook Meta Tags -->
+// <meta property="og:url" content="https://github.com/nissoh/gambit-community/">
+// <meta property="og:type" content="website">
+// <meta property="og:title" content="GitHub - nissoh/gambit-community">
+// <meta property="og:description" content="">
+// <meta property="og:image" content="https://opengraph.githubassets.com/e7524617695ce52985012b8a06b5eb11d8b95be30582523c69e6a0c8c536dc13/nissoh/gambit-community">
+
+// <!-- Twitter Meta Tags -->
+// <meta name="twitter:card" content="summary_large_image">
+// <meta property="twitter:domain" content="github.com">
+// <meta property="twitter:url" content="https://github.com/nissoh/gambit-community/">
+// <meta name="twitter:title" content="GitHub - nissoh/gambit-community">
+// <meta name="twitter:description" content="">
+// <meta name="twitter:image" content="https://opengraph.githubassets.com/e7524617695ce52985012b8a06b5eb11d8b95be30582523c69e6a0c8c536dc13/nissoh/gambit-community">
+
+
+function appendOGMetaTag(property: string, propertyValue: string, content: string) {
+  const meta = document.createElement('meta')
+
+  meta.setAttribute(property, propertyValue)
+  meta.setAttribute('content', content)
+
+  document.getElementsByTagName('head')[0].appendChild(meta)
+}
+
+function addMetatag(title: string, image: string) {
+  appendOGMetaTag('property', 'og:url', document.location.href)
+  appendOGMetaTag('property', 'og:type', 'website')
+  appendOGMetaTag('property', 'og:title', title)
+  appendOGMetaTag('property', 'og:image', image)
+
+  appendOGMetaTag('name', 'twitter:card', 'summary_large_image')
+  appendOGMetaTag('name', 'twitter:domain', document.location.hostname)
+  appendOGMetaTag('name', 'twitter:url', document.location.href)
+  appendOGMetaTag('property', 'twitter:title', title)
+  appendOGMetaTag('property', 'twitter:image', image)
+}
 
 export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
-  claimList: Stream<Claim[]>
-}
+  claimList: Stream<IClaim[]>
 
-type TimelineTime = {
-  time: number
-}
-
-
-function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
-  interval: intervalInMsMap, fillMap: (next: T) => R, fillGapMap: (prev: R) => R, squashMap: (prev: R, next: T) => R = fillGapMap
-) {
-  return (timeline: R[], next: T) => {
-    const lastIdx = timeline.length - 1
-    const prev = timeline[lastIdx]
-
-    const barSpan = (next.time - prev.time) / interval
-
-    if (barSpan > 1) {
-      const barSpanCeil = Math.ceil(barSpan)
-
-      for (let index = 1; index < barSpanCeil; index++) {
-        timeline.push({ ...fillGapMap(prev), time: prev.time + interval * index })
-      }
-
-      const time = timeline[timeline.length - 1].time + interval
-
-      timeline.push({ ...fillMap(next), time })
-
-      return timeline
-    }
-    
-    if (barSpan < 1) {
-      timeline.splice(lastIdx, 1, squashMap(prev, next))
-    } else {
-      timeline.push(fillMap(next))
-    }
-
-    return timeline
-  }
+  aggregatedTradeList: Stream<IAggregateSettledTrade[]>
 }
 
 
@@ -70,30 +75,31 @@ export const $Profile = (config: IAccount) => component((
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
   [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, Token>,
   [selectOtherTimeframe, selectOtherTimeframeTether]: Behavior<IBranch, intervalInMsMap>,
+  [aggregatedTradeListQuery, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
-  const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.HR)
 
-  const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
   const urlFragments = document.location.pathname.split('/')
   const accountAddress = urlFragments[urlFragments.length - 1]
 
-  const accountHistoryPnL = multicast(accountHistoricalPnLApi({
-    account: accountAddress
-  }))
+  addMetatag('GMX Profile', `${document.location.origin}/api/og-account?account=${accountAddress}`)
 
 
+  const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.HR)
+
+  const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
+
+
+  const accountHistoryPnL = multicast(filter(arr => arr.length > 0, config.aggregatedTradeList))
 
 
   const latestInitiatedPosition = map(h => {
-
     // if (h.increasePositions.length === 0) {
     //   return null
     // }
-
-    return TOKEN_ADDRESS_MAP.get(h.increasePositions[h.increasePositions.length - 1].indexToken)!
+    return TOKEN_ADDRESS_MAP.get(h[0].indexToken)!
   }, accountHistoryPnL)
-  // const selectedToken = now(TOKEN_ADDRESS_MAP.get(BSC_CONTRACTS.ETH)!)
+  // const selectedToken = now(TOKEN_ADDRESS_MAP.get(ARBITRUM_CONTRACTS.ETH)!)
 
   const selectedToken = mergeArray([
     latestInitiatedPosition,
@@ -115,23 +121,24 @@ export const $Profile = (config: IAccount) => component((
       const now = Date.now()
 
       const initialDataStartTime = now - interval * INTERVAL_TICKS
+      const closedPosList = historicalData
+        .filter(t => t.settlement)
+        .map(x => {
+          const fee = getPositionFee(x.settlement!.size, 0n)
+          const time = x.settlement!.createdAt.getTime()
+          const value = formatFixed('markPrice' in x.settlement! ? x.settlement.collateral : x.settlement!.realisedPnl - fee, USD_DECIMALS)
 
-      const increasePosList = historicalData.increasePositions.map(x => ({ value: 0, time: x.createdAt.getTime() }))
-      const closedPosList = historicalData.closedPositions.map(x => {
-        const fee = getPositionFee(x.size, x.entryFundingRate, x.entryFundingRate)
+          return { value, time }
+        })
 
-        return { value: formatFixed(x.realisedPnl - fee, USD_DECIMALS), time: x.createdAt.getTime() }
-      })
-      const liquidatedPosList = historicalData.liquidatedPositions.map(x => ({ value: formatFixed(-x.collateral, USD_DECIMALS), time: x.createdAt.getTime() }))
-
-      const sortedParsed = [...increasePosList, ...closedPosList, ...liquidatedPosList]
+      const sortedParsed = closedPosList
         .filter(pos => pos.time > initialDataStartTime)
         .sort((a, b) => a.time - b.time)
         .map(x => {
           accumulated += x.value
           return { value: accumulated, time: x.time }
         })
-            
+
 
       if (sortedParsed.length) {
         sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: now as UTCTimestamp })
@@ -409,10 +416,10 @@ export const $Profile = (config: IAccount) => component((
 
         switchLatest(
           combineArray((pnlData, activeToken) => {
-            const tokens = groupByMapMany(pnlData.increasePositions, pos => pos.indexToken)
+            const tokens = groupByMapMany(pnlData, pos => pos.indexToken)
 
             const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-              const token = TOKEN_ADDRESS_MAP.get(contract as BSC_CONTRACTS)!
+              const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
 
               const selectedTokenBehavior = O(
                 style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
@@ -498,8 +505,8 @@ export const $Profile = (config: IAccount) => component((
 
                 setTimeout(() => {
                   const fstTick = historicKline[0]
-                  const increasePosMarkers = accountHistoryPnL.increasePositions
-                    .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
+                  const increasePosMarkers = accountHistoryPnL
+                    .filter(pos => selectedToken.address === pos.indexToken)
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pos.isLong ? pallete.positive : pallete.negative,
@@ -508,28 +515,28 @@ export const $Profile = (config: IAccount) => component((
                         time: timeTzOffset(pos.createdAt.getTime()),
                       }
                     })
-                  const closePosMarkers = accountHistoryPnL.closedPositions
-                    .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
+                  const closePosMarkers = accountHistoryPnL
+                    .filter(pos => selectedToken.address === pos.indexToken && pos.settlement && !('markPrice' in pos.settlement))
                     .map((pos): SeriesMarker<Time> => {
-                      const fee = getPositionMarginFee(pos.size)
+                      const fee = getPositionMarginFee(pos.settlement!.size)
 
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(pos.realisedPnl + -fee),
-                        time: timeTzOffset(pos.createdAt.getTime()),
+                        text: '$' + formatReadableUSD(pos.settlement!.realisedPnl + -fee),
+                        time: timeTzOffset(pos.settlement!.createdAt.getTime()),
                       }
                     })
-                  const liquidatedPosMarkers = accountHistoryPnL.liquidatedPositions
-                    .filter(pos => selectedToken.address === pos.indexToken && pos.createdAt.getTime() > fstTick.time)
+                  const liquidatedPosMarkers = accountHistoryPnL
+                    .filter(pos => selectedToken.address === pos.indexToken && pos.settlement && 'markPrice' in pos.settlement)
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pallete.negative,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$-' + formatReadableUSD(pos.collateral),
-                        time: timeTzOffset(pos.createdAt.getTime()),
+                        text: '$-' + formatReadableUSD(pos.settlement!.collateral),
+                        time: timeTzOffset(pos.settlement!.createdAt.getTime()),
                       }
                     })
                   
@@ -587,7 +594,7 @@ export const $Profile = (config: IAccount) => component((
       )
     ),
 
-    {  }
+    { aggregatedTradeListQuery: now({ account: accountAddress, timeRange: [Date.now() - timeFrameStore.state * INTERVAL_TICKS, Date.now()] }) as Stream<AccountHistoricalDataApi> }
   ]
 })
 
