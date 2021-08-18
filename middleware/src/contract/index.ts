@@ -2,6 +2,6 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export { Vault } from "./ethers-contracts/factories/Vault"
+export type { Vault } from "./ethers-contracts/factories/Vault"
 export {  Vault__factory } from "./ethers-contracts/factories/Vault__factory"
 

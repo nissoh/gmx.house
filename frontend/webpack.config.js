@@ -42,12 +42,11 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'index.html'
     }),
-    // new CopyPlugin({
-    //   patterns: [
-    //     { from: "404.html" },
-    //     { from: "CNAME" },
-    //   ]
-    // }),
+    new CopyPlugin({
+      patterns: [
+        { from: "favicon.png" }
+      ]
+    }),
   ],
   // node: { crypto: true, stream: true },
   devServer: {

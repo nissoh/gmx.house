@@ -91,13 +91,13 @@ const run = async () => {
   app.use('/api', openGraphScreenshot)
   app.use('/api', claimApi)
   app.use('/api', accountApi)
-  app.use((req, res, next) => {
-    if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
-      res.sendFile(path.join(publicDir, '/index.html'), err => err && next())
-    } else {
-      next()
-    }
-  })
+  // app.use((req, res, next) => {
+  //   if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
+  //     res.sendFile(path.join(publicDir, '/index.html'), err => err && next())
+  //   } else {
+  //     next()
+  //   }
+  // })
   app.use((req, res) => res.status(404).json({ message: 'No route found' }))
 
   server.listen(port, () => {
