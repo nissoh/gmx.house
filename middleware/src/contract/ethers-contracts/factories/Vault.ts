@@ -1048,7 +1048,7 @@ export interface VaultInterface extends Interface {
   getEvent(nameOrSignatureOrTopic: "UpdatePosition"): EventFragment;
 }
 
-export class Vault extends BaseContract {
+export declare class Vault extends BaseContract {
   
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;

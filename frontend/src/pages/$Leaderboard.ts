@@ -113,7 +113,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })
                 },
                 {
-                  $head: $text('Settled P/L'),
+                  $head: $text('PnL Open/Settled'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)

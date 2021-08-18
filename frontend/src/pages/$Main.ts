@@ -88,7 +88,7 @@ export default ({ baseRoute = '' }: Website) => component((
               $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
                 $text(style({  }))(`Novel Perpetual Protocol`),
                 $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`Gambit Community`),
-                $text(style({  }))(`Leveraging-Protocol with Zero slippage`),
+                $text(style({  }))(`Low slippage, low fees and Instant Finality`),
 
                 $node(),
                 $node(),

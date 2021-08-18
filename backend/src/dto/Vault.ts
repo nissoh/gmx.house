@@ -35,10 +35,12 @@ export abstract class PositionMake extends Position implements IPosition {
   @Property({ type: NativeBigIntType }) collateralDelta: bigint
   @Property({ type: NativeBigIntType }) price: bigint
   @Property({ type: NativeBigIntType }) sizeDelta: bigint
+  @Property({ type: NativeBigIntType }) fee: bigint
 
-  constructor(price: bigint, collateralDelta: bigint, sizeDelta: bigint, ...pos: ConstructorParameters<typeof Position>) {
+  constructor(price: bigint, collateralDelta: bigint, sizeDelta: bigint, fee: bigint, ...pos: ConstructorParameters<typeof Position>) {
     super(...pos)
     this.price = price
+    this.fee = fee
     this.collateralDelta = collateralDelta
     this.sizeDelta = sizeDelta
   }
