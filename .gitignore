@@ -3,11 +3,12 @@
 dist
 tsconfig.tsbuildinfo
 
-# yarn Zero-Installs:
+node_modules/
+
 .yarn/*
-!.yarn/cache
 !.yarn/patches
-!.yarn/plugins
 !.yarn/releases
+!.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
+.pnp.*

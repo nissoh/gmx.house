@@ -51,10 +51,11 @@ module.exports = {
   // node: { crypto: true, stream: true },
   devServer: {
     port: 3000,
+    https: true,
     proxy: {
       '/api': 'http://localhost:5555',
       '/ws': {
-        target: 'ws://localhost:5555',
+        target: 'wss://localhost:5555',
         ws: true
       },
     },
