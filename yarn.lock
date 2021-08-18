@@ -2499,7 +2499,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"copy-webpack-plugin@npm:^9.0.1":
+"copy-webpack-plugin@npm:9.0.1":
   version: 9.0.1
   resolution: "copy-webpack-plugin@npm:9.0.1"
   dependencies:
@@ -3915,7 +3915,7 @@ fsevents@~2.3.1:
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
     construct-style-sheets-polyfill: 3.0.0
-    copy-webpack-plugin: ^9.0.1
+    copy-webpack-plugin: 9.0.1
     fork-ts-checker-webpack-plugin: 6.3.2
     gambit-middleware: "workspace:*"
     hash.js: 1.1.7
