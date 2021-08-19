@@ -42,7 +42,7 @@
         "express-promise-router": "^4.1.0",
         "express-session": "^1.17.2",
         "gambit-middleware": "workspace:*",
-        "puppeteer-core": "^10.2.0",
+        "puppeteer": "10.2.0",
         "ws": "^8.2.0"
     },
     "devDependencies": {

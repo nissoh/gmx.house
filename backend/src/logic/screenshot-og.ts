@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core'
+import puppeteer from 'puppeteer'
 
 
 const exePath =
@@ -9,9 +9,9 @@ const exePath =
       : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 async function runPuppeteer() {
+  
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    executablePath: exePath,
     headless: true,
     defaultViewport: {
       width: 1000,
