@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer-core'
 
 
-const exePath =
+const executablePath =
   process.platform === "win32"
     ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
     : process.platform === "linux"
@@ -12,6 +12,7 @@ async function runPuppeteer() {
   
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    executablePath,
     headless: true,
     defaultViewport: {
       width: 1000,
