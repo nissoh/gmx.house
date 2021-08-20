@@ -3304,7 +3304,7 @@ fsevents@~2.3.2:
     express-session: ^1.17.2
     gambit-middleware: "workspace:*"
     html-to-image: ^1.7.0
-    puppeteer-core: 9.1.1
+    puppeteer: 9.1.1
     ts-node: ^10.2.1
     ts-node-dev: ^1.1.8
     typescript: ^4.3.5
@@ -5474,9 +5474,9 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"puppeteer-core@npm:9.1.1":
+"puppeteer@npm:9.1.1":
   version: 9.1.1
-  resolution: "puppeteer-core@npm:9.1.1"
+  resolution: "puppeteer@npm:9.1.1"
   dependencies:
     debug: ^4.1.0
     devtools-protocol: 0.0.869402
@@ -5490,7 +5490,7 @@ fsevents@~2.3.2:
     tar-fs: ^2.0.0
     unbzip2-stream: ^1.3.3
     ws: ^7.2.3
-  checksum: 037c4c4c033526a34ec1b9c408bb70569a572c37b98aea5c3d633e04e8c4d7f9f1346c9c6a4df972064a03a72b07d4085217209fce63d7c76caca296d3c9f164
+  checksum: 545cfec98bdbfb834293218495d39aeb9cebea0196e97e21dcd46ca19261f9adb7a364ba80f14bcd995950287e9eefd703edd35e72119c7afd76796fda02d9c7
   languageName: node
   linkType: hard
 
