@@ -17,6 +17,7 @@
         "upgrade-interactive": "yarn upgrade-interactive",
         "                    ": "_______GLOBAL_TASKS_____",
         "g:tsc:clean": "cd $INIT_CWD && tsc -b --clean",
+        "postinstall": "yarn run build",
         "g:dev": "cd $INIT_CWD && tsc -b --clean",
         "g:tsc:all": "yarn run build",
         "g:tsc:project": "cd $INIT_CWD && tsc -b --verbose",
