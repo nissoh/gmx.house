@@ -12,7 +12,7 @@ async function runPuppeteer() {
   
   const browser = await puppeteer.launch({
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    executablePath,
+    // executablePath,
     // headless: true,
     defaultViewport: {
       width: 1000,
