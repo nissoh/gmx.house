@@ -22,13 +22,12 @@
         "@ethersproject/bignumber": "^5.4.1",
         "@ethersproject/bytes": "5.4.0",
         "@ethersproject/contracts": "^5.4.1",
-        "@ethersproject/providers": "5.4.3",
+        "@ethersproject/providers": "5.4.4",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/node": "^16.0.0",
-        "ethers": "^5.4.4"
+        "@types/node": "^16.0.0"
     }
 }

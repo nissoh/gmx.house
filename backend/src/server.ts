@@ -30,7 +30,7 @@ const server = http.createServer(app)
 
 
 
-const apiComponent = helloFrontend('/ws', server, {
+const apiComponent = helloFrontend('/api-ws', server, {
   aggregatedTradeSettled,
   leaderboard,
   tournament,
@@ -84,9 +84,6 @@ const run = async () => {
   
 
   const publicDir = path.resolve(process.cwd(), '.dist/cjs/public')
-
-  console.log('cwd', process.cwd())
-  console.log('dir', publicDir)
 
   app.use(express.json())
   app.use(express.static(publicDir))

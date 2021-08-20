@@ -54,7 +54,7 @@ module.exports = {
     https: true,
     proxy: {
       '/api': 'http://localhost:5555',
-      '/ws': {
+      '/api-ws': {
         target: 'ws://localhost:5555',
         ws: true
       },

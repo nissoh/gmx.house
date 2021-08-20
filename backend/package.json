@@ -26,7 +26,7 @@
         "@ethersproject/bignumber": "^5.4.1",
         "@ethersproject/bytes": "5.4.0",
         "@ethersproject/contracts": "^5.4.1",
-        "@ethersproject/providers": "5.4.3",
+        "@ethersproject/providers": "5.4.4",
         "@mikro-orm/core": "4.5.7",
         "@mikro-orm/mongo-highlighter": "^1.0.0",
         "@mikro-orm/mongodb": "4.5.7",
@@ -52,7 +52,7 @@
         "@types/node": "15.6.1",
         "@types/ws": "^7.4.7",
         "html-to-image": "^1.7.0",
-        "ts-node": "^10.2.0",
+        "ts-node": "^10.2.1",
         "ts-node-dev": "^1.1.8",
         "typescript": "^4.3.5"
     },

@@ -23,7 +23,7 @@
         "@ethersproject/bignumber": "^5.4.1",
         "@ethersproject/bytes": "5.4.0",
         "@ethersproject/contracts": "^5.4.1",
-        "@ethersproject/providers": "5.4.3",
+        "@ethersproject/providers": "5.4.4",
         "@metamask/detect-provider": "^1.2.0",
         "@mikro-orm/core": "^4.5.7",
         "@mikro-orm/mongodb": "^4.5.7",
