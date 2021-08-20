@@ -11,15 +11,13 @@ const executablePath =
 async function runPuppeteer() {
   
   const browser = await puppeteer.launch({
-    args: ['--no-sandbox']
-    
-    // args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
     // executablePath,
     // headless: true,
-    // defaultViewport: {
-    //   width: 1000,
-    //   height: 500
-    // }
+    defaultViewport: {
+      width: 1000,
+      height: 500
+    }
   })
 
   const page = await browser.newPage()
