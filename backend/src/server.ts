@@ -108,6 +108,7 @@ const run = async () => {
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
           .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
+          .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
           .replace(/\$OG_IMAGE/g, `${fullUrl}/api/og-account?account=${matchedAdress}`)
         
         res.end(ogHtmlFile)
