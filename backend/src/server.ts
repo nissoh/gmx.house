@@ -101,6 +101,7 @@ const run = async () => {
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
       const profilePageMatches = req.originalUrl.match(/(\/p\/account\/|0x[a-fA-F0-9]{40}$)/g)
+      res.setHeader('content-type', 'text/html')
 
       if (profilePageMatches?.length === 2) {
         const matchedAdress: string = profilePageMatches[1]
