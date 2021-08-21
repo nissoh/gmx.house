@@ -104,7 +104,7 @@ const run = async () => {
 
       if (profilePageMatches?.length === 2) {
         const matchedAdress: string = profilePageMatches[1]
-        const fullUrl = req.protocol + '://' + req.get('host')
+        const fullUrl = 'https://' + req.get('host')
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
           .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
