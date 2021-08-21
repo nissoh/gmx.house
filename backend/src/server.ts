@@ -15,7 +15,6 @@ import { aggregatedTradeSettled, leaderboard, tournament } from './api'
 import { initAggTrades, modelChanges, openPositions } from './logic/positions'
 import { AggregatedTrade, AggregatedTradeSettled } from './dto/Vault'
 import { openGraphScreenshot } from './logic/linkOGShot'
-import url from 'url'
 
 
 // @ts-ignore
