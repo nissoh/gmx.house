@@ -11,8 +11,10 @@ openGraphScreenshot.get('/og-account', async (req, res) => {
     return res.status(403).json({ message: 'Invalid account' })
   }
 
+  const selfRef = `http://${req.hostname}/card/${account}`
   // const file = await screenPage(`http://localhost:3000/card/0x4CC6d33B7605809c1E5DBb2198758a0010A67E00`)
-  const file = await screenPage(`http://${req.hostname}:${process.env.PORT}/card/${account}`)
+  console.log(`http://${req.hostname}:${process.env.PORT}/card/${account}`)
+  const file = await screenPage(selfRef)
   
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
   res.setHeader('Content-Type', `image/jpeg`)

@@ -54,7 +54,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
-          $header(layoutSheet.flex)('Top Gambit'),
+          $header(layoutSheet.flex)(`Top GMX'er`),
         ),
         $row(layoutSheet.flex)(),
 
