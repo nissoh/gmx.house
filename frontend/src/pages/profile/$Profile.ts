@@ -16,48 +16,7 @@ import { $caretDown } from "../../elements/$icons"
 import { fillIntervalGap, isDesktopScreen } from "../../common/utils"
 
 
-// $('head').append('<meta property="og:type" content="profile"/>'); 
-// $('head').append('<meta property="og:url" content=""/>');
-// $('head').append("<meta property='og:title' content="+text+"'/>");
-// $('head').append("<meta property='og:image' content="+imageUrl+"'/>");
 
-// <!-- Facebook Meta Tags -->
-// <meta property="og:url" content="https://github.com/nissoh/gambit-community/">
-// <meta property="og:type" content="website">
-// <meta property="og:title" content="GitHub - nissoh/gambit-community">
-// <meta property="og:description" content="">
-// <meta property="og:image" content="https://opengraph.githubassets.com/e7524617695ce52985012b8a06b5eb11d8b95be30582523c69e6a0c8c536dc13/nissoh/gambit-community">
-
-// <!-- Twitter Meta Tags -->
-// <meta name="twitter:card" content="summary_large_image">
-// <meta property="twitter:domain" content="github.com">
-// <meta property="twitter:url" content="https://github.com/nissoh/gambit-community/">
-// <meta name="twitter:title" content="GitHub - nissoh/gambit-community">
-// <meta name="twitter:description" content="">
-// <meta name="twitter:image" content="https://opengraph.githubassets.com/e7524617695ce52985012b8a06b5eb11d8b95be30582523c69e6a0c8c536dc13/nissoh/gambit-community">
-
-
-function appendOGMetaTag(property: string, propertyValue: string, content: string) {
-  const meta = document.createElement('meta')
-
-  meta.setAttribute(property, propertyValue)
-  meta.setAttribute('content', content)
-
-  document.getElementsByTagName('head')[0].appendChild(meta)
-}
-
-function addMetatag(title: string, image: string) {
-  appendOGMetaTag('property', 'og:url', document.location.href)
-  appendOGMetaTag('property', 'og:type', 'website')
-  appendOGMetaTag('property', 'og:title', title)
-  appendOGMetaTag('property', 'og:image', image)
-
-  appendOGMetaTag('name', 'twitter:card', 'summary_large_image')
-  appendOGMetaTag('name', 'twitter:domain', document.location.hostname)
-  appendOGMetaTag('name', 'twitter:url', document.location.href)
-  appendOGMetaTag('property', 'twitter:title', title)
-  appendOGMetaTag('property', 'twitter:image', image)
-}
 
 export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
@@ -81,8 +40,6 @@ export const $Profile = (config: IAccount) => component((
 
   const urlFragments = document.location.pathname.split('/')
   const accountAddress = urlFragments[urlFragments.length - 1]
-
-  addMetatag('GMX Profile', `${document.location.origin}/api/og-account?account=${accountAddress}`)
 
 
   const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.HR)

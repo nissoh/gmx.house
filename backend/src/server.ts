@@ -2,6 +2,7 @@ import { Connection, EntityManager, IDatabaseDriver, MikroORM, RequestContext } 
 import express from 'express'
 
 import http from 'http'
+import { readFileSync } from 'fs'
 import config from './mikro-orm.config'
 import { debounce, merge, tap } from '@most/core'
 import { newDefaultScheduler } from '@most/scheduler'
@@ -14,6 +15,7 @@ import { aggregatedTradeSettled, leaderboard, tournament } from './api'
 import { initAggTrades, modelChanges, openPositions } from './logic/positions'
 import { AggregatedTrade, AggregatedTradeSettled } from './dto/Vault'
 import { openGraphScreenshot } from './logic/linkOGShot'
+import url from 'url'
 
 
 // @ts-ignore
@@ -84,6 +86,9 @@ const run = async () => {
   
 
   const publicDir = path.resolve(process.cwd(), '.dist/cjs/public')
+  const htmlFile = readFileSync(path.join(publicDir, '/index.html')).toString()
+
+
 
   app.use(express.json())
   app.use(express.static(publicDir))
@@ -92,8 +97,28 @@ const run = async () => {
   app.use('/api', claimApi)
   app.use('/api', accountApi)
   app.use((req, res, next) => {
+
+
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
-      res.sendFile(path.join(publicDir, '/index.html'), err => err && next())
+
+      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/|0x[a-fA-F0-9]{40}$)/g)
+
+      if (profilePageMatches?.length === 2) {
+        const matchedAdress: string = profilePageMatches[1]
+        const fullUrl = req.protocol + '://' + req.get('host')
+        const ogHtmlFile = htmlFile
+          .replace(/\$OG_TITLE/g, 'GMX Profile')
+          .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
+          .replace(/\$OG_IMAGE/g, `${fullUrl}/api/og-account?account=${matchedAdress}`)
+        
+        res.end(ogHtmlFile)
+      } else {
+        res.end(htmlFile)
+      }
+
+      
+
+      
     } else {
       next()
     }
