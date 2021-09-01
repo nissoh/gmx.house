@@ -1,4 +1,4 @@
-import { $node, style } from "@aelea/core"
+import { $node, style } from "@aelea/dom"
 
 export const $spinner = $node(style({
   margin: '0 auto',

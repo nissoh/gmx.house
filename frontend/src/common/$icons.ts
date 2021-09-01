@@ -1,4 +1,4 @@
-import { $Node, $svg, attr } from "@aelea/core"
+import { $Node, $svg, attr } from "@aelea/dom"
 import { mergeArray } from "@most/core"
 import { curry2 } from "@most/prelude"
 import { ARBITRUM_CONTRACTS } from "gambit-middleware"
@@ -53,7 +53,7 @@ export const $eth = $svg('g')(
 
 export const $tokenIconMap = {
   [ARBITRUM_CONTRACTS.BTC]: $btc,
-  [ARBITRUM_CONTRACTS.ETH]: $eth,
+  [ARBITRUM_CONTRACTS.WETH]: $eth,
   [ARBITRUM_CONTRACTS.USDC]: $usd,
 }
 

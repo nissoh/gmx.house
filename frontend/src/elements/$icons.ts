@@ -1,4 +1,4 @@
-import { $svg, attr } from "@aelea/core"
+import { $svg, attr } from "@aelea/dom"
 import { pallete } from "@aelea/ui-components-theme"
 
 

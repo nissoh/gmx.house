@@ -5,33 +5,46 @@ __metadata:
   version: 4
   cacheKey: 8
 
-"@aelea/core@npm:0.18.0":
-  version: 0.18.0
-  resolution: "@aelea/core@npm:0.18.0"
+"@aelea/core@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@aelea/core@npm:1.0.0"
   dependencies:
-    "@aelea/utils": 1.1.0
+    "@most/core": 1.6.1
+    "@most/disposable": 1.3.0
+    "@most/prelude": 1.8.0
+    "@most/scheduler": 1.3.0
+    "@most/types": 1.1.0
+  checksum: 656a6ee75cbe3cfd29eed23e1b981545cc6c34a3d3014f5087d8df99157fd9d645e162c7ee2193a861ea5c90fa111579ec7601759aabb1b013bf19f706e1f595
+  languageName: node
+  linkType: hard
+
+"@aelea/dom@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@aelea/dom@npm:0.1.0"
+  dependencies:
+    "@aelea/core": 1.0.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
     csstype: 3.0.8
-  checksum: 5045e7c00aed8f363dad970da052e885bfc4435af51055a6040cfd505e2122060162a9e6c799b2b77e7215354cb448bab9fe3147d7f71d286aec631c04773bea
+  checksum: e85750d50a7f60e06e39b0540a1d5c10162e59eadf05601693a2c215cea65ed3dda77943288b33306359be0bceade082b69cf0b77d055118169672a230a7a2a6
   languageName: node
   linkType: hard
 
-"@aelea/router@npm:0.16.0":
-  version: 0.16.0
-  resolution: "@aelea/router@npm:0.16.0"
+"@aelea/router@npm:0.18.0":
+  version: 0.18.0
+  resolution: "@aelea/router@npm:0.18.0"
   dependencies:
-    "@aelea/core": 0.18.0
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.0.0
+    "@aelea/dom": 0.1.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
-  checksum: a5b2caca63d3250cbd38e178099f0975bcad5c5c276c013b259e4d36cdbfe5b6e4199b86bbe4da53f43451e4d015b99dfdc8ed86064e0ed3517120873422cad7
+  checksum: c3ff182dd50bdc123b6652b1da42b70c7039b6939f59e2bdf6d48b692454f621f497aa535779686c2a497099d291d9fcfe297294e65e17673021e1f8b71969b8
   languageName: node
   linkType: hard
 
@@ -42,20 +55,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aelea/ui-components@npm:0.22.0":
-  version: 0.22.0
-  resolution: "@aelea/ui-components@npm:0.22.0"
+"@aelea/ui-components@npm:0.25.0":
+  version: 0.25.0
+  resolution: "@aelea/ui-components@npm:0.25.0"
   dependencies:
-    "@aelea/core": 0.18.0
-    "@aelea/router": 0.16.0
+    "@aelea/core": 1.0.0
+    "@aelea/dom": 0.1.0
     "@aelea/ui-components-theme": 0.9.0
-    "@aelea/utils": 1.1.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
-  checksum: c5f60808aeae59a3e0036f4396c1152e71e6a9c3a672298119eecaacfadb4c601ff80101063640a8033ce1996bbf674639d3e42e1556d2fd69c81ce7a86c84e2
+  checksum: 715ddf61d0f714d20baf5f6f0e2ed87746824362883457d91e0a9caa194bc91f6d6646344dbcef1e8d1a84f213afdcb854790aa204797b9cb49973efd9e11851
   languageName: node
   linkType: hard
 
@@ -560,9 +572,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mikro-orm/core@npm:4.5.7, @mikro-orm/core@npm:^4.5.7":
-  version: 4.5.7
-  resolution: "@mikro-orm/core@npm:4.5.7"
+"@mikro-orm/core@npm:4.5.9, @mikro-orm/core@npm:^4.5.9":
+  version: 4.5.9
+  resolution: "@mikro-orm/core@npm:4.5.9"
   dependencies:
     ansi-colors: 4.1.1
     clone: 2.1.2
@@ -595,7 +607,7 @@ __metadata:
       optional: true
     "@mikro-orm/sqlite":
       optional: true
-  checksum: fd3a5c27b958821add19746fa1b640018ba2f6aa4dca676a1002f24ff94afe9a4e28a8f0fb38de555330924309eae3d7980494e167704750c6bcd5645dbdb3f4
+  checksum: 8323bbe0009766aa72d0d1237bc27f2fc9b5f894e23d0e1896d486a2ad00a89fcba925b48ac207fb3e47f1922698ba6561c6a50c437ecb3d3386a13b391a5b96
   languageName: node
   linkType: hard
 
@@ -608,27 +620,27 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mikro-orm/mongodb@npm:4.5.7, @mikro-orm/mongodb@npm:^4.5.7":
-  version: 4.5.7
-  resolution: "@mikro-orm/mongodb@npm:4.5.7"
+"@mikro-orm/mongodb@npm:4.5.9, @mikro-orm/mongodb@npm:^4.5.9":
+  version: 4.5.9
+  resolution: "@mikro-orm/mongodb@npm:4.5.9"
   dependencies:
     "@types/mongodb": 3.6.12
     mongodb: 3.6.6
   peerDependencies:
     "@mikro-orm/core": ^4.0.0
-  checksum: 2e8167f4e855849319ff9176b3438fb20e9bbe0773d848fd41a7e6aa1043e5c9b7d3bc0242dc36e64a8a464a28d5aec5442deb6778d4e750c6d6d8f010db5b4d
+  checksum: 476b29b252e50366e9bca8cecfdf0755a17e2af83080b23fbe1c3759a6a95a6461e1c6eae30267e2bb871712597ebd205d34d22cad17503e3071e13830d8d598
   languageName: node
   linkType: hard
 
-"@mikro-orm/reflection@npm:^4.5.7":
-  version: 4.5.7
-  resolution: "@mikro-orm/reflection@npm:4.5.7"
+"@mikro-orm/reflection@npm:^4.5.9":
+  version: 4.5.9
+  resolution: "@mikro-orm/reflection@npm:4.5.9"
   dependencies:
     globby: 11.0.3
     ts-morph: 10.0.2
   peerDependencies:
     "@mikro-orm/core": ^4.0.0
-  checksum: 9e0c916bf60404e141385d100ac83b6096fd9245784707d0337def00c84d8ca6c9953ea8d0798e0b5a89cec2118f6f90fa82cb7a00df20c9ad0b5fa74b8cfc0d
+  checksum: 931928fcbfef98c8499bb686e73f3f41eae2b53203bdf647d3c554b9eb03621049990416516586d83979f0e0977f119bf6a4130c1463812aec4d84deedf57753
   languageName: node
   linkType: hard
 
@@ -987,12 +999,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/eslint-plugin@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/eslint-plugin@npm:4.29.2"
+"@typescript-eslint/eslint-plugin@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/eslint-plugin@npm:4.29.3"
   dependencies:
-    "@typescript-eslint/experimental-utils": 4.29.2
-    "@typescript-eslint/scope-manager": 4.29.2
+    "@typescript-eslint/experimental-utils": 4.29.3
+    "@typescript-eslint/scope-manager": 4.29.3
     debug: ^4.3.1
     functional-red-black-tree: ^1.0.1
     regexpp: ^3.1.0
@@ -1004,66 +1016,66 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 3d3646059daa3d95200d71945a1ec8daebf62c7fedc3f29e1bece87bee9d689b06856fb18a8c55917f9c0bb5e86ddc8bc4c4f65f171e7d5784756dd59e3ff51d
+  checksum: ded1580fc6348848df3ed92d4365586bf13a05cd698c07aa7727155ca13788b5c33bd326b5435af3e97b702156b1eef811ace20fb5ca44eab6388cecfd8e264a
   languageName: node
   linkType: hard
 
-"@typescript-eslint/experimental-utils@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/experimental-utils@npm:4.29.2"
+"@typescript-eslint/experimental-utils@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/experimental-utils@npm:4.29.3"
   dependencies:
     "@types/json-schema": ^7.0.7
-    "@typescript-eslint/scope-manager": 4.29.2
-    "@typescript-eslint/types": 4.29.2
-    "@typescript-eslint/typescript-estree": 4.29.2
+    "@typescript-eslint/scope-manager": 4.29.3
+    "@typescript-eslint/types": 4.29.3
+    "@typescript-eslint/typescript-estree": 4.29.3
     eslint-scope: ^5.1.1
     eslint-utils: ^3.0.0
   peerDependencies:
     eslint: "*"
-  checksum: e07b6b58f386ba84801d10bfe494548c3af20448c2f5596b77d13ba8621345ced4e1c6cf946dcf118c1e8566e0eed8284200f3f3a96f89aa7f367d9cdf6549a3
+  checksum: 7cd398bf3fccee1c769006c9d28fc0a353c2978cbc33e21449d186ab413ccf5f731b3ac30f557550c1daac767a5b97dce15ec10fe9ad5a632846d285dafac5b0
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/parser@npm:4.29.2"
+"@typescript-eslint/parser@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/parser@npm:4.29.3"
   dependencies:
-    "@typescript-eslint/scope-manager": 4.29.2
-    "@typescript-eslint/types": 4.29.2
-    "@typescript-eslint/typescript-estree": 4.29.2
+    "@typescript-eslint/scope-manager": 4.29.3
+    "@typescript-eslint/types": 4.29.3
+    "@typescript-eslint/typescript-estree": 4.29.3
     debug: ^4.3.1
   peerDependencies:
     eslint: ^5.0.0 || ^6.0.0 || ^7.0.0
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 59f9727cea89c208fb31433c24dd7c1b4f2feb3af831b9320f4577f7b84f014f803864d4660b0f6bd16a4026d7ecd22b88523feb8c1593ef4a0a43ca9ea09c33
+  checksum: 3fac6b5219de8b9aea361cc2fa170105661068d5eee5594f2f68526801a66b9525a766fc17427a8d410ada0da2d852f8c021d0b2fac7442a1e913f248ac85d90
   languageName: node
   linkType: hard
 
-"@typescript-eslint/scope-manager@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/scope-manager@npm:4.29.2"
+"@typescript-eslint/scope-manager@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/scope-manager@npm:4.29.3"
   dependencies:
-    "@typescript-eslint/types": 4.29.2
-    "@typescript-eslint/visitor-keys": 4.29.2
-  checksum: f89d11cf7ce28c37a913db432d3dd2c4e5f5bc431bac205dd55c3d49704be691a28d5f27ae96fde7feee23d3e80192d7aff3d8350aef53b415e5b0b53cd965d7
+    "@typescript-eslint/types": 4.29.3
+    "@typescript-eslint/visitor-keys": 4.29.3
+  checksum: 53a4d3cd0844df789ad3548644d9214cf234ce87bbc7843c55949f63e98925b4685b36f0514afbab891b4f8f0da85c249850023be5d5e9b175780aa62d181aac
   languageName: node
   linkType: hard
 
-"@typescript-eslint/types@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/types@npm:4.29.2"
-  checksum: 0bcab66bb1848e2361bb366abebe1f94baa56d7d2058b62467f14c054b969b72d1aa17717a52c11f48e9cfb50846f0e227e49ccc7f06ff750b9eb28ca8b064de
+"@typescript-eslint/types@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/types@npm:4.29.3"
+  checksum: 26fd2bd6782b763ff6d5ef3bcc08e1d29b64d15ef6f3604203f6171517935d822c103f803d8755c8e0cb77319143e5d5108dc90e8e897c8e72bab9f178be67ce
   languageName: node
   linkType: hard
 
-"@typescript-eslint/typescript-estree@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/typescript-estree@npm:4.29.2"
+"@typescript-eslint/typescript-estree@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/typescript-estree@npm:4.29.3"
   dependencies:
-    "@typescript-eslint/types": 4.29.2
-    "@typescript-eslint/visitor-keys": 4.29.2
+    "@typescript-eslint/types": 4.29.3
+    "@typescript-eslint/visitor-keys": 4.29.3
     debug: ^4.3.1
     globby: ^11.0.3
     is-glob: ^4.0.1
@@ -1072,17 +1084,17 @@ __metadata:
   peerDependenciesMeta:
     typescript:
       optional: true
-  checksum: 90342d27f3f0837ad39f9b7e7d7c3c0b6de9c5b0770f5a18d490ebaf7be78efa65ba46ce0ca3004ad946ca1adc5865c5d3ba3b049c95b3b193bfdf0eb5e23095
+  checksum: b7ea37db1a2f43806bf16090dfb44c7243ad07b7cb75d398fc2a1ce347fa04a59a5c729a41d1e34862cc3ed60275f5565fe3343393df1c42d95395ed42c761f0
   languageName: node
   linkType: hard
 
-"@typescript-eslint/visitor-keys@npm:4.29.2":
-  version: 4.29.2
-  resolution: "@typescript-eslint/visitor-keys@npm:4.29.2"
+"@typescript-eslint/visitor-keys@npm:4.29.3":
+  version: 4.29.3
+  resolution: "@typescript-eslint/visitor-keys@npm:4.29.3"
   dependencies:
-    "@typescript-eslint/types": 4.29.2
+    "@typescript-eslint/types": 4.29.3
     eslint-visitor-keys: ^2.0.0
-  checksum: 34185d8c6466340aba746d69b36d357da2d06577d73f58358648c142bd0f181d7fae01ca1138188a665ef074ea7e1bc6306ef9d50f29914c8bcea4e9ea1f82f2
+  checksum: 76d485cb573cfccb8a6aded5b98fd58266c10f82362685d3d0b870e197cbe5e3d61b485e220a7a973765c4861df9ea52a35757ecb818f125e405925556ee1f90
   languageName: node
   linkType: hard
 
@@ -3275,7 +3287,7 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gambit-backend@workspace:backend"
   dependencies:
-    "@aelea/core": 0.18.0
+    "@aelea/core": 1.0.0
     "@aelea/utils": 1.1.0
     "@ethersproject/abi": 5.4.0
     "@ethersproject/abstract-signer": 5.4.1
@@ -3283,10 +3295,10 @@ fsevents@~2.3.2:
     "@ethersproject/bytes": 5.4.0
     "@ethersproject/contracts": ^5.4.1
     "@ethersproject/providers": 5.4.4
-    "@mikro-orm/core": 4.5.7
+    "@mikro-orm/core": 4.5.9
     "@mikro-orm/mongo-highlighter": ^1.0.0
-    "@mikro-orm/mongodb": 4.5.7
-    "@mikro-orm/reflection": ^4.5.7
+    "@mikro-orm/mongodb": 4.5.9
+    "@mikro-orm/reflection": ^4.5.9
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
@@ -3316,9 +3328,10 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gambit-frontend@workspace:frontend"
   dependencies:
-    "@aelea/core": 0.18.0
-    "@aelea/router": 0.16.0
-    "@aelea/ui-components": 0.22.0
+    "@aelea/core": 1.0.0
+    "@aelea/dom": 0.1.0
+    "@aelea/router": 0.18.0
+    "@aelea/ui-components": 0.25.0
     "@aelea/ui-components-theme": 0.9.0
     "@aelea/utils": 1.1.0
     "@ethersproject/abi": 5.4.0
@@ -4571,8 +4584,8 @@ fsevents@~2.3.2:
     "@ethersproject/contracts": ^5.4.1
     "@ethersproject/providers": 5.4.4
     "@metamask/detect-provider": ^1.2.0
-    "@mikro-orm/core": ^4.5.7
-    "@mikro-orm/mongodb": ^4.5.7
+    "@mikro-orm/core": ^4.5.9
+    "@mikro-orm/mongodb": ^4.5.9
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
@@ -4818,8 +4831,8 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "monorepo@workspace:."
   dependencies:
-    "@typescript-eslint/eslint-plugin": 4.29.2
-    "@typescript-eslint/parser": 4.29.2
+    "@typescript-eslint/eslint-plugin": 4.29.3
+    "@typescript-eslint/parser": 4.29.3
     concurrently: ^6.2.1
     eslint: 7.32.0
     typescript: ^4.3.5

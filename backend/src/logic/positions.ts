@@ -26,7 +26,7 @@ export async function initAggTrades() {
   
   const positionTimeline = [...initList, ...closedList, ...liquidatedList, ...decreaseList, ...updateList]
     // .filter(p => p.key === '0x9c51eeea864909c115164d2ad805346ef5575b4673a6695f48c1351a795e8a60')
-    .sort((a: BaseEntity, b: BaseEntity): number => a.createdAt.getTime() - b.createdAt.getTime() + (a instanceof PositionUpdate ? 1000 : a instanceof PositionDecrease ? -1000 : 0))
+    .sort((a: BaseEntity, b: BaseEntity): number => a.createdAt.getTime() - b.createdAt.getTime() + (a instanceof PositionUpdate ? 350 : a instanceof PositionDecrease ? -350 : 0))
   
   const abstractPositions = positionTimeline.reduce((seed, pos) => {
     let aggtrade = seed.open.get(pos.key)
@@ -80,7 +80,6 @@ export const modelChanges = mergeArray([
       pos.key,
     )
 
-    console.log(model)
 
     const aggTrade = openPositions.get(pos.key)
 
@@ -108,7 +107,6 @@ export const modelChanges = mergeArray([
       pos.key,
     )
 
-    console.log(model)
 
     const aggTrade = openPositions.get(pos.key)
     
@@ -131,7 +129,6 @@ export const modelChanges = mergeArray([
       pos.size.toBigInt(),
       pos.key
     )
-    console.log(model)
 
     const aggTrade = openPositions.get(pos.key)
 
@@ -143,6 +140,8 @@ export const modelChanges = mergeArray([
     return [model]
   }, vaultActions.updatePosition),
 
+  
+  // Settle aggregation
   map(pos => {
     const model = new dto.PositionLiquidated(
       pos.markPrice.toBigInt(),
@@ -156,8 +155,6 @@ export const modelChanges = mergeArray([
       pos.collateralToken,
       pos.key,
     )
-
-    console.log(model)
 
     const aggTrade = openPositions.get(pos.key)
 
@@ -182,8 +179,6 @@ export const modelChanges = mergeArray([
       pos.size.toBigInt(),
       pos.key,
     )
-
-    console.log(model)
 
     const aggTrade = openPositions.get(pos.key)
 

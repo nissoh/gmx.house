@@ -13,9 +13,10 @@
     },
     "sideEffects": false,
     "dependencies": {
-        "@aelea/core": "0.18.0",
-        "@aelea/router": "0.16.0",
-        "@aelea/ui-components": "0.22.0",
+        "@aelea/core": "1.0.0",
+        "@aelea/dom": "0.1.0",
+        "@aelea/router": "0.18.0",
+        "@aelea/ui-components": "0.25.0",
         "@aelea/ui-components-theme": "0.9.0",
         "@aelea/utils": "1.1.0",
         "@ethersproject/abi": "5.4.0",

@@ -1,4 +1,4 @@
-import { component, $node, style, $text, attr, event, styleBehavior, Behavior, INode, $element } from "@aelea/core"
+import { component, $node, style, $text, attr, styleBehavior, INode, $element, stylePseudo, nodeEvent, $Node } from "@aelea/dom"
 import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
@@ -13,12 +13,15 @@ import * as provider from 'metamask-provider'
 import { combineArray, combineObject } from "@aelea/utils"
 import { TransactionReceipt } from "@ethersproject/providers"
 import { account } from "metamask-provider"
+import { Behavior } from "@aelea/core"
 
 type IMaybeClaimIdentity = Pick<IClaim, 'identity'> | null
 
 export interface IProfile {
   address: string
   claim: IMaybeClaimIdentity
+
+  $profileAnchor: $Node
 
   tempFix?: boolean
 }
@@ -186,7 +189,7 @@ const $ClaimForm = (address: string) => component((
   ]
 })
 
-export const $AccountProfile = ({ claim, address }: IProfile) => component((
+export const $AccountProfile = ({ claim, address, $profileAnchor }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
   [display, displayTether]: Behavior<any, string>,
@@ -217,18 +220,16 @@ export const $AccountProfile = ({ claim, address }: IProfile) => component((
         switchLatest(map(claimChange => {
           return mergeArray([
             $ProfileLinks(address, claimChange),
-            $anchor(attr({ href: `/p/account/${address}` }), layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
-              $AccountPhoto(address, claimChange),
-              $AccountLabel(address, claimChange),
-            ),
+            $profileAnchor,
           ])
         }, profileDisplay)),
+
 
         switchLatest(
           combineArray((claim, account) => {
             return !account || account && account === address
               ? mergeArray([
-                $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
+                $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click')))(
                   $text(claim && claim.address === account ? 'Rename' : 'Claim')
                 ),
                 $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),

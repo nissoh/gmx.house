@@ -104,6 +104,8 @@ export class PositionLiquidated extends Position implements IPositionLiquidated 
 
 @Entity()
 export class AggregatedTrade extends Position {
+  @ManyToOne(() => PositionIncrease) initialPosition: PositionIncrease
+
   @ManyToMany(() => PositionIncrease) increases = new Collection<PositionIncrease>(this)
   @ManyToMany(() => PositionDecrease) decreases = new Collection<PositionDecrease>(this)
   @ManyToMany(() => PositionUpdate) updates = new Collection<PositionUpdate>(this)
@@ -111,6 +113,7 @@ export class AggregatedTrade extends Position {
   constructor(initIncrease: PositionIncrease) {
     super(initIncrease.account, initIncrease.isLong, initIncrease.indexToken, initIncrease.collateralToken, initIncrease.key)
 
+    this.initialPosition = initIncrease
     this.createdAt = initIncrease.createdAt
     this.increases.add(initIncrease)
   }
@@ -122,12 +125,14 @@ export class AggregatedTradeSettled extends AggregatedTrade {
   @Property() settledDate: Date;
 
   constructor(settlement: PositionClose | PositionLiquidated, aggTrade: AggregatedTrade) {
-    const initialIncrease = aggTrade.increases.getItems()[0]
-    super(initialIncrease)
+    super(aggTrade.initialPosition)
+
+
+    this.increases.set(aggTrade.increases.getItems())
+    this.decreases.set(aggTrade.decreases.getItems())
+    this.updates.set(aggTrade.updates.getItems())
+
     this.settledDate = settlement.createdAt
-
-    Object.assign(this, aggTrade)
-
     this.settlement = settlement
   }
 }

@@ -1,4 +1,4 @@
-// import { Behavior, component, style } from '@aelea/core'
+// import { Behavior, component, style } from "@aelea/dom"
 // import { pallete } from '@aelea/ui-components-theme'
 // import { MouseEventParams } from 'lightweight-charts'
 // import { $Chart, IChart } from './$Chart'

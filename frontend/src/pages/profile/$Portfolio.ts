@@ -1,4 +1,4 @@
-import { $text, Behavior, component, style } from '@aelea/core'
+import { $text, component, style } from "@aelea/dom"
 import { $column, layoutSheet, state } from '@aelea/ui-components'
 
 import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateTrade, IClaim  } from 'gambit-middleware'
@@ -7,6 +7,7 @@ import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
 import * as router from '@aelea/router'
 import { $Profile } from './$Profile'
+import { Behavior } from "@aelea/core"
 
 
 

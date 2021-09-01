@@ -127,3 +127,4 @@ export function toAggregatedSummary(list: IAggregateSettledTrade[]): IAccountAgg
 
   return topMap.sort((a, b) => Number(b.realisedPnl) - Number(a.realisedPnl))
 }
+

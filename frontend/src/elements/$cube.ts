@@ -1,4 +1,4 @@
-import { $node, $wrapNativeElement, style } from "@aelea/core"
+import { $node, $wrapNativeElement, style } from "@aelea/dom"
 import { colorAlpha, pallete, theme } from "@aelea/ui-components-theme"
 import { tap } from "@most/core"
 import { disposeWith } from "@most/disposable"

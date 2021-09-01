@@ -1,4 +1,5 @@
-import { $wrapNativeElement, Behavior, component, INode, style, styleBehavior } from '@aelea/core'
+import { Behavior } from "@aelea/core"
+import { $wrapNativeElement, component, INode, style, styleBehavior } from "@aelea/dom"
 import { observer } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromCallback, O, Op } from '@aelea/utils'

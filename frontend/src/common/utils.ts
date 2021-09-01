@@ -1,8 +1,5 @@
 import { intervalInMsMap } from "gambit-middleware"
 
-export const isDesktopScreen = window.matchMedia('(min-width: 565px)').matches
-export const isMobileScreen = !isDesktopScreen
-
 
 type TimelineTime = {
   time: number

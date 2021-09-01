@@ -1,7 +1,7 @@
-import { $element, $node, $text, attr, Behavior, component, eventElementTarget, style } from '@aelea/core'
+import { $element, $node, $svg, $text, attr, component, eventElementTarget, style, stylePseudo } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
-import { $column, $icon, $row, layoutSheet, state } from '@aelea/ui-components'
+import { $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { $github } from '../elements/$icons'
 import { designSheet } from '@aelea/ui-components'
@@ -11,16 +11,16 @@ import { $cubes } from '../elements/$cube'
 import { $MainMenu } from '../components/$MainMenu'
 import { $Leaderboard } from './$Leaderboard'
 import { $anchor } from '../elements/$common'
-import { $ButtonPrimary } from '../components/form/$Button'
 import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
-import { $Tournament } from './tournament/$tournament'
-import { isDesktopScreen } from '../common/utils'
+// import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
 import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateTrade, LeaderboardApi, toAggregatedSummary } from 'gambit-middleware'
 import { aggregatedSettledTradeJson, aggregatedTradeJson, leaderboardAccountJson } from '../logic/utils'
 import { $Card } from './$Card'
-import { $logo } from '../common/$icons'
+import { $gmx, $logo } from '../common/$icons'
+import { $tradeGMX } from '../common/$tradeButton'
+import { Behavior } from "@aelea/core"
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -96,12 +96,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 $node(),
 
                 $row(style({ justifyContent: 'center' }))(
-                  $anchor(attr({ href: 'https://gambit.financial' }), style({ textDecoration: 'none' }))(
-
-                    $ButtonPrimary({
-                      $content: $text('https://gambit.financial')
-                    })({})
-                  )
+                  $tradeGMX
                 )
               ),
 
@@ -132,28 +127,29 @@ export default ({ baseRoute = '' }: Website) => component((
         ),
 
         router.contains(pagesRoute)(
-          $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
-            $row(layoutSheet.spacing, style({ padding: isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
-              isDesktopScreen
+          $column(layoutSheet.spacingBig, style({ maxWidth: '1280px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
+            $row(layoutSheet.spacing, style({ padding: screenUtils.isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
+              screenUtils.isDesktopScreen
                 ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
                   click: linkClickTether()
                 })
                 : empty(),
-              isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
+              screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
               $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether()
               })
             ),
             router.match(leaderboardRoute)(
               $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore, claimList, leaderboardQuery: map(x => toAggregatedSummary(x.map(aggregatedSettledTradeJson)), clientApi.leaderboard) })({
-                leaderboardQuery: leaderboardTether()
+                leaderboardQuery: leaderboardTether(),
+                routeChange: linkClickTether()
               })
             ),
-            router.match(tournamentRoute)(
-              $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList, tournamentQuery: map(x => x.map(leaderboardAccountJson), clientApi.tournament) })({
-                tournamentQuery: tournamentQueryTether()
-              })
-            ),
+            // router.match(tournamentRoute)(
+            //   $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList, tournamentQuery: map(x => x.map(leaderboardAccountJson), clientApi.tournament) })({
+            //     tournamentQuery: tournamentQueryTether()
+            //   })
+            // ),
             router.contains(portfolioRoute)(
               $Portfolio({
                 parentRoute: portfolioRoute, parentStore: rootStore, claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled) })({

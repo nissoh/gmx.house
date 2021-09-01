@@ -1,4 +1,4 @@
-import { $text, component, style } from '@aelea/core'
+import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
 
 import {  AccountHistoricalDataApi, formatFixed, getPositionFee, IAggregateSettledTrade, IClaim, intervalInMsMap, readableUSD, timeTzOffset, toAggregatedSummary, USD_DECIMALS, UTCTimestamp  } from 'gambit-middleware'
@@ -154,7 +154,7 @@ export const $Card = (config: ICard) => component(() => {
                     $text(style({ color: pallete.foreground }))(`/`),
                     $text(`${data.settledPositionCount - data.profitablePositionsCount}`),
                   ),
-                  $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win/Loss')
+                  $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win / Loss')
 
                 )
               )

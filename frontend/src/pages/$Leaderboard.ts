@@ -1,15 +1,17 @@
-import { $text, Behavior, event, component, style, styleBehavior, StyleCSS, attr } from '@aelea/core'
+import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo } from "@aelea/dom"
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, now, startWith, switchLatest, tap } from '@most/core'
+import { constant, map, multicast, now, startWith, switchLatest } from '@most/core'
 import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAccountAggregatedSummary } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { $AccountProfile } from '../components/$AccountProfile'
-import { isMobileScreen } from '../common/utils'
+import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$AccountProfile'
+import { Behavior } from "@aelea/core"
+import { $Link } from "../components/$Link"
+import { screenUtils } from "@aelea/ui-components"
 
 
 
@@ -34,6 +36,9 @@ const timeFrameToRangeOp = map((timeSpan: intervalInMsMap): LeaderboardApi => {
 
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
   [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
+
+  [routeChange, routeChangeTether]: Behavior<string, string>,
+
 ) => {
 
   const $header = $text(style({ fontSize: '1.45em', letterSpacing: '4px' }))
@@ -51,55 +56,80 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
+    $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
         $row(
-          $header(layoutSheet.flex)(`Top GMX'er`),
+          // $header(layoutSheet.flex)(`Top GMX'er`),
         ),
         $row(layoutSheet.flex)(),
 
         $text(style({ color: pallete.foreground }))('Time Frame:'),
         $anchor(
           styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.DAY))
+          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
         )(
           $text('24Hrs')
         ),
         $anchor(
           styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.WEEK))
+          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
         )(
           $text('Week')
         ),
         $anchor(
           styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.MONTH))
+          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
         )(
           $text('Month')
         )
       ),
-      $card(layoutSheet.spacingBig, style({ padding: isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
+      $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
         $column(layoutSheet.spacing)(
 
           switchLatest(map((dataSource) => {
             return $Table<IAccountAggregatedSummary>({
-              bodyContainerOp: O(layoutSheet.spacing),
+              bodyContainerOp: O(layoutSheet.spacingBig),
               dataSource: now(dataSource),
+              bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '30px' })),
               columns: [
+                ...screenUtils.isDesktopScreen ? [{
+                  $head: $text('Rank'),
+                  columnOp: style({ flex: .5, placeContent: 'center' }),
+                  valueOp: map((x: IAccountAggregatedSummary) => {
+                    const idx = dataSource.data.indexOf(x) + 1
+                    return $text(`#${idx}`)
+                  })
+                }] : [],
                 {
                   $head: $text('Account'),
-                  columnOp: style({ flex: 4 }),
-                  valueOp: map(x => {
+                  columnOp: style({ flex: 3 }),
+                  valueOp: map(({ address }) => {
                     return switchLatest(
                       map(claimList => {
-                        const claim = claimList.find(c => c.address === x.address) || null
-                        return $AccountProfile({ address: x.address, claim })({})
+                        const claim = claimList.find(c => c.address === address) || null
+
+                        const $profileAnchor = $Link({
+                          $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
+                            $AccountPhoto(address, claim),
+                            $AccountLabel(address, claim),
+                          ),
+                          url: `/p/account/${address}`,
+                          route: config.parentRoute.create({ fragment: '2121212' })
+                        })({
+                          click: routeChangeTether()
+                        })
+
+
+                        return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                          $profileAnchor,
+                          $ProfileLinks(address, claim),
+                        )
                       }, config.claimList)
                     )
                   })
                 },
                 {
-                  $head: $text('Win/Loss'),
+                  $head: $text('Win / Loss'),
                   columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
                     return $text(`${x.profitablePositionsCount}/${x.settledPositionCount - x.profitablePositionsCount}`)
@@ -113,7 +143,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })
                 },
                 {
-                  $head: $text('PnL Open/Settled'),
+                  $head: $text('PnL Settled'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)
@@ -129,7 +159,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     ),
 
     {
-      leaderboardQuery: timeFrame
+      leaderboardQuery: timeFrame,
+      routeChange
     }
   ]
 })

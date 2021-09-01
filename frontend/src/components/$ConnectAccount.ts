@@ -1,4 +1,5 @@
-import { $text, component, style, Behavior, $Node, attr } from "@aelea/core"
+import { Behavior } from "@aelea/core"
+import { $text, component, style, $Node, attr } from "@aelea/dom"
 import { $column, layoutSheet } from "@aelea/ui-components"
 import { combine, map, merge, switchLatest } from "@most/core"
 import { CHAIN } from "gambit-middleware"

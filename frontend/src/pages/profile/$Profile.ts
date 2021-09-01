@@ -1,19 +1,20 @@
-import { $text, Behavior, component, style, styleBehavior, event, StyleCSS, $node, motion, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/core"
+import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, IAggregateTrade, HistoricalDataApi, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregateSettledTrade } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregateSettledTrade } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
 import { $anchor, $seperator, $tokenLabel } from "../../elements/$common"
-import { state } from "@aelea/ui-components"
+import { screenUtils, state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
 import { $Chart } from "../../components/chart/$Chart"
 import { Stream } from "@most/types"
 import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
-import { fillIntervalGap, isDesktopScreen } from "../../common/utils"
+import { fillIntervalGap } from "../../common/utils"
+import { Behavior } from "@aelea/core"
 
 
 
@@ -148,8 +149,7 @@ export const $Profile = (config: IAccount) => component((
     ])
   )
 
-
-  const $container = isDesktopScreen
+  const $container = screenUtils.isDesktopScreen
     ? $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))
     : $column
 
@@ -157,7 +157,7 @@ export const $Profile = (config: IAccount) => component((
     backgroundImage: `radial-gradient(at right center, ${pallete.background} 50%, transparent)`,
     background: pallete.background
   })
-  const $chartContainer = isDesktopScreen
+  const $chartContainer = screenUtils.isDesktopScreen
     ? $node(
       chartContainerStyle, style({
         position: 'fixed', top: 0, right: 0, left: 0, bottom:0, height: '100vh', width: 'calc(50vw)', display: 'flex',
@@ -175,10 +175,12 @@ export const $Profile = (config: IAccount) => component((
             map(claimList => {
               const claim = claimList.find(c => c.address === accountAddress) || null
 
-              return $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+              return $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                 $AccountPhoto(accountAddress, claim, 72),
-                $AccountLabel(accountAddress, claim),
-                $ProfileLinks(accountAddress, claim),
+                $column(layoutSheet.spacingTiny)(
+                  $AccountLabel(accountAddress, claim),
+                  $ProfileLinks(accountAddress, claim),
+                )
               )
               // $anchor(attr({ href: getAccountUrl(CHAIN.BSC, accountAddress) }))(
               //   $icon({ $content: $external, width: '12px', viewBox: '0 0 24 24' })
@@ -193,7 +195,7 @@ export const $Profile = (config: IAccount) => component((
             }, config.claimList)
           ),
 
-          $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '280px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
+          $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '380px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
             switchLatest(map(data => $Chart({
               initializeSeries: map((api) => {
                 const series = api.addAreaSeries({
@@ -300,19 +302,19 @@ export const $Profile = (config: IAccount) => component((
           // $alert($text('Binance')),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(event('click'), constant(intervalInMsMap.MIN15))
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
           )(
             $text('15 Min')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(event('click'), constant(intervalInMsMap.HR))
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
           )(
             $text('1 Hour')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(event('click'), constant(intervalInMsMap.HR4))
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
           )(
             $text('4 Hour')
           ),
@@ -322,31 +324,31 @@ export const $Profile = (config: IAccount) => component((
               return $column(layoutSheet.spacingSmall)(
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.MIN === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(event('click'), constant(intervalInMsMap.MIN))
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN))
                 )(
                   $text('1 Minute')
                 ),
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.MIN5 === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(event('click'), constant(intervalInMsMap.MIN5))
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN5))
                 )(
                   $text('5 Minutes')
                 ),
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.HR8 === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(event('click'), constant(intervalInMsMap.HR8))
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR8))
                 )(
                   $text('8 Hour')
                 ),
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.DAY === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(event('click'), constant(intervalInMsMap.DAY))
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
                 )(
                   $text('24 Hour(Day)')
                 ),
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.WEEK === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(event('click'), constant(intervalInMsMap.WEEK))
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
                 )(
                   $text('1 Week')
                 ),
@@ -356,7 +358,7 @@ export const $Profile = (config: IAccount) => component((
           })(
             $anchor(
               styleBehavior(map(tf => ![intervalInMsMap.MIN15, intervalInMsMap.HR, intervalInMsMap.HR4].some(a => a === tf) ? { color: pallete.primary } : null, chartInterval)),
-              selectOtherTimeframeTether(event('click'), constant(intervalInMsMap.HR4))
+              selectOtherTimeframeTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
             )(
               $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
                 $text('Other'),
@@ -381,7 +383,7 @@ export const $Profile = (config: IAccount) => component((
               const selectedTokenBehavior = O(
                 style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
                 selectedTokenChangeTether(
-                  event('click'),
+                  nodeEvent('click'),
                   constant(token)
                 )
               )
@@ -394,7 +396,7 @@ export const $Profile = (config: IAccount) => component((
               )
             })
 
-            const $container = isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
+            const $container = screenUtils.isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
 
             return $container(layoutSheet.spacing)(
               ...$tokenChooser
@@ -444,7 +446,7 @@ export const $Profile = (config: IAccount) => component((
                 const priceScale = api.priceScale()
 
                 priceScale.applyOptions({
-                  scaleMargins: isDesktopScreen
+                  scaleMargins: screenUtils.isDesktopScreen
                     ? {
                       top:  0.3,
                       bottom: 0.3

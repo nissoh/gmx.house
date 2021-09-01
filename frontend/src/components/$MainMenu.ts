@@ -1,4 +1,4 @@
-import { $text, Behavior, component, IBranch, style } from '@aelea/core'
+import { $text, component, IBranch, style } from "@aelea/dom"
 import { $row, layoutSheet } from '@aelea/ui-components'
 import { $Link } from '../components/$Link'
 import { Route } from '@aelea/router'
@@ -10,6 +10,8 @@ import { Stream } from '@most/types'
 import { $Picker } from './$ThemePicker'
 import { dark, light } from '../common/theme'
 import { IClaim } from 'gambit-middleware'
+import { $tradeGMX } from '../common/$tradeButton'
+import { Behavior } from "@aelea/core"
 
 
 
@@ -28,20 +30,20 @@ export const $MainMenu = ({ parentRoute, containerOp = O(), claimList }: MainMen
   const leaderboardRoute = parentRoute.create({ fragment: 'guide', title: 'Guide' })
   const examplesRoute = parentRoute.create({ fragment: 'examples', title: 'Examples' })
   
-  const $accountDisplay = $IntermediateDisplay({
-    $display: switchLatest(
-      combineArray((address, claimList) => {
-        const claim = claimList.find(c => c.address === address) || null
+  // const $accountDisplay = $IntermediateDisplay({
+  //   $display: switchLatest(
+  //     combineArray((address, claimList) => {
+  //       const claim = claimList.find(c => c.address === address) || null
 
-        return $AccountProfile({ address, claim })({})
-        // return $Link({ $content: $text('Portfolio'), url: '/p/account', route: examplesRoute })({
-        //   click: routeChangeTether()
-        // })
-      }, walletConnectedSucceed, claimList)
-    )
-  })({
-    connectedWalletSucceed: walletConnectedSucceedTether()
-  })
+  //       return $AccountProfile({ address, claim })({})
+  //       // return $Link({ $content: $text('Portfolio'), url: '/p/account', route: examplesRoute })({
+  //       //   click: routeChangeTether()
+  //       // })
+  //     }, walletConnectedSucceed, claimList)
+  //   )
+  // })({
+  //   connectedWalletSucceed: walletConnectedSucceedTether()
+  // })
   return [
     $row(layoutSheet.spacingBig, style({ fontSize: '.9em', alignItems: 'center' }), containerOp)(
       $Picker([light, dark])({}),
@@ -54,7 +56,8 @@ export const $MainMenu = ({ parentRoute, containerOp = O(), claimList }: MainMen
       $Link({ $content: $text('Leaderboard'), url: '/p/leaderboard', route: leaderboardRoute })({
         click: routeChangeTether()
       }),
-      $accountDisplay
+      $tradeGMX
+      // $accountDisplay
     ),
 
 

@@ -1,4 +1,5 @@
-import { $Node, $text, Behavior, component, event, INode, style, styleBehavior } from "@aelea/core"
+import { Behavior } from "@aelea/core"
+import { $Node, $text, component, INode, nodeEvent, style, styleBehavior } from "@aelea/dom"
 import { $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { Op } from "@aelea/utils"
@@ -28,7 +29,7 @@ export const $ButtonToggle = <T>({ options, selected, $option = defaultOption }:
       ...options.map(opt =>
         $toggleBtn(
           sampleSelect(
-            event('click'),
+            nodeEvent('click'),
             constant(opt)
           ),
           styleBehavior(

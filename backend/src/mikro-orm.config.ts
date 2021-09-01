@@ -6,7 +6,7 @@ const options: Options = {
   type: 'mongo',
   entities: Object.values(dto),
   // metadataProvider: TsMorphMetadataProvider,
-  dbName: 'gambit-portal',
+  dbName: 'gmx',
   // highlighter: new MongoHighlighter(),
   // debug: true,
   ensureIndexes: true,

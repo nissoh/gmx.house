@@ -41,24 +41,22 @@ const run = async () => {
   ORM = await MikroORM.init(config)
   EM = ORM.em
 
-  const aggregatedTrades = await EM.find(AggregatedTradeSettled, {})
+  const aggregatedTradesSettled = await EM.find(AggregatedTradeSettled, {}, { populate: true })
+  const aggregatedTrades = await EM.find(AggregatedTrade, {})
 
-  if (aggregatedTrades.length === 0) {
+  if (aggregatedTradesSettled.length === 0 && aggregatedTrades.length === 0) {
     await initAggTrades()
   } else {
-    const aggregatedTrades = await EM.find(AggregatedTrade, {})
     aggregatedTrades.forEach(agg => openPositions.set(agg.key, agg))
   }
 
   console.log(`Initiating with ${openPositions.size} open positions`)
+
   EM.flush()
 
 
   const scheduler = newDefaultScheduler()
   const writeToDb = debounce(1500, tap(async model => {
-    // const model = await modelQuery
-
-    console.log(`inserting ${JSON.stringify(model[0])}`)
     return EM.persist(model)
   }, modelChanges))
 
