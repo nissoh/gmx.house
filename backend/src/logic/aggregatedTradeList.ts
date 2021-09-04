@@ -3,7 +3,7 @@ import { EM } from '../server'
 import { dto } from '../dto'
 import { awaitPromises, loop, map } from '@most/core'
 import { HistoricalDataApi, intervalInMsMap, LeaderboardApi, AccountHistoricalDataApi } from 'gambit-middleware'
-import { AggregatedTradeSettled } from '../dto/Vault'
+import { AggregatedTradeSettled, AggregatedTrade } from '../dto/Vault'
 import { timespanPassedSinceInvoke } from '../utils'
 import { O } from '@aelea/utils'
 
@@ -46,9 +46,9 @@ export const leaderboard = O(
     //   return { seed, value: seed.cache }
     // }
 
-    const allAccounts = Leaderboard(queryParams)
+    const allAccounts = getAggratedSettledTrades(queryParams)
   
-    seed.cache = allAccounts as any
+    seed.cache = allAccounts
 
     return {
       seed,
@@ -56,6 +56,16 @@ export const leaderboard = O(
     }
 
   }, { cache: Promise.resolve([]) as Promise<AggregatedTradeSettled[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
+  awaitPromises
+)
+
+export const openTrades = O(
+  map(async (queryParams: LeaderboardApi) => {
+
+    const allAccounts = await getAggregatedTrades()
+
+    return allAccounts
+  }),
   awaitPromises
 )
 
@@ -71,9 +81,8 @@ export const tournament = O(
 
     const start = Date.UTC(2021, 5, 14, 12, 0, 0, 0)
     const end = Date.UTC(2021, 5, 30, 12, 0, 0, 0)
-    const allAccounts = Leaderboard({ timeRange: [start, end] })
+    const allAccounts = getAggratedSettledTrades({ timeRange: [start, end] })
 
-    // @ts-ignore
     seed.cache = allAccounts
 
     return {
@@ -84,7 +93,7 @@ export const tournament = O(
   awaitPromises
 )
 
-async function Leaderboard({ timeRange }: HistoricalDataApi): Promise<AggregatedTradeSettled[]> {
+async function getAggratedSettledTrades({ timeRange }: HistoricalDataApi): Promise<AggregatedTradeSettled[]> {
 
   const aggTradeList = await EM.find(
     dto.AggregatedTradeSettled,
@@ -96,14 +105,22 @@ async function Leaderboard({ timeRange }: HistoricalDataApi): Promise<Aggregated
     }
   )
 
-  const mm = aggTradeList.find(x => x.id === "61001f5713d0575dfd0b7107")
-  console.log(mm)
+  return aggTradeList
 
-  const posClose = await EM.findOne(
-    dto.PositionClose,
-    "60ff1808f710122d0cf2ecad"
+}
+
+
+async function getAggregatedTrades(): Promise<AggregatedTrade[]> {
+
+  const aggTradeList = await EM.find(
+    dto.AggregatedTrade,
+    {
+    },
+    {
+      populate: true
+    }
   )
-  console.log(posClose)
+
 
   return aggTradeList
 

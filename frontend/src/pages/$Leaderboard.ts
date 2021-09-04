@@ -47,6 +47,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const timeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
+
+  config.openTradesQuery
   
 
   const topGambit: Stream<TablePageResponse<IAccountAggregatedSummary>> = map((tournament) => {
@@ -143,7 +145,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })
                 },
                 {
-                  $head: $text('PnL Settled'),
+                  $head: $text('PnL (open)Settled'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)
@@ -160,6 +162,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
     {
       leaderboardQuery: timeFrame,
+      openTradesQuery : now(null),
       routeChange
     }
   ]

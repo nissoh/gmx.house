@@ -1,7 +1,7 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, layoutSheet, state } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateTrade, IClaim  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateSettledTrade, IAggregateTrade, IClaim  } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
@@ -15,7 +15,8 @@ export interface IPortfolio<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IAggregateTrade[]>
+  aggregatedTradeList: Stream<IAggregateSettledTrade[]>
+  aggregatedOpenTradeList: Stream<IAggregateTrade[]>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 

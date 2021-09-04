@@ -3,7 +3,7 @@ import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAccountAggregatedSummary, IAggregateSettledTrade } from "./types"
+import { IAccountAggregatedSummary, IAggregateSettledTrade, IAggregateTrade } from "./types"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -59,7 +59,7 @@ export function priceDeltaPercentage(positionPrice: bigint, price: bigint, colla
   return delta * BASIS_POINTS_DIVISOR / collateral
 }
 
-export function toAggregatedSummary(list: IAggregateSettledTrade[]): IAccountAggregatedSummary[] {
+export function toAggregatedSummary(list: IAggregateSettledTrade[], openPositions: IAggregateTrade[]): IAccountAggregatedSummary[] {
 
   // const sortByCreartion = (a: BaseEntity, b: BaseEntity): number => a.createdAt.getTime() - b.createdAt.getTime()
   // const initPositionsMap = groupByMapMany(initPositions.sort(sortByCreartion), a => a.account)
@@ -94,14 +94,16 @@ export function toAggregatedSummary(list: IAggregateSettledTrade[]): IAccountAgg
       const updateList = agg.updates
       const settlement = agg.settlement
       const increaseList = agg.increases
+      const decreaseList = agg.increases
 
 
       const cumulative = increaseList.reduce((seed, pos, idx) => ({
         size: seed.size + pos.sizeDelta,
-        leverage: getLeverage(pos.sizeDelta, pos.collateralDelta, 0n),
+        leverage: seed.leverage,
         collateral: seed.collateral + pos.collateralDelta,
-        fee: seed.fee + getPositionFee(pos.sizeDelta, 0n)
+        fee: seed.fee + pos.fee
       }), { size: 0n, collateral: 0n, leverage: 0n, fee: 0n })
+
 
       if (settlement?.size) {
         cumulative.fee += getPositionFee(BigInt(settlement.size), 0n)

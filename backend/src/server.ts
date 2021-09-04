@@ -11,11 +11,10 @@ import path from 'path'
 import { accountApi } from './logic/account'
 import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
-import { aggregatedTradeSettled, leaderboard, tournament } from './api'
+import { aggregatedTradeSettled, leaderboard, openTrades, tournament } from './api'
 import { initAggTrades, modelChanges, openPositions } from './logic/positions'
 import { AggregatedTrade, AggregatedTradeSettled } from './dto/Vault'
 import { openGraphScreenshot } from './logic/linkOGShot'
-
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -34,6 +33,7 @@ const server = http.createServer(app)
 const apiComponent = helloFrontend('/api-ws', server, {
   aggregatedTradeSettled,
   leaderboard,
+  openTrades,
   tournament,
 })
 
@@ -56,14 +56,12 @@ const run = async () => {
 
 
   const scheduler = newDefaultScheduler()
-  const writeToDb = debounce(1500, tap(async model => {
-    return EM.persist(model)
-  }, modelChanges))
+  const writeToDb = debounce(1500, modelChanges)
 
   merge(
-    tap(() => {
+    tap((model) => {
       try {
-        EM.flush()
+        EM.persistAndFlush(model)
       } catch (e) {
         console.error(e)
       }
@@ -101,9 +99,10 @@ const run = async () => {
       const profilePageMatches = req.originalUrl.match(/(\/p\/account\/|0x[a-fA-F0-9]{40}$)/g)
       res.setHeader('content-type', 'text/html; charset=utf-8')
 
+      const fullUrl = 'https://' + req.get('host')
+
       if (profilePageMatches?.length === 2) {
         const matchedAdress: string = profilePageMatches[1]
-        const fullUrl = 'https://' + req.get('host')
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
           .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
@@ -112,7 +111,13 @@ const run = async () => {
         
         res.end(ogHtmlFile)
       } else {
-        res.end(htmlFile)
+        const ogHtmlFile = htmlFile
+          .replace(/\$OG_TITLE/g, 'GMX Commuinity')
+          .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
+          .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
+          .replace(/\$OG_IMAGE/g, ``)
+
+        res.end(ogHtmlFile)
       }
 
       

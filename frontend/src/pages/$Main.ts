@@ -20,7 +20,7 @@ import { aggregatedSettledTradeJson, aggregatedTradeJson, leaderboardAccountJson
 import { $Card } from './$Card'
 import { $gmx, $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
-import { Behavior } from "@aelea/core"
+import { Behavior, combineArray } from "@aelea/core"
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -38,8 +38,8 @@ interface Website {
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
   [leaderboard, leaderboardTether]: Behavior<LeaderboardApi, LeaderboardApi>,
-  [tournament, tournamentQueryTether]: Behavior<'', Account[]>,
-  [aggregatedTradeListQuery, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [openTrades, openTradesTether]: Behavior<any, LeaderboardApi>,
+  [aggregatedTradeSettled, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -72,9 +72,9 @@ export default ({ baseRoute = '' }: Website) => component((
   const claimList = claimListQuery()
 
   const clientApi = helloBackend({
-    aggregatedTradeSettled: aggregatedTradeListQuery,
+    aggregatedTradeSettled,
     leaderboard,
-    tournament,
+    openTrades
   })
 
   return [
@@ -87,7 +87,7 @@ export default ({ baseRoute = '' }: Website) => component((
             $row(style({ alignItems: 'center', width: '100%' }))(
               $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
                 $text(style({  }))(`Novel Perpetual Protocol`),
-                $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`Gambit Community`),
+                $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`GMX Community`),
                 $text(style({  }))(`Low slippage, low fees and Instant Finality`),
 
                 $node(),
@@ -140,8 +140,17 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
             router.match(leaderboardRoute)(
-              $Leaderboard({ parentRoute: rootRoute, parentStore: rootStore, claimList, leaderboardQuery: map(x => toAggregatedSummary(x.map(aggregatedSettledTradeJson)), clientApi.leaderboard) })({
+              $Leaderboard({
+                parentRoute: rootRoute,
+                parentStore: rootStore,
+                claimList,
+                leaderboardQuery: combineArray(x => {
+
+                  return toAggregatedSummary(x.map(aggregatedSettledTradeJson))
+                }, clientApi.leaderboard, clientApi.openTrades),
+              })({
                 leaderboardQuery: leaderboardTether(),
+                openTradesQuery: openTradesTether(),
                 routeChange: linkClickTether()
               })
             ),
@@ -152,7 +161,12 @@ export default ({ baseRoute = '' }: Website) => component((
             // ),
             router.contains(portfolioRoute)(
               $Portfolio({
-                parentRoute: portfolioRoute, parentStore: rootStore, claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled) })({
+                parentRoute: portfolioRoute,
+                parentStore: rootStore,
+                claimList,
+                aggregatedOpenTradeList: clientApi.openTrades,
+                aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
+              })({
                 aggregatedTradeListQuery: aggregatedTradeListQueryTether()
               })
             )
