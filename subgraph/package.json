@@ -3,8 +3,10 @@
   "license": "MIT",
   "scripts": {
     "codegen": "graph codegen",
+    "contracts-typecain": "yarn workspace gambit-contracts run typechain",
     "build": "graph build",
-    "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/ gmx-vault",
+    "build:pre-deploy": "yarn run contracts-typecain && yarn run codegen && yarn run build",
+    "deploy": "yarn run build:pre-deploy && graph deploy --product hosted-service nissoh/gmx-vault",
     "create-local": "graph create --node http://localhost:8020/ gmx-vault",
     "remove-local": "graph remove --node http://localhost:8020/ gmx-vault",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gmx-vault"

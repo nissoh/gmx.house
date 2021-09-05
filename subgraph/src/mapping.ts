@@ -1,16 +1,26 @@
+/* eslint-disable prefer-const */
+import { ethereum, store } from "@graphprotocol/graph-ts"
 import * as contract from "../generated/gmxVault/gmxVault"
 
 import {
   ClosePosition,
   DecreasePosition,
-  IncreasePosition, LiquidatePosition, UpdatePosition
+  IncreasePosition, LiquidatePosition, UpdatePosition, AggregatedTradeOpen, AggregatedTradeClosed, AggregatedTradeLiquidated
 } from "../generated/schema"
 
+
+
+const txId = (ev: ethereum.Event, key: string): string => key + "-" + ev.logIndex.toString()
+
+
+
+
 export function handleIncreasePosition(event: contract.IncreasePosition): void {
-  let entity = new IncreasePosition(event.transaction.hash.toHex())
+  let tradeKey = event.params.key.toHex()
+  let entity = new IncreasePosition(txId(event, tradeKey)) // we prevent 
 
   // BigInt and BigDecimal math are supported
-  entity.key = event.params.key.toHexString()
+  entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
   entity.indexToken = event.params.indexToken.toString()
@@ -24,13 +34,34 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
 
   // Entities can be written to the store with `.save()`
   entity.save()
+
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
+
+  if (aggTradeOpen === null) {
+    aggTradeOpen = new AggregatedTradeOpen(tradeKey)
+
+    aggTradeOpen.initialPosition = entity.id
+    aggTradeOpen.increaseList = []
+    aggTradeOpen.decreaseList = []
+    aggTradeOpen.updateList = []
+    aggTradeOpen.isLong = event.params.isLong
+  }
+
+  let increaseList = aggTradeOpen.increaseList
+  increaseList.push(entity.id)
+  aggTradeOpen.increaseList = increaseList
+
+
+  aggTradeOpen.save()
 }
 
 export function handleDecreasePosition(event: contract.DecreasePosition): void {
-  let entity = new DecreasePosition(event.transaction.hash.toHex())
+  let tradeKey = event.params.key.toHex()
+  let tradeId = txId(event, tradeKey)
+  let entity = new DecreasePosition(tradeId)
 
   // BigInt and BigDecimal math are supported
-  entity.key = event.params.key.toHexString()
+  entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
   entity.indexToken = event.params.indexToken.toString()
@@ -44,14 +75,93 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
 
   // Entities can be written to the store with `.save()`
   entity.save()
+
+
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+
+  if (aggTradeOpen) {
+    let decreaseList = aggTradeOpen.decreaseList
+    decreaseList.push(entity.id)
+    aggTradeOpen.decreaseList = decreaseList
+    aggTradeOpen.save()
+  }
+
+}
+
+export function handleUpdatePosition(event: contract.UpdatePosition): void {
+  let tradeKey = event.params.key.toHex()
+  let tradeId = txId(event, tradeKey)
+  let entity = new UpdatePosition(tradeId)
+
+  entity.key = event.params.key.toHex()
+
+  entity.size = event.params.size.toBigDecimal()
+  entity.collateral = event.params.collateral.toBigDecimal()
+  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
+  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
+  entity.averagePrice = event.params.averagePrice.toBigDecimal()
+  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
+
+  entity.save()
+
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+
+  if (aggTradeOpen) {
+    let updates = aggTradeOpen.updateList
+    updates.push(entity.id)
+
+    aggTradeOpen.updateList = updates
+    aggTradeOpen.save()
+  }
+
+}
+export function handleClosePosition(event: contract.ClosePosition): void {
+  let tradeKey = event.params.key.toHex()
+  let tradeId = txId(event, tradeKey)
+  let entity = new ClosePosition(tradeId)
+
+  // BigInt and BigDecimal math are supported
+  entity.key = event.params.key.toHex()
+
+
+  entity.size = event.params.size.toBigDecimal()
+  entity.collateral = event.params.collateral.toBigDecimal()
+  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
+  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
+  entity.averagePrice = event.params.averagePrice.toBigDecimal()
+  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
+
+  // Entities can be written to the store with `.save()`
+  entity.save()
+
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+
+  if (aggTradeOpen) {
+    let settled = new AggregatedTradeClosed(txId(event, tradeKey))
+
+    settled.initialPosition = aggTradeOpen.initialPosition
+    settled.settlement = entity.id
+
+    settled.decreaseList = aggTradeOpen.decreaseList
+    settled.increaseList = aggTradeOpen.increaseList
+    settled.updateList = aggTradeOpen.updateList
+    settled.isLong = aggTradeOpen.isLong
+
+    settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
+
+    store.remove('AggregatedTradeOpen', aggTradeOpen.id)
+    aggTradeOpen.save()
+  }
+
 }
 
 export function handleLiquidatePosition(event: contract.LiquidatePosition): void {
-
-  let entity = new LiquidatePosition(event.transaction.hash.toHex())
+  let tradeKey = event.params.key.toHex()
+  let tradeId = txId(event, tradeKey)
+  let entity = new LiquidatePosition(tradeId)
 
   // BigInt and BigDecimal math are supported
-  entity.key = event.params.key.toHexString()
+  entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
   entity.indexToken = event.params.indexToken.toString()
@@ -66,42 +176,26 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
 
   // Entities can be written to the store with `.save()`
   entity.save()
-}
 
-export function handleClosePosition(event: contract.ClosePosition): void {
-  let entity = new ClosePosition(event.transaction.hash.toHex())
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
 
-  // BigInt and BigDecimal math are supported
-  entity.key = event.params.key.toHexString()
+  if (aggTradeOpen) {
+    let settled = new AggregatedTradeLiquidated(txId(event, tradeKey))
 
+    settled.initialPosition = aggTradeOpen.initialPosition
+    settled.settlement = entity.id
 
-  entity.size = event.params.size.toBigDecimal()
-  entity.collateral = event.params.collateral.toBigDecimal()
-  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
-  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
-  entity.averagePrice = event.params.averagePrice.toBigDecimal()
-  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
+    settled.decreaseList = aggTradeOpen.decreaseList
+    settled.increaseList = aggTradeOpen.increaseList
+    settled.updateList = aggTradeOpen.updateList
+    settled.isLong = aggTradeOpen.isLong
 
-  // Entities can be written to the store with `.save()`
-  entity.save()
-}
+    settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
 
-export function handleUpdatePosition(event: contract.UpdatePosition): void {
-  let entity = new UpdatePosition(event.transaction.hash.toHex())
+    store.remove('AggregatedTradeOpen', aggTradeOpen.id)
+    aggTradeOpen.save()
+  }
 
-  // BigInt and BigDecimal math are supported
-  entity.key = event.params.key.toHexString()
-
-
-  entity.size = event.params.size.toBigDecimal()
-  entity.collateral = event.params.collateral.toBigDecimal()
-  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
-  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
-  entity.averagePrice = event.params.averagePrice.toBigDecimal()
-  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
 }
 
 

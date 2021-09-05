@@ -6,6 +6,31 @@ import { HistoricalDataApi, intervalInMsMap, LeaderboardApi, AccountHistoricalDa
 import { AggregatedTradeSettled, AggregatedTrade } from '../dto/Vault'
 import { timespanPassedSinceInvoke } from '../utils'
 import { O } from '@aelea/utils'
+import { ApolloClient, InMemoryCache, gql } from '@apollo/client'
+
+const APIURL = "https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault"
+
+const tokensQuery = `
+  query {
+    decreasePositions(first: 5) {
+      id
+      key
+      account
+      collateralToken
+    }
+  }
+`
+
+const client = new ApolloClient({
+  uri: APIURL,
+  cache: new InMemoryCache()
+})
+
+client.query({
+  query: gql(tokensQuery)
+})
+  .then(data => console.log("Subgraph data: ", data))
+  .catch(err => { console.log("Error fetching data: ", err) })
 
 
 function getTimespanParams(params: HistoricalDataApi) {

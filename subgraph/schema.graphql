@@ -1,22 +1,30 @@
 
-type Position @entity {
+
+type IncreasePosition @entity {
   id: ID!
 
-  size: BigDecimal!
-  collateral: BigDecimal!
-  averagePrice: BigDecimal!
-  entryFundingRate: BigDecimal!
-  realisedPnl: BigDecimal!
-  lastIncreasedTime: BigDecimal!
+  account: String!
+  collateralToken: String!
+  indexToken: String!
+
+  key: String!
+
+  isLong: Boolean!
+
+  collateralDelta: BigDecimal!
+  sizeDelta: BigDecimal!
+  price: BigDecimal!
+  fee: BigDecimal!
 }
 
 type DecreasePosition @entity {
   id: ID!
 
-  key: String!
   account: String!
   collateralToken: String!
   indexToken: String!
+
+  key: String!
 
   isLong: Boolean!
 
@@ -24,40 +32,6 @@ type DecreasePosition @entity {
   sizeDelta: BigDecimal!
   price: BigDecimal!
   fee: BigDecimal!
-}
-
-type IncreasePosition @entity {
-  id: ID!
-
-  key: String!
-  account: String!
-  collateralToken: String!
-  indexToken: String!
-
-  isLong: Boolean!
-
-  collateralDelta: BigDecimal!
-  sizeDelta: BigDecimal!
-  price: BigDecimal!
-  fee: BigDecimal!
-}
-
-type LiquidatePosition @entity {
-  id: ID!
-
-  key: String!
-  account: String!
-  collateralToken: String!
-  indexToken: String!
-
-  isLong: Boolean!
-
-
-  size: BigDecimal!
-  collateral: BigDecimal!
-  reserveAmount: BigDecimal!
-  realisedPnl: BigDecimal!
-  markPrice: BigDecimal!
 }
 
 type UpdatePosition @entity {
@@ -85,3 +59,68 @@ type ClosePosition @entity {
   averagePrice: BigDecimal!
   entryFundingRate: BigDecimal!
 }
+
+type LiquidatePosition @entity {
+  id: ID!
+
+  key: String!
+
+  account: String!
+  collateralToken: String!
+  indexToken: String!
+
+  isLong: Boolean!
+
+
+  size: BigDecimal!
+  collateral: BigDecimal!
+  reserveAmount: BigDecimal!
+  realisedPnl: BigDecimal!
+  markPrice: BigDecimal!
+}
+
+
+type AggregatedTradeOpen @entity {
+  id: ID!
+
+  isLong: Boolean!
+
+  initialPosition: IncreasePosition!
+
+  increaseList: [IncreasePosition]!
+  decreaseList: [DecreasePosition]!
+  updateList: [UpdatePosition]!
+}
+
+type AggregatedTradeClosed @entity {
+  id: ID!
+
+  isLong: Boolean!
+
+  initialPosition: IncreasePosition!
+
+  increaseList: [IncreasePosition]!
+  decreaseList: [DecreasePosition]!
+  updateList: [UpdatePosition]!
+
+  settlement: ClosePosition!
+
+  settledBlockTimestamp: BigDecimal!
+}
+
+type AggregatedTradeLiquidated @entity {
+  id: ID!
+
+  isLong: Boolean!
+
+  initialPosition: IncreasePosition!
+
+  increaseList: [IncreasePosition]!
+  decreaseList: [DecreasePosition]!
+  updateList: [UpdatePosition]!
+
+  settlement: LiquidatePosition!
+
+  settledBlockTimestamp: BigDecimal!
+}
+

@@ -21,6 +21,7 @@
     "dependencies": {
         "@aelea/core": "1.0.0",
         "@aelea/utils": "1.1.0",
+        "@apollo/client": "^3.4.10",
         "@ethersproject/abi": "5.4.1",
         "@ethersproject/abstract-signer": "5.4.1",
         "@ethersproject/bignumber": "^5.4.1",

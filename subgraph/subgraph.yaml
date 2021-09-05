@@ -10,7 +10,7 @@ dataSources:
       abi: gmxVault
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.2
       language: wasm/assemblyscript
       entities:
         - ClosePosition
@@ -18,6 +18,10 @@ dataSources:
         - IncreasePosition
         - LiquidatePosition
         - UpdatePosition
+
+        - AggregatedTradeOpen
+        - AggregatedTradeClosed
+        - AggregatedTradeLiquidated
 
         # - BuyUSDG
         # - CollectMarginFees
