@@ -16,7 +16,7 @@ import { claimListQuery } from '../logic/claim'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
 import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregatedTradeOpen, LeaderboardApi } from 'gambit-middleware'
-import { accountSummaryJson } from '../logic/utils'
+import { accountSummaryJson, toPositionIncreaseJson } from '../logic/utils'
 import { $Card } from './$Card'
 import { $gmx, $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
@@ -131,7 +131,7 @@ export default ({ baseRoute = '' }: Website) => component((
         ),
 
         router.contains(pagesRoute)(
-          $column(layoutSheet.spacingBig, style({ maxWidth: '1280px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
+          $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
             $row(layoutSheet.spacing, style({ padding: screenUtils.isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
               screenUtils.isDesktopScreen
                 ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
@@ -165,7 +165,9 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: portfolioRoute,
                 parentStore: rootStore,
                 claimList,
-                aggregatedTradeList: clientApi.aggregatedTradeSettled
+                aggregatedTradeList: map(res => {
+                  return toPositionIncreaseJson(res)
+                }, clientApi.aggregatedTradeSettled)
               })({
                 aggregatedTradeListQuery: aggregatedTradeListQueryTether()
               })

@@ -22,6 +22,7 @@ export function handleAddLiquidity(event: glpManager.AddLiquidity): void {
 
   entity.account = event.params.account.toHex()
   entity.token = event.params.token.toHex()
+
   entity.amount = event.params.amount.toBigDecimal()
   entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
   entity.glpSupply = event.params.glpSupply.toBigDecimal()
@@ -71,6 +72,7 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
 
   if (aggTradeOpen === null) {
     aggTradeOpen = new AggregatedTradeOpen(tradeKey)
+    aggTradeOpen.account = event.params.account.toHex()
 
     aggTradeOpen.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
     aggTradeOpen.initialPosition = entity.id
@@ -170,7 +172,8 @@ export function handleClosePosition(event: contract.ClosePosition): void {
 
   if (aggTradeOpen) {
     let settled = new AggregatedTradeClosed(txId(event, tradeKey))
-    settled.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
+    settled.account = aggTradeOpen.account
+    settled.initialPositionBlockTimestamp = aggTradeOpen.initialPositionBlockTimestamp
 
     settled.initialPosition = aggTradeOpen.initialPosition
     settled.settledPosition = entity.id
@@ -213,7 +216,8 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
 
   if (aggTradeOpen) {
     let settled = new AggregatedTradeLiquidated(txId(event, tradeKey))
-    settled.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
+    settled.account = aggTradeOpen.account
+    settled.initialPositionBlockTimestamp = aggTradeOpen.initialPositionBlockTimestamp
 
     settled.initialPosition = aggTradeOpen.initialPosition
     settled.settledPosition = entity.id

@@ -1,3 +1,4 @@
+
 type AddLiquidity @entity {
   id: ID!
 
@@ -106,6 +107,7 @@ type LiquidatePosition @entity {
 
 type AggregatedTradeOpen @entity {
   id: ID!
+  account: String!
 
   initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!
@@ -117,6 +119,7 @@ type AggregatedTradeOpen @entity {
 
 type AggregatedTradeClosed @entity {
   id: ID!
+  account: String!
 
   initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!
@@ -131,6 +134,7 @@ type AggregatedTradeClosed @entity {
 
 type AggregatedTradeLiquidated @entity {
   id: ID!
+  account: String!
 
   initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!

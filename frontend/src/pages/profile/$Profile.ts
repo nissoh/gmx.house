@@ -48,14 +48,14 @@ export const $Profile = (config: IAccount) => component((
   const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
 
-  const accountHistoryPnL = multicast(filter(arr => arr.aggregatedTradeCloseds.length > 0, config.aggregatedAccountSummary))
+  const accountHistoryPnL = multicast(filter(arr => {
+    return arr.aggregatedTradeCloseds.length > 0
+  }, config.aggregatedAccountSummary))
 
 
   const latestInitiatedPosition = map(h => {
-    // if (h.increasePositions.length === 0) {
-    //   return null
-    // }
-    return TOKEN_ADDRESS_MAP.get(h.aggregatedTradeCloseds[0].initialPosition.indexToken as ARBITRUM_CONTRACTS)!
+    const token = h.aggregatedTradeCloseds[0].initialPosition.indexToken
+    return TOKEN_ADDRESS_MAP.get(token as ARBITRUM_CONTRACTS)!
   }, accountHistoryPnL)
   // const selectedToken = now(TOKEN_ADDRESS_MAP.get(ARBITRUM_CONTRACTS.ETH)!)
 
@@ -81,10 +81,10 @@ export const $Profile = (config: IAccount) => component((
       const initialDataStartTime = now - interval * INTERVAL_TICKS
       const closedPosList = historicalData.aggregatedTradeCloseds
         // .filter(t => t.settledPosition)
-        .map(x => {
-          const fee = getPositionFee(x!.settledPosition.size, 0n)
-          const time = x.initialPositionBlockTimestamp
-          const value = formatFixed('markPrice' in x.settledPosition! ? x.settledPosition.collateral : x.settledPosition!.realisedPnl - fee, USD_DECIMALS)
+        .map(aggTrade => {
+          const fee = getPositionFee(aggTrade.settledPosition.size, 0n)
+          const time = aggTrade.settledBlockTimestamp
+          const value = formatFixed(aggTrade.settledPosition.realisedPnl - fee, USD_DECIMALS)
 
           return { value, time }
         })
@@ -170,10 +170,10 @@ export const $Profile = (config: IAccount) => component((
     $container(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
-        $row(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
+        $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
           switchLatest(
-            map(claimList => {
-              const claim = claimList.find(c => c.address === accountAddress) || null
+            map((claimList: IClaim[]) => {
+              const claim = claimList?.find(c => c.address === accountAddress) || null
 
               return $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                 $AccountPhoto(accountAddress, claim, 72),
@@ -192,7 +192,7 @@ export const $Profile = (config: IAccount) => component((
 
 
               // return $AccountProfile({ address: accountAddress, claim, tempFix: true })({})
-            }, config.claimList)
+            }, now(null) as any)
           ),
 
           $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '380px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
@@ -484,7 +484,7 @@ export const $Profile = (config: IAccount) => component((
                         position: "belowBar",
                         shape: 'square',
                         text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl + -fee),
-                        time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
+                        time: timeTzOffset(pos.settledBlockTimestamp),
                       }
                     })
                   const liquidatedPosMarkers = accountHistoryPnL.aggregatedTradeLiquidateds
@@ -495,7 +495,7 @@ export const $Profile = (config: IAccount) => component((
                         position: "belowBar",
                         shape: 'square',
                         text: '$-' + formatReadableUSD(pos.settledPosition!.collateral),
-                        time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
+                        time: timeTzOffset(pos.settledBlockTimestamp),
                       }
                     })
                   

@@ -37,96 +37,96 @@ query {
 
 const aggregatedTradesMap = gql`
 
-query($timeStart: BigDecimal, $timeEnd: BigDecimal) {
-  aggregatedTradeOpens {
-    id
-    initialPosition {
-      account
-      isLong
-      collateralDelta
-      id
-    }
-    increaseList {
-      fee
-      id
-    }
-    decreaseList {
-      fee
-      id
-    }
-    updateList {
-      key
-      id
-    }
-  }
+fragment increasePositionFields on IncreasePosition {
+  account
+  collateralToken
+  indexToken
 
-  aggregatedTradeCloseds(where: { initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+  key
+  isLong
+  collateralDelta
+  sizeDelta
+  price
+  fee
+}
+
+fragment decreasePositionFields on DecreasePosition {
+  account
+  collateralToken
+  indexToken
+
+  key
+  isLong
+  collateralDelta
+  sizeDelta
+  price
+  fee
+}
+
+fragment updatePositionFields on UpdatePosition {
+  key
+  size
+  collateral
+  reserveAmount
+  realisedPnl
+  averagePrice
+  entryFundingRate
+}
+
+fragment closePositionFields on ClosePosition {
+  key
+  size
+  collateral
+  reserveAmount
+  realisedPnl
+  averagePrice
+  entryFundingRate
+}
+
+fragment liquidatePositionFields on LiquidatePosition {
+  key
+  account
+  collateralToken
+  indexToken
+  isLong
+  size
+  collateral
+  reserveAmount
+  realisedPnl
+  markPrice
+}
+
+query ($account: String = "", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
+  aggregatedTradeOpens(where: {account_starts_with: $account}) {
     id
-    initialPositionBlockTimestamp
-    
-    initialPosition {
-      account
-      isLong
-      collateralDelta
-      id
-    }
-    
-    settledBlockTimestamp
-    settledPosition {
-      collateral
-      realisedPnl
-    }
-    increaseList {
-      fee
-      id
-      sizeDelta
-      collateralDelta
-    }
-    decreaseList {
-      fee
-      id
-      sizeDelta
-      collateralDelta
-    }
-    updateList {
-      key
-      id
-    }
+    account
+    initialPosition { ...increasePositionFields }
+    increaseList { ...increasePositionFields }
+    decreaseList { ... decreasePositionFields}
+    updateList { ...updatePositionFields }
   }
-  aggregatedTradeLiquidateds(where: { initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+  aggregatedTradeCloseds(where: { account_starts_with: $account, initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
     id
-    
     initialPositionBlockTimestamp
-    
-    initialPosition {
-      account
-      isLong
-      collateralDelta
-      id
-    }
-    
+    account
+    initialPosition { ...increasePositionFields }
     settledBlockTimestamp
-    settledPosition {
-      collateral
-      realisedPnl
-    }
-    increaseList {
-      fee
-      id
-      sizeDelta
-      collateralDelta
-    }
-    decreaseList {
-      fee
-      id
-      sizeDelta
-      collateralDelta
-    }
-    updateList {
-      key
-      collateral
-      id
-    }
+    settledPosition {...closePositionFields}
+    increaseList { ...increasePositionFields }
+    decreaseList { ... decreasePositionFields}
+    updateList { ...updatePositionFields }
+  }
+  aggregatedTradeLiquidateds(where: { account_starts_with: $account, initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+    id
+    account
+    initialPositionBlockTimestamp
+    initialPosition { ...increasePositionFields }
+    settledBlockTimestamp
+    settledPosition {...liquidatePositionFields}
+    initialPosition { ...increasePositionFields }
+    increaseList { ...increasePositionFields }
+    decreaseList { ... decreasePositionFields}
+    updateList { ...updatePositionFields }
   }
 }
 
@@ -158,7 +158,7 @@ function getTimespanParams(params: HistoricalDataApi) {
 
 export const aggregatedTradeSettled = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
-    const allAccounts = await getAggratedSettledTrades({})
+    const allAccounts = await getAggratedSettledTrades(queryParams)
 
     return allAccounts
   }),
@@ -190,7 +190,7 @@ export const leaderboard = O(
 export const openTrades = O(
   map(async (queryParams: LeaderboardApi) => {
 
-    const allAccounts = await getAggratedSettledTrades({})
+    const allAccounts = await getAggratedSettledTrades(queryParams)
 
     return allAccounts
   }),
@@ -222,16 +222,17 @@ export const openTrades = O(
 // )
 
 async function getAggratedSettledTrades(
-  { timeRange }: HistoricalDataApi
+  params: AccountHistoricalDataApi | LeaderboardApi
 ): Promise<IQueryAggregatedTradeMap> {
 
-  const [timeStart = 0, timeEnd = Infinity] = timeRange || []
+  const [timeStart = 0, timeEnd = Infinity] = params.timeRange || []
+  const account = 'account' in params ? params.account : ''
 
-  const data = client.query(aggregatedTradesMap, { timeStart: timeStart / 1000, timeEnd: timeEnd / 1000 }).toPromise().then((res: OperationResult<IQueryAggregatedTradeMap>) => {
+  const data = client.query(aggregatedTradesMap, { timeStart: timeStart / 1000, timeEnd: timeEnd / 1000, account: account ?? '' }).toPromise().then((res: OperationResult<IQueryAggregatedTradeMap>) => {
     if (res.data) {
       return res.data
     } else {
-      return Promise.reject('Unable to query data')
+      return Promise.reject(`Unable to query data: ${res.error?.message}`)
     }
   })
 

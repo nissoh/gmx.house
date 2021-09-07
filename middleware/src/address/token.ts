@@ -32,6 +32,33 @@ export const TOKENS_BSC = [
   }
 ] as Token[]
 
+export const TOKENS_ARBITRUM = [
+  {
+    name: "Bitcoin",
+    symbol: SYMBOL.BTC,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.BTC,
+  },
+  {
+    name: "Ethereum",
+    symbol: SYMBOL.ETH,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.WETH,
+  },
+  {
+    name: "USD Gambit",
+    symbol: SYMBOL.USDG,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.USDG
+  },
+  {
+    name: "USD Coin",
+    symbol: SYMBOL.BUSD,
+    decimals: 6,
+    address: ARBITRUM_CONTRACTS.USDC
+  }
+] as Token[]
+
 export function groupByMapMany<A, B extends keyof any>(list: A[], keyGetter: (v: A) => B) {
   const map = list.reduce((previous, currentItem) => {
     const group = keyGetter(currentItem)
@@ -43,5 +70,5 @@ export function groupByMapMany<A, B extends keyof any>(list: A[], keyGetter: (v:
 }
 
 
-export const TOKEN_ADDRESS_MAP = groupByMap(TOKENS_BSC, (x) => x.address)
+export const TOKEN_ADDRESS_MAP = groupByMap(TOKENS_ARBITRUM, (x) => x.address)
 

@@ -66,7 +66,7 @@ export interface HistoricalDataApi {
 }
 
 export interface AccountHistoricalDataApi extends HistoricalDataApi {
-  account: string
+  account?: string
 }
 
 export interface LeaderboardApi extends HistoricalDataApi {
@@ -92,7 +92,7 @@ export interface IAggregatedTradeLiquidated extends IAggregatedTradeOpen {
   settledBlockTimestamp: number
 }
 
-export interface IQueryAggregatedTradeMap extends IAggregatedTradeOpen {
+export interface IQueryAggregatedTradeMap {
   aggregatedTradeOpens: IAggregatedTradeOpen[]
   aggregatedTradeCloseds: IAggregatedTradeClosed[]
   aggregatedTradeLiquidateds: IAggregatedTradeLiquidated[]

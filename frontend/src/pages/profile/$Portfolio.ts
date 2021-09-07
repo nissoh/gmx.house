@@ -1,7 +1,7 @@
 import { $text, component, style } from "@aelea/dom"
-import { $column, $row, layoutSheet, state } from '@aelea/ui-components'
+import { $column, layoutSheet, state } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAggregatedAccountSummary, IClaim, IQueryAggregatedTradeMap  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IClaim, IQueryAggregatedTradeMap  } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
@@ -33,7 +33,6 @@ export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => com
     fragment: ETH_ADDRESS_REGEXP,
     title: 'Account'
   })
-
 
   return [
     $column(layoutSheet.spacingBig)(
