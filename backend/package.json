@@ -14,6 +14,7 @@
         "start": "node .dist/cjs/server",
         "dev": "tsnd -r dotenv/config --respawn ./src/server.ts",
         "clean": "yarn g:tsc:clean",
+        "gql-typings": "zeus ../subgraph/schema.graphql ./src  --ts",
         "build:project": "yarn g:tsc:project",
         "build:cjs": "yarn g:tsc:cjs",
         "build": "yarn build:cjs"
@@ -21,7 +22,6 @@
     "dependencies": {
         "@aelea/core": "1.0.0",
         "@aelea/utils": "1.1.0",
-        "@apollo/client": "^3.4.10",
         "@ethersproject/abi": "5.4.1",
         "@ethersproject/abstract-signer": "5.4.1",
         "@ethersproject/bignumber": "^5.4.1",
@@ -37,12 +37,16 @@
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
+        "@types/isomorphic-fetch": "^0.0.35",
+        "@urql/core": "^2.3.1",
         "concurrently": "^6.2.1",
         "dotenv": "^10.0.0",
         "express": "^4.17.1",
         "express-promise-router": "^4.1.0",
         "express-session": "^1.17.2",
         "gambit-middleware": "workspace:*",
+        "graphql": "^15.5.3",
+        "isomorphic-fetch": "^3.0.0",
         "puppeteer": "9.1.1",
         "ws": "^8.2.1"
     },

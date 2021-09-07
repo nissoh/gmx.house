@@ -4,17 +4,15 @@ import express from 'express'
 import http from 'http'
 import { readFileSync } from 'fs'
 import config from './mikro-orm.config'
-import { debounce, merge, tap } from '@most/core'
 import { newDefaultScheduler } from '@most/scheduler'
 
 import path from 'path'
 import { accountApi } from './logic/account'
-import { claimApi } from './logic/claimAccount'
+// import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
-import { aggregatedTradeSettled, leaderboard, openTrades, tournament } from './api'
-import { initAggTrades, modelChanges, openPositions } from './logic/positions'
-import { AggregatedTrade, AggregatedTradeSettled } from './dto/Vault'
+import { aggregatedTradeSettled, leaderboard, openTrades } from './api'
 import { openGraphScreenshot } from './logic/linkOGShot'
+import ws from 'ws'
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -27,47 +25,25 @@ const port = process.env.PORT
 
 const server = http.createServer(app)
 
+// const wss = new ws('wss://api.thegraph.com/subgraphs/name/nissoh/gmx-vault')
+const wss = new ws.Server({ server, path: '/api-ws' })
 
 
-
-const apiComponent = helloFrontend('/api-ws', server, {
+const apiComponent = helloFrontend(wss, {
   aggregatedTradeSettled,
   leaderboard,
   openTrades,
-  tournament,
 })
 
 const run = async () => {
-  ORM = await MikroORM.init(config)
-  EM = ORM.em
+  // ORM = await MikroORM.init(config)
+  // EM = ORM.em
 
-  const aggregatedTradesSettled = await EM.find(AggregatedTradeSettled, {}, { populate: true })
-  const aggregatedTrades = await EM.find(AggregatedTrade, {})
-
-  if (aggregatedTradesSettled.length === 0 && aggregatedTrades.length === 0) {
-    await initAggTrades()
-  } else {
-    aggregatedTrades.forEach(agg => openPositions.set(agg.key, agg))
-  }
-
-  console.log(`Initiating with ${openPositions.size} open positions`)
-
-  EM.flush()
 
 
   const scheduler = newDefaultScheduler()
-  const writeToDb = debounce(1500, modelChanges)
 
-  merge(
-    tap((model) => {
-      try {
-        EM.persistAndFlush(model)
-      } catch (e) {
-        console.error(e)
-      }
-    }, writeToDb),
-    apiComponent
-  )
+  apiComponent
     .run({
       event(time, val) {
       
@@ -87,9 +63,9 @@ const run = async () => {
 
   app.use(express.json())
   app.use(express.static(publicDir))
-  app.use((req, res, next) => RequestContext.create(ORM.em, next))
+  // app.use((req, res, next) => RequestContext.create(ORM.em, next))
   app.use('/api', openGraphScreenshot)
-  app.use('/api', claimApi)
+  // app.use('/api', claimApi)
   app.use('/api', accountApi)
   app.use((req, res, next) => {
 

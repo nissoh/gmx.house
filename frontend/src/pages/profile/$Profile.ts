@@ -1,6 +1,6 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregateSettledTrade } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregatedTradeClosed, unixTimeTzOffset, IAggregatedAccountSummary, IAggregatedTradeSummary, IQueryAggregatedTradeMap } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
@@ -23,7 +23,7 @@ export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   claimList: Stream<IClaim[]>
 
-  aggregatedTradeList: Stream<IAggregateSettledTrade[]>
+  aggregatedAccountSummary: Stream<IQueryAggregatedTradeMap>
 }
 
 
@@ -48,14 +48,14 @@ export const $Profile = (config: IAccount) => component((
   const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
 
-  const accountHistoryPnL = multicast(filter(arr => arr.length > 0, config.aggregatedTradeList))
+  const accountHistoryPnL = multicast(filter(arr => arr.aggregatedTradeCloseds.length > 0, config.aggregatedAccountSummary))
 
 
   const latestInitiatedPosition = map(h => {
     // if (h.increasePositions.length === 0) {
     //   return null
     // }
-    return TOKEN_ADDRESS_MAP.get(h[0].indexToken)!
+    return TOKEN_ADDRESS_MAP.get(h.aggregatedTradeCloseds[0].initialPosition.indexToken as ARBITRUM_CONTRACTS)!
   }, accountHistoryPnL)
   // const selectedToken = now(TOKEN_ADDRESS_MAP.get(ARBITRUM_CONTRACTS.ETH)!)
 
@@ -79,12 +79,12 @@ export const $Profile = (config: IAccount) => component((
       const now = Date.now()
 
       const initialDataStartTime = now - interval * INTERVAL_TICKS
-      const closedPosList = historicalData
-        .filter(t => t.settlement)
+      const closedPosList = historicalData.aggregatedTradeCloseds
+        // .filter(t => t.settledPosition)
         .map(x => {
-          const fee = getPositionFee(x.settlement!.size, 0n)
-          const time = x.settlement!.createdAt.getTime()
-          const value = formatFixed('markPrice' in x.settlement! ? x.settlement.collateral : x.settlement!.realisedPnl - fee, USD_DECIMALS)
+          const fee = getPositionFee(x!.settledPosition.size, 0n)
+          const time = x.initialPositionBlockTimestamp
+          const value = formatFixed('markPrice' in x.settledPosition! ? x.settledPosition.collateral : x.settledPosition!.realisedPnl - fee, USD_DECIMALS)
 
           return { value, time }
         })
@@ -375,7 +375,7 @@ export const $Profile = (config: IAccount) => component((
 
         switchLatest(
           combineArray((pnlData, activeToken) => {
-            const tokens = groupByMapMany(pnlData, pos => pos.indexToken)
+            const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
 
             const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
               const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
@@ -464,38 +464,38 @@ export const $Profile = (config: IAccount) => component((
 
                 setTimeout(() => {
                   const fstTick = historicKline[0]
-                  const increasePosMarkers = accountHistoryPnL
-                    .filter(pos => selectedToken.address === pos.indexToken)
+                  const increasePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
+                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken)
                     .map((pos): SeriesMarker<Time> => {
                       return {
-                        color: pos.isLong ? pallete.positive : pallete.negative,
+                        color: pos.initialPosition.isLong ? pallete.positive : pallete.negative,
                         position: "aboveBar",
-                        shape: pos.isLong ? 'arrowUp' : 'arrowDown',
-                        time: timeTzOffset(pos.createdAt.getTime()),
+                        shape: pos.initialPosition.isLong ? 'arrowUp' : 'arrowDown',
+                        time: timeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
-                  const closePosMarkers = accountHistoryPnL
-                    .filter(pos => selectedToken.address === pos.indexToken && pos.settlement && !('markPrice' in pos.settlement))
+                  const closePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
+                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !('markPrice' in pos.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
-                      const fee = getPositionMarginFee(pos.settlement!.size)
+                      const fee = getPositionMarginFee(pos.settledPosition!.size)
 
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(pos.settlement!.realisedPnl + -fee),
-                        time: timeTzOffset(pos.settlement!.createdAt.getTime()),
+                        text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl + -fee),
+                        time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
-                  const liquidatedPosMarkers = accountHistoryPnL
-                    .filter(pos => selectedToken.address === pos.indexToken && pos.settlement && 'markPrice' in pos.settlement)
+                  const liquidatedPosMarkers = accountHistoryPnL.aggregatedTradeLiquidateds
+                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && 'markPrice' in pos.settledPosition)
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pallete.negative,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$-' + formatReadableUSD(pos.settlement!.collateral),
-                        time: timeTzOffset(pos.settlement!.createdAt.getTime()),
+                        text: '$-' + formatReadableUSD(pos.settledPosition!.collateral),
+                        time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
                   

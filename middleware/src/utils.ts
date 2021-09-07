@@ -15,7 +15,7 @@ export const EXPLORER_URL = {
   [CHAIN.BSC]: "https://bscscan.com/",
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
 
-  [CHAIN.ARBITRUM]: "https://explorer.arbitrum.io/",
+  [CHAIN.ARBITRUM]: "https://arbiscan.io/",
   [CHAIN.ARBITRUM_RINKBY]: "https://rinkeby-explorer.arbitrum.io/",
 } as const
 
@@ -186,7 +186,7 @@ export const padDecimals = (amount: string, minDecimals: number) => {
 
 
 
-export function getAccountUrl(chainId: CHAIN, account: string) {
+export function getAccountExplorerUrl(chainId: CHAIN, account: string) {
   if (!account) {
     return EXPLORER_URL[chainId]
   }
@@ -243,5 +243,9 @@ export const tzOffset = new Date().getTimezoneOffset() * 60000
 
 export function timeTzOffset(ms: number): UTCTimestamp {
   return Math.floor((ms - tzOffset) / 1000) as UTCTimestamp
+}
+
+export function unixTimeTzOffset(ms: number): UTCTimestamp {
+  return ms - tzOffset as UTCTimestamp
 }
 

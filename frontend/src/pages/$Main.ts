@@ -15,12 +15,16 @@ import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateTrade, LeaderboardApi, toAggregatedSummary } from 'gambit-middleware'
-import { aggregatedSettledTradeJson, aggregatedTradeJson, leaderboardAccountJson } from '../logic/utils'
+import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregatedTradeOpen, LeaderboardApi } from 'gambit-middleware'
+import { accountSummaryJson } from '../logic/utils'
 import { $Card } from './$Card'
 import { $gmx, $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior, combineArray } from "@aelea/core"
+
+import { createClient } from '@urql/core'
+
+
 
 
 const popStateEvent = eventElementTarget('popstate', window)
@@ -74,7 +78,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const clientApi = helloBackend({
     aggregatedTradeSettled,
     leaderboard,
-    openTrades
+    // openTrades
   })
 
   return [
@@ -144,10 +148,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: rootRoute,
                 parentStore: rootStore,
                 claimList,
-                leaderboardQuery: combineArray(x => {
-
-                  return toAggregatedSummary(x.map(aggregatedSettledTradeJson))
-                }, clientApi.leaderboard, clientApi.openTrades),
+                leaderboardQuery: map(data => data.map(accountSummaryJson), clientApi.leaderboard),
               })({
                 leaderboardQuery: leaderboardTether(),
                 openTradesQuery: openTradesTether(),
@@ -164,8 +165,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: portfolioRoute,
                 parentStore: rootStore,
                 claimList,
-                aggregatedOpenTradeList: clientApi.openTrades,
-                aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
+                aggregatedTradeList: clientApi.aggregatedTradeSettled
               })({
                 aggregatedTradeListQuery: aggregatedTradeListQueryTether()
               })
@@ -176,12 +176,12 @@ export default ({ baseRoute = '' }: Website) => component((
       
       router.contains(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
-          $Card({
-            parentRoute: cardRoute,
-            claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
-          })({
-            aggregatedTradeListQuery: aggregatedTradeListQueryTether()
-          })
+          // $Card({
+          //   parentRoute: cardRoute,
+          //   claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
+          // })({
+          //   aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+          // })
         )
       )
 

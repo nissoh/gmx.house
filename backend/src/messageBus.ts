@@ -2,14 +2,13 @@ import { fromCallback, nullSink, O, Op } from '@aelea/utils'
 import { chain, filter, fromPromise, join, map, mergeArray, multicast, tap } from '@most/core'
 import { Stream } from '@most/types'
 import { ICommunicationMessage } from 'gambit-middleware'
-import http from 'http'
-import ws from 'ws'
+import ws, { EventEmitter } from 'ws'
 
 
 
 export type WsData = { data: ws.Data, ws: ws }
 
-function wsConnection<OUT>(wss: ws.Server, out: Stream<OUT>): Stream<WsData> {
+function wsConnection<OUT>(wss: EventEmitter, out: Stream<OUT>): Stream<WsData> {
   return {
     run(sink, scheduler) {
 
@@ -41,7 +40,7 @@ export type ILoopMap<T> = {
 }
 
 
-export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(path: string, server: http.Server, inMap: IN)  => {
+export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(wss: ws.Server | ws, inMap: IN)  => {
 
   const entriesInMap: [string, Op<any, any>][] = Object.entries(inMap)
   const outMapEntries = entriesInMap.map(async ([topic, op]) => {
@@ -68,8 +67,8 @@ export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(path: string, server
     return ww
   }, {} as ILoopMap<OUT>)
 
-  const wss = new ws.Server({ server, path })
-  const multicastConnection = multicast(wsConnection(wss, mergeArray(outMapEntries.map(O(fromPromise, join)))))
+  const outputStream = mergeArray(outMapEntries.map(O(fromPromise, join)))
+  const multicastConnection = multicast(wsConnection(wss, outputStream))
 
   return multicastConnection
 }

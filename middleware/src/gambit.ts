@@ -3,7 +3,7 @@ import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAccountAggregatedSummary, IAggregateSettledTrade, IAggregateTrade } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSummary, IQueryAggregatedTradeMap } from "./types"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -59,73 +59,67 @@ export function priceDeltaPercentage(positionPrice: bigint, price: bigint, colla
   return delta * BASIS_POINTS_DIVISOR / collateral
 }
 
-export function toAggregatedSummary(list: IAggregateSettledTrade[], openPositions: IAggregateTrade[]): IAccountAggregatedSummary[] {
+export function toAggregatedTradeAverageSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedTradeSummary {
+  const cumulativeAccountData: IAggregatedTradeSummary = {
+    indexToken: agg.initialPosition.indexToken as ARBITRUM_CONTRACTS,
+    startTimestamp: agg.initialPositionBlockTimestamp,
+    leverage: 0n, pnl: 0n, size: 0n, collateral: 0n, fee: 0n,
+    isLong: agg.initialPosition.isLong
+  }
 
-  // const sortByCreartion = (a: BaseEntity, b: BaseEntity): number => a.createdAt.getTime() - b.createdAt.getTime()
-  // const initPositionsMap = groupByMapMany(initPositions.sort(sortByCreartion), a => a.account)
-  const aggTradeAccountMap = groupByMapMany(list, a => a.account)
+  agg.increaseList?.forEach((pos) => {
+    cumulativeAccountData.size += BigInt(pos.sizeDelta)
+    cumulativeAccountData.collateral += BigInt(pos.collateralDelta)
+    cumulativeAccountData.fee += BigInt(pos.fee)
+    cumulativeAccountData.leverage += BigInt(pos.sizeDelta) / BigInt(pos.collateralDelta)
+  })
 
-  const topMap = Object.entries(aggTradeAccountMap).reduce((seed, [address, aggTradeList]) => {
+  cumulativeAccountData.leverage = cumulativeAccountData.leverage / BigInt(agg.increaseList.length)
+  
+  agg.decreaseList?.forEach((pos) => {
+    cumulativeAccountData.fee += BigInt(pos.fee)
+  })
 
-    const [closedList, liquidatedList] = aggTradeList.reduce((seed, next) => {
-      const slot = 'markPrice' in next.settlement ? 1 : 0
-      seed[slot].push(next)
-      return seed
-    }, [[], []] as [IAggregateSettledTrade[], IAggregateSettledTrade[]])
+  return cumulativeAccountData
+}
 
-    const account: IAccountAggregatedSummary = {
-      address: address,
-      settledPositionCount: closedList.length,
-      profitablePositionsCount: 0,
-      leverage: 0n,
+export function toAggregatedAccountSummary(list: IQueryAggregatedTradeMap): IAggregatedAccountSummary[] {
+  // const closedListMap = groupByMapMany(list.aggregatedTradeCloseds, a => a.initialPosition.account)
+  // const liqListMap = groupByMapMany(list.aggregatedTradeLiquidateds, a => a.initialPosition.account)
+
+  const settledListMap = groupByMapMany([...list.aggregatedTradeLiquidateds, ...list.aggregatedTradeCloseds], a => a.initialPosition.account)
+  // const openListMap = groupByMapMany(list.aggregatedTradeOpens, a => a.initialPosition.account)
+
+  const allPositions = Object.entries(settledListMap)
+
+  const topMap = allPositions.reduce((seed, [address, aggTradeList]) => {
+
+    let profitablePositionsCount = 0
+
+    const tradeSummaries = aggTradeList.map(toAggregatedTradeAverageSummary)
+    const fee = tradeSummaries.reduce((seed, pos) => seed + BigInt(pos.fee), 0n)
+    const realisedPnl = aggTradeList.reduce((seed, pos) => {
+      if (pos.settledPosition.realisedPnl > 0n) {
+        profitablePositionsCount++
+      }
+
+      return seed + BigInt(pos.settledPosition.realisedPnl)
+    }, 0n)
+
+
+    const account: IAggregatedAccountSummary = {
+      address, tradeSummaries, fee, profitablePositionsCount,
+      settledPositionCount: aggTradeList.length,
+      leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0n) / BigInt(tradeSummaries.length),
       openPnl: null,
       claim: null,
-      realisedPnl: 0n,
-      openSize: 0n,
-      aggTradeList
+      realisedPnl: realisedPnl - fee,
     }
-
-
-    liquidatedList.forEach((liqAgg) => {
-      account.realisedPnl -= liqAgg.settlement.collateral
-    })
-
-    closedList.forEach((agg) => {
-      const updateList = agg.updates
-      const settlement = agg.settlement
-      const increaseList = agg.increases
-      const decreaseList = agg.increases
-
-
-      const cumulative = increaseList.reduce((seed, pos, idx) => ({
-        size: seed.size + pos.sizeDelta,
-        leverage: seed.leverage,
-        collateral: seed.collateral + pos.collateralDelta,
-        fee: seed.fee + pos.fee
-      }), { size: 0n, collateral: 0n, leverage: 0n, fee: 0n })
-
-
-      if (settlement?.size) {
-        cumulative.fee += getPositionFee(BigInt(settlement.size), 0n)
-      }
-
-      account.leverage += cumulative.leverage
-      account.realisedPnl += (settlement?.realisedPnl || 0n) - cumulative.fee
-
-      if (agg.settlement!.realisedPnl > 0n) {
-        account.profitablePositionsCount++
-      }
-    })
-
-    if (closedList.length) {
-      account.leverage = account.leverage / BigInt(closedList.length)
-    }
-    
 
     seed.push(account)
 
     return seed
-  }, [] as IAccountAggregatedSummary[])
+  }, [] as IAggregatedAccountSummary[])
 
   return topMap.sort((a, b) => Number(b.realisedPnl) - Number(a.realisedPnl))
 }

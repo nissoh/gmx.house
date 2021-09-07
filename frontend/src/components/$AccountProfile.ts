@@ -2,7 +2,7 @@ import { component, $node, style, $text, attr, styleBehavior, INode, $element, s
 import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
-import { shortenAddress, getAccountUrl, CHAIN, bnToHex, BSC_WALLET, IClaim, shortPostAdress } from "gambit-middleware"
+import { shortenAddress, getAccountExplorerUrl, CHAIN, bnToHex, BSC_WALLET, IClaim, shortPostAdress } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
@@ -83,7 +83,7 @@ export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
 
   return $row(layoutSheet.spacingSmall)(
     $twitterAnchor,
-    $anchor(attr({ href: getAccountUrl(CHAIN.BSC, address) }))(
+    $anchor(attr({ href: getAccountExplorerUrl(CHAIN.ARBITRUM, address) }))(
       $icon({ $content: $ethScan, width: '12px', viewBox: '0 0 24 24' })
     )
   )

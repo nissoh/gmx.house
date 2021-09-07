@@ -1,9 +1,9 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, formatFixed, getPositionFee, IAggregateSettledTrade, IClaim, intervalInMsMap, readableUSD, timeTzOffset, toAggregatedSummary, USD_DECIMALS, UTCTimestamp  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, formatFixed, getPositionFee, IAggregatedTradeClosed, IClaim, intervalInMsMap, readableUSD, timeTzOffset, USD_DECIMALS, UTCTimestamp  } from 'gambit-middleware'
 import { Stream } from '@most/types'
-import { filter, map, multicast, now, switchLatest } from '@most/core'
+import { filter, map, multicast, never, now, switchLatest } from '@most/core'
 import { Route } from '@aelea/router'
 import { pallete } from '@aelea/ui-components-theme'
 import { fillIntervalGap } from "../common/utils"
@@ -17,7 +17,7 @@ export interface ICard {
   parentRoute: Route
 
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IAggregateSettledTrade[]>
+  aggregatedTradeList: Stream<IAggregatedTradeClosed[]>
 }
 
 
@@ -31,7 +31,8 @@ export const $Card = (config: ICard) => component(() => {
   const accountHistoryPnL = multicast(filter(arr => arr.length > 0, config.aggregatedTradeList))
 
 
-  const summary = map(data => toAggregatedSummary(data)[0], accountHistoryPnL)
+  // const summary = map(data => toAggregatedSummary(data)[0], accountHistoryPnL)
+  const summary = never() as any
 
 
   const state = multicast(
@@ -41,11 +42,11 @@ export const $Card = (config: ICard) => component(() => {
       const initialDataStartTime = now - interval * INTERVAL_TICKS
 
       const closedPosList = historicalData
-        .filter(t => t.settlement)
+        .filter(t => t.settledPosition)
         .map(x => {
-          const fee = getPositionFee(x.settlement!.size, 0n)
-          const time = x.settlement!.createdAt.getTime()
-          const value = formatFixed('markPrice' in x.settlement! ? x.settlement.collateral : x.settlement!.realisedPnl - fee, USD_DECIMALS)
+          const fee = getPositionFee(x.settledPosition!.size, 0n)
+          const time = x.initialPositionBlockTimestamp
+          const value = formatFixed('markPrice' in x.settledPosition! ? x.settledPosition.collateral : x.settledPosition!.realisedPnl - fee, USD_DECIMALS)
 
           return { value, time }
         })
@@ -143,20 +144,19 @@ export const $Card = (config: ICard) => component(() => {
               return $row(layoutSheet.spacingBig, style({ placeContent: 'center', alignItems: 'center' }))(
                 $column(style({ alignItems: 'center' }))(
                   $row(
-                    $text(`${formatFixed(data.leverage, 4).toFixed(1)}x`),
+                    // $text(`${formatFixed(data.leverage, 4).toFixed(1)}x`),
                   ),
                   $text(style({ fontSize: '.6em', color: pallete.foreground }))('Leverage')
                 ),
 
-                $column(style({ alignItems: 'center' }))(
-                  $row(layoutSheet.spacing)(
-                    $text(`${data.profitablePositionsCount}`),
-                    $text(style({ color: pallete.foreground }))(`/`),
-                    $text(`${data.settledPositionCount - data.profitablePositionsCount}`),
-                  ),
-                  $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win / Loss')
-
-                )
+                // $column(style({ alignItems: 'center' }))(
+                //   $row(layoutSheet.spacing)(
+                //     $text(`${data.profitablePositionsCount}`),
+                //     $text(style({ color: pallete.foreground }))(`/`),
+                //     $text(`${data.settledPositionCount - data.profitablePositionsCount}`),
+                //   ),
+                //   $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win / Loss')
+                // )
               )
             }, summary)
           ),

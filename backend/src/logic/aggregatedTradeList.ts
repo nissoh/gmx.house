@@ -1,36 +1,145 @@
 
-import { EM } from '../server'
-import { dto } from '../dto'
 import { awaitPromises, loop, map } from '@most/core'
-import { HistoricalDataApi, intervalInMsMap, LeaderboardApi, AccountHistoricalDataApi } from 'gambit-middleware'
-import { AggregatedTradeSettled, AggregatedTrade } from '../dto/Vault'
+import { HistoricalDataApi, intervalInMsMap, LeaderboardApi, AccountHistoricalDataApi, IQueryAggregatedTradeMap, toAggregatedAccountSummary, IAggregatedAccountSummary } from 'gambit-middleware'
 import { timespanPassedSinceInvoke } from '../utils'
 import { O } from '@aelea/utils'
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client'
+import { createClient, gql, OperationResult } from '@urql/core'
+import fetch from 'isomorphic-fetch'
 
-const APIURL = "https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault"
 
-const tokensQuery = `
-  query {
-    decreasePositions(first: 5) {
-      id
-      key
+const aggregatedOpenTrades = gql`
+query {
+  aggregatedTradeOpens {
+    id
+    initialPosition {
       account
-      collateralToken
+      isLong
+      collateralDelta
+      id
+    }
+    increaseList {
+      fee
+      id
+    }
+    decreaseList {
+      fee
+      id
+    }
+    updateList {
+      key
+      id
     }
   }
+}
+
 `
 
-const client = new ApolloClient({
-  uri: APIURL,
-  cache: new InMemoryCache()
+
+const aggregatedTradesMap = gql`
+
+query($timeStart: BigDecimal, $timeEnd: BigDecimal) {
+  aggregatedTradeOpens {
+    id
+    initialPosition {
+      account
+      isLong
+      collateralDelta
+      id
+    }
+    increaseList {
+      fee
+      id
+    }
+    decreaseList {
+      fee
+      id
+    }
+    updateList {
+      key
+      id
+    }
+  }
+
+  aggregatedTradeCloseds(where: { initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+    id
+    initialPositionBlockTimestamp
+    
+    initialPosition {
+      account
+      isLong
+      collateralDelta
+      id
+    }
+    
+    settledBlockTimestamp
+    settledPosition {
+      collateral
+      realisedPnl
+    }
+    increaseList {
+      fee
+      id
+      sizeDelta
+      collateralDelta
+    }
+    decreaseList {
+      fee
+      id
+      sizeDelta
+      collateralDelta
+    }
+    updateList {
+      key
+      id
+    }
+  }
+  aggregatedTradeLiquidateds(where: { initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+    id
+    
+    initialPositionBlockTimestamp
+    
+    initialPosition {
+      account
+      isLong
+      collateralDelta
+      id
+    }
+    
+    settledBlockTimestamp
+    settledPosition {
+      collateral
+      realisedPnl
+    }
+    increaseList {
+      fee
+      id
+      sizeDelta
+      collateralDelta
+    }
+    decreaseList {
+      fee
+      id
+      sizeDelta
+      collateralDelta
+    }
+    updateList {
+      key
+      collateral
+      id
+    }
+  }
+}
+
+
+`
+
+
+const client = createClient({
+  fetch: fetch as any,
+  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault',
 })
 
-client.query({
-  query: gql(tokensQuery)
-})
-  .then(data => console.log("Subgraph data: ", data))
-  .catch(err => { console.log("Error fetching data: ", err) })
+
 
 
 function getTimespanParams(params: HistoricalDataApi) {
@@ -49,15 +158,9 @@ function getTimespanParams(params: HistoricalDataApi) {
 
 export const aggregatedTradeSettled = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
+    const allAccounts = await getAggratedSettledTrades({})
 
-    const aggTradeList = await EM.find(dto.AggregatedTradeSettled, {
-      createdAt: getTimespanParams(queryParams),
-      account: { $eq: queryParams.account }
-    }, {
-      populate: true
-    })
-
-    return aggTradeList
+    return allAccounts
   }),
   awaitPromises
 )
@@ -71,7 +174,7 @@ export const leaderboard = O(
     //   return { seed, value: seed.cache }
     // }
 
-    const allAccounts = getAggratedSettledTrades(queryParams)
+    const allAccounts = getAggratedSettledTrades(queryParams).then(toAggregatedAccountSummary)
   
     seed.cache = allAccounts
 
@@ -80,14 +183,14 @@ export const leaderboard = O(
       value: allAccounts
     }
 
-  }, { cache: Promise.resolve([]) as Promise<AggregatedTradeSettled[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
+  }, { cache: Promise.resolve([]) as Promise<IAggregatedAccountSummary[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
   awaitPromises
 )
 
 export const openTrades = O(
   map(async (queryParams: LeaderboardApi) => {
 
-    const allAccounts = await getAggregatedTrades()
+    const allAccounts = await getAggratedSettledTrades({})
 
     return allAccounts
   }),
@@ -95,61 +198,48 @@ export const openTrades = O(
 )
 
 
-export const tournament = O(
-  loop((seed, s: string) => {
+// export const tournament = O(
+//   loop((seed, s: string) => {
 
-    const cacheTimespanPasses = seed.cacheAgeFn()
+//     const cacheTimespanPasses = seed.cacheAgeFn()
 
-    if (!cacheTimespanPasses) {
-      return { seed, value: seed.cache }
+//     if (!cacheTimespanPasses) {
+//       return { seed, value: seed.cache }
+//     }
+
+//     const start = Date.UTC(2021, 5, 14, 12, 0, 0, 0)
+//     const end = Date.UTC(2021, 5, 30, 12, 0, 0, 0)
+//     const allAccounts = getAggratedSettledTrades({ timeRange: [start, end] })
+
+//     seed.cache = allAccounts
+
+//     return {
+//       seed,
+//       value: allAccounts
+//     }
+//   }, { cache: Promise.resolve([]) as Promise<AggregatedTradeSettled[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
+//   awaitPromises
+// )
+
+async function getAggratedSettledTrades(
+  { timeRange }: HistoricalDataApi
+): Promise<IQueryAggregatedTradeMap> {
+
+  const [timeStart = 0, timeEnd = Infinity] = timeRange || []
+
+  const data = client.query(aggregatedTradesMap, { timeStart: timeStart / 1000, timeEnd: timeEnd / 1000 }).toPromise().then((res: OperationResult<IQueryAggregatedTradeMap>) => {
+    if (res.data) {
+      return res.data
+    } else {
+      return Promise.reject('Unable to query data')
     }
+  })
 
-    const start = Date.UTC(2021, 5, 14, 12, 0, 0, 0)
-    const end = Date.UTC(2021, 5, 30, 12, 0, 0, 0)
-    const allAccounts = getAggratedSettledTrades({ timeRange: [start, end] })
-
-    seed.cache = allAccounts
-
-    return {
-      seed,
-      value: allAccounts
-    }
-  }, { cache: Promise.resolve([]) as Promise<AggregatedTradeSettled[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
-  awaitPromises
-)
-
-async function getAggratedSettledTrades({ timeRange }: HistoricalDataApi): Promise<AggregatedTradeSettled[]> {
-
-  const aggTradeList = await EM.find(
-    dto.AggregatedTradeSettled,
-    {
-      settledDate: getTimespanParams({ timeRange })
-    },
-    {
-      populate: true
-    }
-  )
-
-  return aggTradeList
-
+  return data
 }
 
 
-async function getAggregatedTrades(): Promise<AggregatedTrade[]> {
 
-  const aggTradeList = await EM.find(
-    dto.AggregatedTrade,
-    {
-    },
-    {
-      populate: true
-    }
-  )
-
-
-  return aggTradeList
-
-}
 
 // leaderboardApi.post('/liquidations', async (req, res) => {
 //   const queryParams: HistoricalDataApi = req.body

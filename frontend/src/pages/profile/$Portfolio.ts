@@ -1,13 +1,13 @@
 import { $text, component, style } from "@aelea/dom"
-import { $column, layoutSheet, state } from '@aelea/ui-components'
+import { $column, $row, layoutSheet, state } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregateSettledTrade, IAggregateTrade, IClaim  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAggregatedAccountSummary, IClaim, IQueryAggregatedTradeMap  } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
 import * as router from '@aelea/router'
-import { $Profile } from './$Profile'
 import { Behavior } from "@aelea/core"
+import { $Profile } from "./$Profile"
 
 
 
@@ -15,8 +15,7 @@ export interface IPortfolio<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IAggregateSettledTrade[]>
-  aggregatedOpenTradeList: Stream<IAggregateTrade[]>
+  aggregatedTradeList: Stream<IQueryAggregatedTradeMap>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 
@@ -42,7 +41,7 @@ export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => com
         $Profile({
           parentStore: config.parentStore,
           claimList: config.claimList,
-          aggregatedTradeList: config.aggregatedTradeList
+          aggregatedAccountSummary: config.aggregatedTradeList
         })({
           aggregatedTradeListQuery: aggregatedTradeListQueryTether()
         })

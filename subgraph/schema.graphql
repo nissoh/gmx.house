@@ -83,8 +83,7 @@ type LiquidatePosition @entity {
 type AggregatedTradeOpen @entity {
   id: ID!
 
-  isLong: Boolean!
-
+  initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!
 
   increaseList: [IncreasePosition]!
@@ -95,32 +94,28 @@ type AggregatedTradeOpen @entity {
 type AggregatedTradeClosed @entity {
   id: ID!
 
-  isLong: Boolean!
-
+  initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!
 
   increaseList: [IncreasePosition]!
   decreaseList: [DecreasePosition]!
   updateList: [UpdatePosition]!
 
-  settlement: ClosePosition!
-
+  settledPosition: ClosePosition!
   settledBlockTimestamp: BigDecimal!
 }
 
 type AggregatedTradeLiquidated @entity {
   id: ID!
 
-  isLong: Boolean!
-
+  initialPositionBlockTimestamp: BigDecimal!
   initialPosition: IncreasePosition!
 
   increaseList: [IncreasePosition]!
   decreaseList: [DecreasePosition]!
   updateList: [UpdatePosition]!
 
-  settlement: LiquidatePosition!
-
+  settledPosition: LiquidatePosition!
   settledBlockTimestamp: BigDecimal!
 }
 

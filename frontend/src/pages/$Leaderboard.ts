@@ -1,9 +1,9 @@
 import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo } from "@aelea/dom"
 import { O, } from '@aelea/utils'
-import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
+import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state, $icon } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { constant, map, multicast, now, startWith, switchLatest } from '@most/core'
-import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAccountAggregatedSummary } from 'gambit-middleware'
+import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAggregatedAccountSummary } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -12,6 +12,7 @@ import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$Acco
 import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
+import { $caretDown } from "../elements/$icons"
 
 
 
@@ -20,7 +21,7 @@ export interface ILeaderboard<T extends BaseProvider> {
   provider?: Stream<T>
   claimList: Stream<IClaim[]>
 
-  leaderboardQuery: Stream<Account[]>
+  leaderboardQuery: Stream<IAggregatedAccountSummary[]>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
@@ -48,10 +49,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const timeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
 
-  config.openTradesQuery
-  
 
-  const topGambit: Stream<TablePageResponse<IAccountAggregatedSummary>> = map((tournament) => {
+  const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((tournament) => {
     return { data: tournament }
   }, config.leaderboardQuery)
 
@@ -60,8 +59,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   return [
     $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
       $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
-        $row(
-          // $header(layoutSheet.flex)(`Top GMX'er`),
+        $row(layoutSheet.spacing)(
+          $header(layoutSheet.flex, style({ color: pallete.foreground }))(`Leaderboard`),
+          // $header(layoutSheet.flex)(`Settled`),
+          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
         ),
         $row(layoutSheet.flex)(),
 
@@ -89,7 +90,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         $column(layoutSheet.spacing)(
 
           switchLatest(map((dataSource) => {
-            return $Table<IAccountAggregatedSummary>({
+            return $Table<IAggregatedAccountSummary>({
               bodyContainerOp: O(layoutSheet.spacingBig),
               dataSource: now(dataSource),
               bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '30px' })),
@@ -97,7 +98,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 ...screenUtils.isDesktopScreen ? [{
                   $head: $text('Rank'),
                   columnOp: style({ flex: .5, placeContent: 'center' }),
-                  valueOp: map((x: IAccountAggregatedSummary) => {
+                  valueOp: map((x: IAggregatedAccountSummary) => {
                     const idx = dataSource.data.indexOf(x) + 1
                     return $text(`#${idx}`)
                   })
@@ -107,8 +108,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   columnOp: style({ flex: 3 }),
                   valueOp: map(({ address }) => {
                     return switchLatest(
-                      map(claimList => {
-                        const claim = claimList.find(c => c.address === address) || null
+                      map((claimList: IClaim[]) => {
+                        const claim = claimList?.find(c => c.address === address) || null
 
                         const $profileAnchor = $Link({
                           $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
@@ -126,7 +127,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                           $profileAnchor,
                           $ProfileLinks(address, claim),
                         )
-                      }, config.claimList)
+                      }, now(null) as any)
                     )
                   })
                 },
@@ -141,11 +142,11 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   $head: $text('Leverage'),
                   columnOp: style({ flex: 1, placeContent: 'center' }),
                   valueOp: map(x => {
-                    return $text(`${formatFixed(x.leverage, 4).toFixed(1)}x`)
+                    return $text(`${String(x.leverage)}x`)
                   })
                 },
                 {
-                  $head: $text('PnL (open)Settled'),
+                  $head: $text('Settled PnL'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
                     const str = formatReadableUSD(x.realisedPnl)
@@ -154,7 +155,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
               ],
             })({})
-          }, topGambit))
+          }, topGMX))
         ),
 
       ),

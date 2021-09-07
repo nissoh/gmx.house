@@ -23,7 +23,7 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
   entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
-  entity.indexToken = event.params.indexToken.toString()
+  entity.indexToken = event.params.indexToken.toHex()
 
   entity.isLong = event.params.isLong
 
@@ -40,11 +40,11 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
   if (aggTradeOpen === null) {
     aggTradeOpen = new AggregatedTradeOpen(tradeKey)
 
+    aggTradeOpen.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
     aggTradeOpen.initialPosition = entity.id
     aggTradeOpen.increaseList = []
     aggTradeOpen.decreaseList = []
     aggTradeOpen.updateList = []
-    aggTradeOpen.isLong = event.params.isLong
   }
 
   let increaseList = aggTradeOpen.increaseList
@@ -60,11 +60,11 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
   let tradeId = txId(event, tradeKey)
   let entity = new DecreasePosition(tradeId)
 
-  // BigInt and BigDecimal math are supported
+
   entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
-  entity.indexToken = event.params.indexToken.toString()
+  entity.indexToken = event.params.indexToken.toHex()
 
   entity.isLong = event.params.isLong
 
@@ -77,7 +77,7 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
   entity.save()
 
 
-  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
     let decreaseList = aggTradeOpen.decreaseList
@@ -104,7 +104,7 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
 
   entity.save()
 
-  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
     let updates = aggTradeOpen.updateList
@@ -134,23 +134,23 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   // Entities can be written to the store with `.save()`
   entity.save()
 
-  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
     let settled = new AggregatedTradeClosed(txId(event, tradeKey))
+    settled.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
 
     settled.initialPosition = aggTradeOpen.initialPosition
-    settled.settlement = entity.id
+    settled.settledPosition = entity.id
 
     settled.decreaseList = aggTradeOpen.decreaseList
     settled.increaseList = aggTradeOpen.increaseList
     settled.updateList = aggTradeOpen.updateList
-    settled.isLong = aggTradeOpen.isLong
 
     settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
 
+    settled.save()
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
-    aggTradeOpen.save()
   }
 
 }
@@ -164,7 +164,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   entity.key = event.params.key.toHex()
   entity.account = event.params.account.toHex()
   entity.collateralToken = event.params.collateralToken.toHex()
-  entity.indexToken = event.params.indexToken.toString()
+  entity.indexToken = event.params.indexToken.toHex()
 
   entity.isLong = event.params.isLong
 
@@ -177,23 +177,23 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   // Entities can be written to the store with `.save()`
   entity.save()
 
-  let aggTradeOpen = AggregatedTradeOpen.load(tradeId)
+  let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
     let settled = new AggregatedTradeLiquidated(txId(event, tradeKey))
+    settled.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
 
     settled.initialPosition = aggTradeOpen.initialPosition
-    settled.settlement = entity.id
+    settled.settledPosition = entity.id
 
     settled.decreaseList = aggTradeOpen.decreaseList
     settled.increaseList = aggTradeOpen.increaseList
     settled.updateList = aggTradeOpen.updateList
-    settled.isLong = aggTradeOpen.isLong
 
     settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
 
+    settled.save()
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
-    aggTradeOpen.save()
   }
 
 }

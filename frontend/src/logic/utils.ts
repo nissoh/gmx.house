@@ -1,9 +1,10 @@
-import { Account, IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregateTrade, IAccountAggregatedSummary, IPositionUpdate, IAggregateSettledTrade, IBaseEntity } from "gambit-middleware"
+import {
+  IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
+  IPositionUpdate, IBaseEntity, IAggregatedTradeSummary
+} from "gambit-middleware"
 
 function baseEntityJson<T extends  IBaseEntity>(json: T): T {
-  const createdAt = new Date(json.createdAt)
-
-  return { ...json, createdAt }
+  return { ...json }
 }
 
 export function positonCloseJson(json: IPositionClose) {
@@ -11,65 +12,53 @@ export function positonCloseJson(json: IPositionClose) {
   const collateral = BigInt(json.collateral)
   const entryFundingRate = BigInt(json.entryFundingRate)
   const size = BigInt(json.size)
-  const createdAt = new Date(json.createdAt)
 
-  return { ...baseEntityJson(json), size, collateral, entryFundingRate, realisedPnl, createdAt }
+  return { ...baseEntityJson(json), size, collateral, entryFundingRate, realisedPnl }
 }
 
 export function positionLiquidatedJson(json: IPositionLiquidated): IPositionLiquidated {
   const collateral = BigInt(json.collateral)
   const markPrice = BigInt(json.markPrice)
-  const createdAt = new Date(json.createdAt)
   const size = BigInt(json.size)
 
-  return { ...baseEntityJson(json), size, markPrice, collateral, createdAt }
+  return { ...baseEntityJson(json), size, markPrice, collateral }
 }
 
 export function positionDirJson(json: IPositionIncrease): IPositionIncrease {
   // const realisedPnl = BigInt(json.realisedPnl)
-  const createdAt = new Date(json.createdAt)
   const sizeDelta = BigInt(json.sizeDelta)
   const collateralDelta = BigInt(json.collateralDelta)
 
-  return { ...baseEntityJson(json), sizeDelta, collateralDelta, createdAt }
+  return { ...baseEntityJson(json), sizeDelta, collateralDelta }
 }
 
 
 export function positionUpdateJson(json: IPositionUpdate): IPositionUpdate {
-  const createdAt = new Date(json.createdAt)
   const collateral = BigInt(json.collateral)
   const averagePrice = BigInt(json.averagePrice)
   const size = BigInt(json.size)
   const entryFundingRate = BigInt(json.entryFundingRate)
   const realisedPnl = BigInt(json.realisedPnl)
   const reserveAmount = BigInt(json.reserveAmount)
-  return { ...json, createdAt, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount, }
+  return { ...json, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount, }
 }
 
-export function leaderboardAccountJson(json: IAccountAggregatedSummary): IAccountAggregatedSummary {
+export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccountSummary {
   const leverage = BigInt(json.leverage)
-  const openSize = BigInt(json.openSize)
   const realisedPnl = BigInt(json.realisedPnl)
+  const fee = BigInt(json.fee)
+  const openPnl = json.openPnl ? BigInt(json.openPnl) : null
 
-  return { ...json, realisedPnl, leverage, openSize }
+  return { ...json, realisedPnl, leverage, fee, openPnl }
 }
 
-export function aggregatedTradeJson(json: IAggregateTrade): IAggregateTrade {
-  const increases = json.increases.map(positionDirJson)
-  const decreases = json.decreases.map(positionDirJson)
-  const updates = json.updates.map(positionUpdateJson)
-  const createdAt = new Date(json.createdAt)
+export function toAggregatedTradeSummaryJson(json: IAggregatedTradeSummary): IAggregatedTradeSummary {
+  const startPositon = json.startTimestamp
+  const size = BigInt(json.size)
+  const collateral = BigInt(json.collateral)
+  const pnl = BigInt(json.pnl)
+  const fee = BigInt(json.fee)
 
-
-  return { ...json, createdAt, decreases, increases, updates }
-}
-
-
-export function aggregatedSettledTradeJson(json: IAggregateSettledTrade): IAggregateSettledTrade {
-  const settlement = 'markPrice' in json.settlement
-    ? positionLiquidatedJson(json.settlement)
-    : positonCloseJson(json.settlement)
-
-  return { ...aggregatedTradeJson(json), settlement }
+  return { ...json, size, collateral, pnl, fee, startTimestamp: startPositon, }
 }
 

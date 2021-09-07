@@ -22,7 +22,6 @@ export interface Transaction {
 
 export interface IBaseEntity {
   id: string
-  createdAt: Date
 }
 
 export interface IPosition extends IBaseEntity {
@@ -47,18 +46,6 @@ export interface IPositionUpdate extends IBaseEntity, ExtractAndParseEventType<V
 
 export interface IPositionClose extends IBaseEntity, ExtractAndParseEventType<Vault, 'ClosePosition'> {
 }
-
-export interface IAggregateTrade extends IPosition {
-  increases: IPositionIncrease[]
-  decreases: IPositionDecrease[]
-  updates: IPositionUpdate[]
-}
-
-export interface IAggregateSettledTrade extends IAggregateTrade {
-  settlement: IPositionClose | IPositionLiquidated
-}
-
-
 
 export interface IClaim extends IBaseEntity {
   address: string
@@ -85,15 +72,55 @@ export interface AccountHistoricalDataApi extends HistoricalDataApi {
 export interface LeaderboardApi extends HistoricalDataApi {
 }
 
-export interface IAccountAggregatedSummary {
+
+export interface IAggregatedTradeOpen {
+  initialPositionBlockTimestamp: number
+  initialPosition: IPositionIncrease
+
+  increaseList: IPositionIncrease[]
+  decreaseList: IPositionDecrease[]
+  updateList: IPositionUpdate[]
+}
+
+export interface IAggregatedTradeClosed extends IAggregatedTradeOpen {
+  settledPosition: IPositionClose
+  settledBlockTimestamp: number
+}
+
+export interface IAggregatedTradeLiquidated extends IAggregatedTradeOpen {
+  settledPosition: IPositionLiquidated
+  settledBlockTimestamp: number
+}
+
+export interface IQueryAggregatedTradeMap extends IAggregatedTradeOpen {
+  aggregatedTradeOpens: IAggregatedTradeOpen[]
+  aggregatedTradeCloseds: IAggregatedTradeClosed[]
+  aggregatedTradeLiquidateds: IAggregatedTradeLiquidated[]
+}
+
+
+
+export interface IAggregatedAccountSummary {
   address: string
   realisedPnl: bigint
-  openPnl: any
+  openPnl: bigint | null
   leverage: bigint
-  openSize: bigint
   settledPositionCount: number
   profitablePositionsCount: number
   claim: IClaim | null,
-  aggTradeList: any
+  fee: bigint
+
+  tradeSummaries: IAggregatedTradeSummary[]
+}
+
+export interface IAggregatedTradeSummary {
+  startTimestamp: number
+  indexToken: ARBITRUM_CONTRACTS
+  size: bigint
+  isLong: boolean
+  leverage: bigint
+  collateral: bigint
+  pnl: bigint
+  fee: bigint
 }
 
