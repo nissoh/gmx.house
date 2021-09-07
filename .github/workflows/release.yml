@@ -13,10 +13,10 @@ jobs:
           # https://yarnpkg.com/features/release-workflow/#ensuring-that-versions-are-bumped-ci
           fetch-depth: 0
 
-      - name: Use Node.js 14.x
+      - name: Use specific Node.js version
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 16.x
 
       - name: Check if commit includes version information
         # Run `yarn version check --interactive` before committing
