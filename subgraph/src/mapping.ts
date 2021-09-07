@@ -1,19 +1,51 @@
 /* eslint-disable prefer-const */
 import { ethereum, store } from "@graphprotocol/graph-ts"
 import * as contract from "../generated/gmxVault/gmxVault"
+import * as glpManager from "../generated/glpManager/glpManager"
 
 import {
   ClosePosition,
   DecreasePosition,
-  IncreasePosition, LiquidatePosition, UpdatePosition, AggregatedTradeOpen, AggregatedTradeClosed, AggregatedTradeLiquidated
+  IncreasePosition, LiquidatePosition, UpdatePosition, AggregatedTradeOpen, AggregatedTradeClosed, AggregatedTradeLiquidated,
+  AddLiquidity, RemoveLiquidity
 } from "../generated/schema"
-
 
 
 const txId = (ev: ethereum.Event, key: string): string => key + "-" + ev.logIndex.toString()
 
+const eventId = (ev: ethereum.Event): string => `${ev.transactionHash.toString()}-${ev.logIndex.toString()}`
 
+export function handleAddLiquidity(event: glpManager.AddLiquidity): void {
+  let id = eventId(event)
 
+  let entity = new AddLiquidity(id)
+
+  entity.account = event.params.account.toHex()
+  entity.token = event.params.token.toHex()
+  entity.amount = event.params.amount.toBigDecimal()
+  entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
+  entity.glpSupply = event.params.glpSupply.toBigDecimal()
+  entity.usdgAmount = event.params.usdgAmount.toBigDecimal()
+  entity.mintAmount = event.params.mintAmount.toBigDecimal()
+
+  entity.save()
+}
+
+export function handleRemoveLiquidity(event: glpManager.RemoveLiquidity): void {
+  let id = eventId(event)
+
+  let entity = new RemoveLiquidity(id)
+
+  entity.account = event.params.account.toHex()
+  entity.token = event.params.token.toHex()
+  entity.amount = event.params.amount.toBigDecimal()
+  entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
+  entity.glpSupply = event.params.glpSupply.toBigDecimal()
+  entity.usdgAmount = event.params.usdgAmount.toBigDecimal()
+  entity.amountOut = event.params.amountOut.toBigDecimal()
+
+  entity.save()
+}
 
 export function handleIncreasePosition(event: contract.IncreasePosition): void {
   let tradeKey = event.params.key.toHex()
