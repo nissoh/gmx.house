@@ -1,4 +1,28 @@
+type AddLiquidity @entity {
+  id: ID!
 
+  account: String!
+  token: String!
+
+  amount: BigDecimal!
+  aumInUsdg: BigDecimal!
+  glpSupply: BigDecimal!
+  usdgAmount: BigDecimal!
+  mintAmount: BigDecimal!
+}
+
+type RemoveLiquidity @entity {
+  id: ID!
+
+  account: String!
+  token: String!
+
+  amount: BigDecimal!
+  aumInUsdg: BigDecimal!
+  glpSupply: BigDecimal!
+  usdgAmount: BigDecimal!
+  amountOut: BigDecimal!
+}
 
 type IncreasePosition @entity {
   id: ID!
