@@ -17,7 +17,7 @@ type RemoveLiquidity @entity {
   account: String!
   token: String!
 
-  amount: BigDecimal!
+  glpAmount: BigDecimal!
   aumInUsdg: BigDecimal!
   glpSupply: BigDecimal!
   usdgAmount: BigDecimal!

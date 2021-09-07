@@ -13,7 +13,7 @@ import {
 
 const txId = (ev: ethereum.Event, key: string): string => key + "-" + ev.logIndex.toString()
 
-const eventId = (ev: ethereum.Event): string => `${ev.transactionHash.toString()}-${ev.logIndex.toString()}`
+const eventId = (ev: ethereum.Event): string => ev.transaction.hash.toString() + "-" + ev.logIndex.toString()
 
 export function handleAddLiquidity(event: glpManager.AddLiquidity): void {
   let id = eventId(event)
@@ -38,7 +38,7 @@ export function handleRemoveLiquidity(event: glpManager.RemoveLiquidity): void {
 
   entity.account = event.params.account.toHex()
   entity.token = event.params.token.toHex()
-  entity.amount = event.params.amount.toBigDecimal()
+  entity.glpAmount = event.params.glpAmount.toBigDecimal()
   entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
   entity.glpSupply = event.params.glpSupply.toBigDecimal()
   entity.usdgAmount = event.params.usdgAmount.toBigDecimal()
