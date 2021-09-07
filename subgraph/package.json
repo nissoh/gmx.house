@@ -11,7 +11,7 @@
     "remove-local": "graph remove --node http://localhost:8020/ gmx-vault",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gmx-vault"
   },
-  "dependencies": {
+  "devDependencies": {
     "@graphprotocol/graph-ts": "0.20.1"
   }
 }
