@@ -1,10 +1,10 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
-import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS } from "./constant"
+import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSummary, IQueryAggregatedTradeMap } from "./types"
-import { formatFixed } from "./utils"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IQueryAggregatedTradeMap } from "./types"
+import { fillIntervalGap, formatFixed, timeTzOffset, UTCTimestamp } from "./utils"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -126,4 +126,56 @@ export function toAggregatedAccountSummary(list: IQueryAggregatedTradeMap): IAgg
 
   return topMap.sort((a, b) => formatFixed(b.realisedPnl - b.fees) - formatFixed(a.realisedPnl - a.fees))
 }
+
+
+export function historicalPnLMetric(historicalData: IQueryAggregatedTradeMap, interval: intervalInMsMap, ticks: number) {
+  let accumulated = 0
+  const now = Date.now()
+
+  const initialDataStartTime = now - interval * ticks
+  const closedPosList = historicalData.aggregatedTradeCloseds
+  // .filter(t => t.settledPosition)
+    .map(aggTrade => {
+      const time = aggTrade.settledBlockTimestamp
+      const value = formatFixed(aggTrade.settledPosition.realisedPnl, USD_DECIMALS)
+
+      return { value, time }
+    })
+
+  const sortedParsed = closedPosList
+    .filter(pos => pos.time > initialDataStartTime)
+    .sort((a, b) => a.time - b.time)
+    .map(x => {
+      accumulated += x.value
+      return { value: accumulated, time: x.time }
+    })
+
+
+  if (sortedParsed.length) {
+    sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: now as UTCTimestamp })
+  }
+
+
+  const filled = sortedParsed
+    .reduce(
+      fillIntervalGap(
+        interval,
+        (next) => {
+          return { time: next.time, value: next.value }
+        },
+        (prev) => {
+          return { time: prev.time, value: prev.value }
+        },
+        (prev, next) => {
+          return { time: prev.time, value: next.value }
+        }
+      ),
+      [{ time: initialDataStartTime, value: 0 }] as { time: number; value: number} []
+    )
+    .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
+          
+
+  return filled
+}
+
 

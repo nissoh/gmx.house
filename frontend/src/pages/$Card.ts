@@ -1,12 +1,11 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, formatFixed, getPositionFee, IAggregatedTradeClosed, IClaim, intervalInMsMap, readableUSD, timeTzOffset, USD_DECIMALS, UTCTimestamp  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, formatFixed, historicalPnLMetric, IClaim, intervalInMsMap, IQueryAggregatedTradeMap, readableUSD, toAggregatedAccountSummary  } from 'gambit-middleware'
 import { Stream } from '@most/types'
 import { filter, map, multicast, never, now, switchLatest } from '@most/core'
 import { Route } from '@aelea/router'
 import { pallete } from '@aelea/ui-components-theme'
-import { fillIntervalGap } from "../common/utils"
 import { $AccountLabel, $AccountPhoto } from '../components/$AccountProfile'
 import { $Chart } from "../components/chart/$Chart"
 import { LineStyle } from 'lightweight-charts'
@@ -17,7 +16,7 @@ export interface ICard {
   parentRoute: Route
 
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IAggregatedTradeClosed[]>
+  aggregatedTradeList: Stream<IQueryAggregatedTradeMap>
 }
 
 
@@ -28,63 +27,14 @@ export const $Card = (config: ICard) => component(() => {
   const urlFragments = document.location.pathname.split('/')
   const accountAddress = urlFragments[urlFragments.length - 1]
 
-  const accountHistoryPnL = multicast(filter(arr => arr.length > 0, config.aggregatedTradeList))
+  const accountHistoryPnL = multicast(filter(arr => (arr.aggregatedTradeCloseds.length + arr.aggregatedTradeLiquidateds.length) > 0, config.aggregatedTradeList))
 
+  const summary = map(data => toAggregatedAccountSummary(data)[0], accountHistoryPnL)
 
-  // const summary = map(data => toAggregatedSummary(data)[0], accountHistoryPnL)
-  const summary = never() as any
-
-
+  
   const state = multicast(
     map((historicalData) => {
-      let accumulated = 0
-      const now = Date.now()
-      const initialDataStartTime = now - interval * INTERVAL_TICKS
-
-      const closedPosList = historicalData
-        .filter(t => t.settledPosition)
-        .map(x => {
-          const fee = getPositionFee(x.settledPosition!.size, 0n)
-          const time = x.initialPositionBlockTimestamp
-          const value = formatFixed('markPrice' in x.settledPosition! ? x.settledPosition.collateral : x.settledPosition!.realisedPnl - fee, USD_DECIMALS)
-
-          return { value, time }
-        })
-
-      const sortedParsed = closedPosList
-        .filter(pos => pos.time > initialDataStartTime)
-        .sort((a, b) => a.time - b.time)
-        .map(x => {
-          accumulated += x.value
-          return { value: accumulated, time: x.time }
-        })
-
-
-      if (sortedParsed.length) {
-        sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: now as UTCTimestamp })
-      }
-
-
-      const filled = sortedParsed
-        .reduce(
-          fillIntervalGap(
-            interval,
-            (next) => {
-              return { time: next.time, value: next.value }
-            },
-            (prev) => {
-              return { time: prev.time, value: prev.value }
-            },
-            (prev, next) => {
-              return { time: prev.time, value: next.value }
-            }
-          ),
-          [{ time: initialDataStartTime, value: 0 }] as { time: number; value: number} []
-        )
-        .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
-          
-
-      return filled
+      return historicalPnLMetric(historicalData, interval, INTERVAL_TICKS)
     }, accountHistoryPnL)
   )
 
@@ -105,8 +55,8 @@ export const $Card = (config: ICard) => component(() => {
       $row(style({ gap: '75px', alignItems: 'center', justifyContent: 'center', paddingTop: '18vh' }))(
         $row(
           switchLatest(
-            map(claimList => {
-              const claim = claimList.find(c => c.address === accountAddress) || null
+            map((claimList: IClaim[]) => {
+              const claim = claimList?.find(c => c.address === accountAddress) || null
 
               return $row(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
                 $AccountPhoto(accountAddress, claim, 100),
@@ -122,7 +72,7 @@ export const $Card = (config: ICard) => component(() => {
 
 
               // return $AccountProfile({ address: accountAddress, claim, tempFix: true })({})
-            }, config.claimList)
+            }, now(null) as any)
           ),
         ),
 
@@ -144,19 +94,19 @@ export const $Card = (config: ICard) => component(() => {
               return $row(layoutSheet.spacingBig, style({ placeContent: 'center', alignItems: 'center' }))(
                 $column(style({ alignItems: 'center' }))(
                   $row(
-                    // $text(`${formatFixed(data.leverage, 4).toFixed(1)}x`),
+                    $text(`${formatFixed(data.leverage, 4).toFixed(1)}x`),
                   ),
                   $text(style({ fontSize: '.6em', color: pallete.foreground }))('Leverage')
                 ),
 
-                // $column(style({ alignItems: 'center' }))(
-                //   $row(layoutSheet.spacing)(
-                //     $text(`${data.profitablePositionsCount}`),
-                //     $text(style({ color: pallete.foreground }))(`/`),
-                //     $text(`${data.settledPositionCount - data.profitablePositionsCount}`),
-                //   ),
-                //   $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win / Loss')
-                // )
+                $column(style({ alignItems: 'center' }))(
+                  $row(layoutSheet.spacing)(
+                    $text(`${data.profitablePositionsCount}`),
+                    $text(style({ color: pallete.foreground }))(`/`),
+                    $text(`${data.settledPositionCount - data.profitablePositionsCount}`),
+                  ),
+                  $text(style({ fontSize: '.6em', color: pallete.foreground }))('Win / Loss')
+                )
               )
             }, summary)
           ),

@@ -1,6 +1,6 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregatedTradeClosed, unixTimeTzOffset, IAggregatedAccountSummary, IAggregatedTradeSummary, IQueryAggregatedTradeMap } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregatedTradeClosed, unixTimeTzOffset, IAggregatedAccountSummary, IAggregatedTradeSummary, IQueryAggregatedTradeMap, historicalPnLMetric } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
@@ -13,7 +13,6 @@ import { $Chart } from "../../components/chart/$Chart"
 import { Stream } from "@most/types"
 import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
-import { fillIntervalGap } from "../../common/utils"
 import { Behavior } from "@aelea/core"
 import { toAggregatedTradeClosedJson } from "../../logic/utils"
 
@@ -76,55 +75,7 @@ export const $Profile = (config: IAccount) => component((
 
   const historicalPnl = multicast(
     combineArray((historicalData, interval) => {
-      let accumulated = 0
-      const now = Date.now()
-
-      const initialDataStartTime = now - interval * INTERVAL_TICKS
-      const closedPosList = historicalData.aggregatedTradeCloseds
-        // .filter(t => t.settledPosition)
-        .map(aggTrade => {
-          const time = aggTrade.settledBlockTimestamp
-          const aggsumm = toAggregatedTradeClosedJson
-          
-          const value = formatFixed(aggTrade.settledPosition.realisedPnl, USD_DECIMALS)
-
-          return { value, time }
-        })
-
-      const sortedParsed = closedPosList
-        .filter(pos => pos.time > initialDataStartTime)
-        .sort((a, b) => a.time - b.time)
-        .map(x => {
-          accumulated += x.value
-          return { value: accumulated, time: x.time }
-        })
-
-
-      if (sortedParsed.length) {
-        sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: now as UTCTimestamp })
-      }
-
-
-      const filled = sortedParsed
-        .reduce(
-          fillIntervalGap(
-            interval,
-            (next) => {
-              return { time: next.time, value: next.value }
-            },
-            (prev) => {
-              return { time: prev.time, value: prev.value }
-            },
-            (prev, next) => {
-              return { time: prev.time, value: next.value }
-            }
-          ),
-          [{ time: initialDataStartTime, value: 0 }] as { time: number; value: number} []
-        )
-        .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
-          
-
-      return filled
+      return historicalPnLMetric(historicalData, interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
 

@@ -1,4 +1,4 @@
-import { $element, $node, $svg, $text, attr, component, eventElementTarget, style, stylePseudo } from "@aelea/dom"
+import { $element, $node, $text, attr, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
@@ -15,14 +15,12 @@ import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { Account, AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, HistoricalDataApi, IAggregatedTradeOpen, LeaderboardApi } from 'gambit-middleware'
+import { AccountHistoricalDataApi, LeaderboardApi } from 'gambit-middleware'
 import { accountSummaryJson, toPositionIncreaseJson } from '../logic/utils'
-import { $Card } from './$Card'
-import { $gmx, $logo } from '../common/$icons'
+import { $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
-import { Behavior, combineArray } from "@aelea/core"
-
-import { createClient } from '@urql/core'
+import { Behavior } from "@aelea/core"
+import { $Card } from "./$Card"
 
 
 
@@ -178,12 +176,15 @@ export default ({ baseRoute = '' }: Website) => component((
       
       router.contains(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
-          // $Card({
-          //   parentRoute: cardRoute,
-          //   claimList, aggregatedTradeList: map(x => x.map(aggregatedSettledTradeJson), clientApi.aggregatedTradeSettled)
-          // })({
-          //   aggregatedTradeListQuery: aggregatedTradeListQueryTether()
-          // })
+          $Card({
+            parentRoute: cardRoute,
+            claimList,
+            aggregatedTradeList: map(res => {
+              return toPositionIncreaseJson(res)
+            }, clientApi.aggregatedTradeSettled)
+          })({
+            aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+          })
         )
       )
 
