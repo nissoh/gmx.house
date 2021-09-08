@@ -1,43 +1,46 @@
 import {
   IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
-  IPositionUpdate, IBaseEntity, IAggregatedTradeSummary, IAggregatedTradeOpen, IPosition, IQueryAggregatedTradeMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated
+  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IQueryAggregatedTradeMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated
 } from "gambit-middleware"
+
+
+
 
 function baseEntityJson<T extends  IBaseEntity>(json: T): T {
   return { ...json }
 }
 
 export function positonCloseJson(json: IPositionClose) {
-  const realisedPnl = BigInt(json.realisedPnl)
-  const collateral = BigInt(json.collateral)
-  const entryFundingRate = BigInt(json.entryFundingRate)
-  const averagePrice = BigInt(json.averagePrice)
-  const size = BigInt(json.size)
+  const realisedPnl = BigInt(json?.realisedPnl)
+  const collateral = BigInt(json?.collateral)
+  const entryFundingRate = BigInt(json?.entryFundingRate)
+  const averagePrice = BigInt(json?.averagePrice)
+  const size = BigInt(json?.size)
 
   return { ...baseEntityJson(json), size, collateral, entryFundingRate, realisedPnl, averagePrice }
 }
 
 export function positionLiquidatedJson(json: IPositionLiquidated): IPositionLiquidated {
-  const collateral = BigInt(json.collateral)
-  const markPrice = BigInt(json.markPrice)
-  const size = BigInt(json.size)
+  const collateral = BigInt(json?.collateral)
+  const markPrice = BigInt(json?.markPrice)
+  const size = BigInt(json?.size)
 
   return { ...baseEntityJson(json), size, markPrice, collateral }
 }
 
 export function positionIncreaseJson(json: IPositionIncrease): IPositionIncrease {
-  const fee = BigInt(json.fee)
-  const price = BigInt(json.price)
-  const sizeDelta = BigInt(json.sizeDelta)
-  const collateralDelta = BigInt(json.collateralDelta)
+  const fee = BigInt(json?.fee)
+  const price = BigInt(json?.price)
+  const sizeDelta = BigInt(json?.sizeDelta)
+  const collateralDelta = BigInt(json?.collateralDelta)
 
   return { ...json, fee, price, sizeDelta, collateralDelta }
 }
 
 export function positionDecreaseJson(json: IPositionDecrease): IPositionDecrease {
-  const fee = BigInt(json.fee)
+  const fee = BigInt(json?.fee)
   const price = BigInt(json?.price)
-  const sizeDelta = BigInt(json.sizeDelta)
+  const sizeDelta = BigInt(json?.sizeDelta)
 
   return { ...json, fee, price, sizeDelta }
 }
@@ -45,33 +48,24 @@ export function positionDecreaseJson(json: IPositionDecrease): IPositionDecrease
 
 
 export function positionUpdateJson(json: IPositionUpdate): IPositionUpdate {
-  const collateral = BigInt(json.collateral)
-  const averagePrice = BigInt(json.averagePrice)
-  const size = BigInt(json.size)
-  const entryFundingRate = BigInt(json.entryFundingRate)
-  const realisedPnl = BigInt(json.realisedPnl)
-  const reserveAmount = BigInt(json.reserveAmount)
+  const collateral = BigInt(json?.collateral)
+  const averagePrice = BigInt(json?.averagePrice)
+  const size = BigInt(json?.size)
+  const entryFundingRate = BigInt(json?.entryFundingRate)
+  const realisedPnl = BigInt(json?.realisedPnl)
+  const reserveAmount = BigInt(json?.reserveAmount)
   return { ...json, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount, }
 }
 
 export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccountSummary {
-  const leverage = BigInt(json.leverage)
-  const realisedPnl = BigInt(json.realisedPnl)
-  const fee = BigInt(json.fee)
-  const openPnl = json.openPnl ? BigInt(json.openPnl) : null
+  const leverage = BigInt(json?.leverage)
+  const realisedPnl = BigInt(json?.realisedPnl)
+  const fees = BigInt(json?.fees)
+  const openPnl = json.openPnl ? BigInt(json?.openPnl) : null
 
-  return { ...json, realisedPnl, leverage, fee, openPnl }
+  return { ...json, realisedPnl, leverage, fees, openPnl }
 }
 
-export function toAggregatedTradeSummaryJson(json: IAggregatedTradeSummary): IAggregatedTradeSummary {
-  const startPositon = json.startTimestamp
-  const size = BigInt(json.size)
-  const collateral = BigInt(json.collateral)
-  const pnl = BigInt(json.pnl)
-  const fee = BigInt(json.fee)
-
-  return { ...json, size, collateral, pnl, fee, startTimestamp: startPositon, }
-}
 
 // IAggregatedTradeOpen
 export function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: T): T {

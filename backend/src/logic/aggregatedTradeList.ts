@@ -37,11 +37,12 @@ query {
 
 const aggregatedTradesMap = gql`
 
+
+
 fragment increasePositionFields on IncreasePosition {
   account
   collateralToken
   indexToken
-
   key
   isLong
   collateralDelta
@@ -54,7 +55,6 @@ fragment decreasePositionFields on DecreasePosition {
   account
   collateralToken
   indexToken
-
   key
   isLong
   collateralDelta
@@ -74,7 +74,7 @@ fragment updatePositionFields on UpdatePosition {
 }
 
 fragment closePositionFields on ClosePosition {
-  key
+  # key
   size
   collateral
   reserveAmount
@@ -96,39 +96,71 @@ fragment liquidatePositionFields on LiquidatePosition {
   markPrice
 }
 
-query ($account: String = "", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
-  aggregatedTradeOpens(where: {account_starts_with: $account}) {
+query ($account: String = "0xba9366ce37aa833eab8f12d599977a16e470e34e", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
+  aggregatedTradeOpens(first: 1000, where: {account_starts_with: $account}) {
     id
     account
-    initialPosition { ...increasePositionFields }
-    increaseList { ...increasePositionFields }
-    decreaseList { ... decreasePositionFields}
-    updateList { ...updatePositionFields }
+    initialPosition {
+      ...increasePositionFields
+    }
+    increaseList {
+      ...increasePositionFields
+    }
+    decreaseList {
+      ...decreasePositionFields
+    }
+    # updateList {
+    #   ...updatePositionFields
+    # }
   }
-  aggregatedTradeCloseds(where: { account_starts_with: $account, initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+  aggregatedTradeCloseds(first: 1000, where: {account_starts_with: $account, settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
     id
     initialPositionBlockTimestamp
     account
-    initialPosition { ...increasePositionFields }
+    initialPosition {
+      ...increasePositionFields
+    }
     settledBlockTimestamp
-    settledPosition {...closePositionFields}
-    increaseList { ...increasePositionFields }
-    decreaseList { ... decreasePositionFields}
-    updateList { ...updatePositionFields }
+    settledPosition {
+      ...closePositionFields
+    }
+    increaseList {
+      ...increasePositionFields
+    }
+    decreaseList {
+      ...decreasePositionFields
+    }
+    # updateList {
+    #   ...updatePositionFields
+    # }
   }
-  aggregatedTradeLiquidateds(where: { account_starts_with: $account, initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd }) {
+  aggregatedTradeLiquidateds(first: 1000, where: {account_starts_with: $account, initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
     id
     account
     initialPositionBlockTimestamp
-    initialPosition { ...increasePositionFields }
+    initialPosition {
+      ...increasePositionFields
+    }
     settledBlockTimestamp
-    settledPosition {...liquidatePositionFields}
-    initialPosition { ...increasePositionFields }
-    increaseList { ...increasePositionFields }
-    decreaseList { ... decreasePositionFields}
-    updateList { ...updatePositionFields }
+    settledPosition {
+      ...liquidatePositionFields
+    }
+    initialPosition {
+      ...increasePositionFields
+    }
+    increaseList {
+      ...increasePositionFields
+    }
+    decreaseList {
+      ...decreasePositionFields
+    }
+    # updateList {
+    #   ...updatePositionFields
+    # }
   }
 }
+
+
 
 
 `
@@ -174,7 +206,7 @@ export const leaderboard = O(
     //   return { seed, value: seed.cache }
     // }
 
-    const allAccounts = getAggratedSettledTrades(queryParams).then(toAggregatedAccountSummary)
+    const allAccounts = getAggratedSettledTrades({ ...queryParams }).then(toAggregatedAccountSummary)
   
     seed.cache = allAccounts
 

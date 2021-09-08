@@ -51,7 +51,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((tournament) => {
-    return { data: tournament }
+    return {
+      data: tournament
+    }
   }, config.leaderboardQuery)
 
 
@@ -149,7 +151,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   $head: $text('Settled PnL'),
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                   valueOp: map(x => {
-                    const str = formatReadableUSD(x.realisedPnl)
+                    const str = formatReadableUSD(x.realisedPnl - x.fees)
                     return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
                   })
                 },

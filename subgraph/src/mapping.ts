@@ -11,9 +11,7 @@ import {
 } from "../generated/schema"
 
 
-const txId = (ev: ethereum.Event, key: string): string => key + "-" + ev.logIndex.toString()
-
-const eventId = (ev: ethereum.Event): string => ev.transaction.hash.toString() + "-" + ev.logIndex.toString()
+const eventId = (ev: ethereum.Event): string => ev.transaction.hash.toHex() + "-" + ev.logIndex.toString()
 
 export function handleAddLiquidity(event: glpManager.AddLiquidity): void {
   let id = eventId(event)
@@ -50,7 +48,7 @@ export function handleRemoveLiquidity(event: glpManager.RemoveLiquidity): void {
 
 export function handleIncreasePosition(event: contract.IncreasePosition): void {
   let tradeKey = event.params.key.toHex()
-  let entity = new IncreasePosition(txId(event, tradeKey)) // we prevent 
+  let entity = new IncreasePosition(eventId(event)) // we prevent 
 
   // BigInt and BigDecimal math are supported
   entity.key = event.params.key.toHex()
@@ -91,7 +89,7 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
 
 export function handleDecreasePosition(event: contract.DecreasePosition): void {
   let tradeKey = event.params.key.toHex()
-  let tradeId = txId(event, tradeKey)
+  let tradeId = eventId(event)
   let entity = new DecreasePosition(tradeId)
 
 
@@ -124,7 +122,7 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
 
 export function handleUpdatePosition(event: contract.UpdatePosition): void {
   let tradeKey = event.params.key.toHex()
-  let tradeId = txId(event, tradeKey)
+  let tradeId = eventId(event)
   let entity = new UpdatePosition(tradeId)
 
   entity.key = event.params.key.toHex()
@@ -151,7 +149,7 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
 }
 export function handleClosePosition(event: contract.ClosePosition): void {
   let tradeKey = event.params.key.toHex()
-  let tradeId = txId(event, tradeKey)
+  let tradeId = eventId(event)
   let entity = new ClosePosition(tradeId)
 
   // BigInt and BigDecimal math are supported
@@ -171,7 +169,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
-    let settled = new AggregatedTradeClosed(txId(event, tradeKey))
+    let settled = new AggregatedTradeClosed(eventId(event))
     settled.account = aggTradeOpen.account
     settled.initialPositionBlockTimestamp = aggTradeOpen.initialPositionBlockTimestamp
 
@@ -192,7 +190,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
 
 export function handleLiquidatePosition(event: contract.LiquidatePosition): void {
   let tradeKey = event.params.key.toHex()
-  let tradeId = txId(event, tradeKey)
+  let tradeId = eventId(event)
   let entity = new LiquidatePosition(tradeId)
 
   // BigInt and BigDecimal math are supported
@@ -215,7 +213,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
-    let settled = new AggregatedTradeLiquidated(txId(event, tradeKey))
+    let settled = new AggregatedTradeLiquidated(eventId(event))
     settled.account = aggTradeOpen.account
     settled.initialPositionBlockTimestamp = aggTradeOpen.initialPositionBlockTimestamp
 

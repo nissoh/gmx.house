@@ -108,7 +108,7 @@ export interface IAggregatedAccountSummary {
   settledPositionCount: number
   profitablePositionsCount: number
   claim: IClaim | null,
-  fee: bigint
+  fees: bigint
 
   tradeSummaries: IAggregatedTradeSummary[]
 }

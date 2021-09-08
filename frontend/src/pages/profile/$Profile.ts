@@ -15,6 +15,7 @@ import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
 import { fillIntervalGap } from "../../common/utils"
 import { Behavior } from "@aelea/core"
+import { toAggregatedTradeClosedJson } from "../../logic/utils"
 
 
 
@@ -82,9 +83,10 @@ export const $Profile = (config: IAccount) => component((
       const closedPosList = historicalData.aggregatedTradeCloseds
         // .filter(t => t.settledPosition)
         .map(aggTrade => {
-          const fee = getPositionFee(aggTrade.settledPosition.size, 0n)
           const time = aggTrade.settledBlockTimestamp
-          const value = formatFixed(aggTrade.settledPosition.realisedPnl - fee, USD_DECIMALS)
+          const aggsumm = toAggregatedTradeClosedJson
+          
+          const value = formatFixed(aggTrade.settledPosition.realisedPnl, USD_DECIMALS)
 
           return { value, time }
         })
@@ -168,31 +170,109 @@ export const $Profile = (config: IAccount) => component((
   
   return [
     $container(
+
+      
+
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
-        $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-          switchLatest(
-            map((claimList: IClaim[]) => {
-              const claim = claimList?.find(c => c.address === accountAddress) || null
-
-              return $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                $AccountPhoto(accountAddress, claim, 72),
-                $column(layoutSheet.spacingTiny)(
-                  $AccountLabel(accountAddress, claim),
-                  $ProfileLinks(accountAddress, claim),
-                )
+        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $text(style({ color: pallete.foreground }))('Chart Interval:'),
+          // $alert($text('Binance')),
+          $anchor(
+            styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
+          )(
+            $text('15 Min')
+          ),
+          $anchor(
+            styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
+          )(
+            $text('1 Hour')
+          ),
+          $anchor(
+            styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
+          )(
+            $text('4 Hour')
+          ),
+          $seperator,
+          $Popover({
+            $$popContent: map(x => {
+              return $column(layoutSheet.spacingSmall)(
+                $anchor(
+                  styleBehavior(map(tf => intervalInMsMap.MIN === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN))
+                )(
+                  $text('1 Minute')
+                ),
+                $anchor(
+                  styleBehavior(map(tf => intervalInMsMap.MIN5 === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN5))
+                )(
+                  $text('5 Minutes')
+                ),
+                $anchor(
+                  styleBehavior(map(tf => intervalInMsMap.HR8 === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR8))
+                )(
+                  $text('8 Hour')
+                ),
+                $anchor(
+                  styleBehavior(map(tf => intervalInMsMap.DAY === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+                )(
+                  $text('24 Hour(Day)')
+                ),
+                $anchor(
+                  styleBehavior(map(tf => intervalInMsMap.WEEK === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+                )(
+                  $text('1 Week')
+                ),
               )
-              // $anchor(attr({ href: getAccountUrl(CHAIN.BSC, accountAddress) }))(
-              //   $icon({ $content: $external, width: '12px', viewBox: '0 0 24 24' })
-              // ),
-              // $text(style({ color: pallete.horizon }))('|'),
-              // $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
-              //   $text('Claim')
-              // ), 
+            }, selectOtherTimeframe),
+            // dismiss: selectOtherTimeframe
+          })(
+            $anchor(
+              styleBehavior(map(tf => ![intervalInMsMap.MIN15, intervalInMsMap.HR, intervalInMsMap.HR4].some(a => a === tf) ? { color: pallete.primary } : null, chartInterval)),
+              selectOtherTimeframeTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
+            )(
+              $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+                $text('Other'),
+                $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+              )
+            )
+          )({})
+        ),
+
+        
+
+        $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
+          $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
+            switchLatest(
+              map((claimList: IClaim[]) => {
+                const claim = claimList?.find(c => c.address === accountAddress) || null
+
+                return $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
+                  $AccountPhoto(accountAddress, claim, 72),
+                  $column(layoutSheet.spacingTiny)(
+                    $AccountLabel(accountAddress, claim),
+                    $ProfileLinks(accountAddress, claim),
+                  )
+                )
+                // $anchor(attr({ href: getAccountUrl(CHAIN.BSC, accountAddress) }))(
+                //   $icon({ $content: $external, width: '12px', viewBox: '0 0 24 24' })
+                // ),
+                // $text(style({ color: pallete.horizon }))('|'),
+                // $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
+                //   $text('Claim')
+                // ), 
 
 
-              // return $AccountProfile({ address: accountAddress, claim, tempFix: true })({})
-            }, now(null) as any)
+                // return $AccountProfile({ address: accountAddress, claim, tempFix: true })({})
+              }, now(null) as any)
+            ),
           ),
 
           $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '380px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
@@ -296,77 +376,6 @@ export const $Profile = (config: IAccount) => component((
         ),
 
         $node(),
-
-        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
-          $text(style({ color: pallete.foreground }))('Chart Interval:'),
-          // $alert($text('Binance')),
-          $anchor(
-            styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
-          )(
-            $text('15 Min')
-          ),
-          $anchor(
-            styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
-          )(
-            $text('1 Hour')
-          ),
-          $anchor(
-            styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
-          )(
-            $text('4 Hour')
-          ),
-          $seperator,
-          $Popover({
-            $$popContent: map(x => {
-              return $column(layoutSheet.spacingSmall)(
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.MIN === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN))
-                )(
-                  $text('1 Minute')
-                ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.MIN5 === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN5))
-                )(
-                  $text('5 Minutes')
-                ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.HR8 === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR8))
-                )(
-                  $text('8 Hour')
-                ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.DAY === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
-                )(
-                  $text('24 Hour(Day)')
-                ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.WEEK === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
-                )(
-                  $text('1 Week')
-                ),
-              )
-            }, selectOtherTimeframe),
-            // dismiss: selectOtherTimeframe
-          })(
-            $anchor(
-              styleBehavior(map(tf => ![intervalInMsMap.MIN15, intervalInMsMap.HR, intervalInMsMap.HR4].some(a => a === tf) ? { color: pallete.primary } : null, chartInterval)),
-              selectOtherTimeframeTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
-            )(
-              $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
-                $text('Other'),
-                $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
-              )
-            )
-          )({})
-        ),
 
 
         // $AccountProfile({ address: accountAddress, claim: null })({}),
@@ -477,13 +486,13 @@ export const $Profile = (config: IAccount) => component((
                   const closePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !('markPrice' in pos.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
-                      const fee = getPositionMarginFee(pos.settledPosition!.size)
+                      // const fee = getPositionMarginFee(pos.settledPosition.size)
 
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl + -fee),
+                        text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl),
                         time: timeTzOffset(pos.settledBlockTimestamp),
                       }
                     })
