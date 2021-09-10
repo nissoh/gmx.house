@@ -10,7 +10,7 @@ import path from 'path'
 import { accountApi } from './logic/account'
 // import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
-import { aggregatedTradeSettled, leaderboard, openTrades } from './api'
+import { requestAccountAggregation, requestAggregatedTradeList, leaderboard, requestOpenAggregatedTrades } from './api'
 import { openGraphScreenshot } from './logic/linkOGShot'
 import ws from 'ws'
 
@@ -30,9 +30,9 @@ const wss = new ws.Server({ server, path: '/api-ws' })
 
 
 const apiComponent = helloFrontend(wss, {
-  aggregatedTradeSettled,
-  leaderboard,
-  openTrades,
+  requestAggregatedTradeList,
+  requestAccountAggregation,
+  requestOpenAggregatedTrades,
 })
 
 const run = async () => {

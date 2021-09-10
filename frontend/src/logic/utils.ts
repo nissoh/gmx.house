@@ -1,6 +1,6 @@
 import {
   IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
-  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IQueryAggregatedTradeMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated
+  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeListMap
 } from "gambit-middleware"
 
 
@@ -61,9 +61,10 @@ export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregated
   const leverage = BigInt(json?.leverage)
   const realisedPnl = BigInt(json?.realisedPnl)
   const fees = BigInt(json?.fees)
+  const collateral = BigInt(json?.collateral)
   const openPnl = json.openPnl ? BigInt(json?.openPnl) : null
 
-  return { ...json, realisedPnl, leverage, fees, openPnl }
+  return { ...json, collateral, realisedPnl, leverage, fees, openPnl }
 }
 
 
@@ -81,23 +82,30 @@ export function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: 
 export function toAggregatedTradeClosedJson(json: IAggregatedTradeClosed): IAggregatedTradeClosed {
   const settledPosition = positonCloseJson(json.settledPosition)
   const settledBlockTimestamp = json.settledBlockTimestamp * 1000
+  const initialPositionBlockTimestamp = json.initialPositionBlockTimestamp * 1000
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp }
+  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp, initialPositionBlockTimestamp }
 }
 
 export function toAggregatedTradeLiquidatedJson(json: IAggregatedTradeLiquidated): IAggregatedTradeLiquidated {
   const settledPosition = positionLiquidatedJson(json.settledPosition)
   const settledBlockTimestamp = json.settledBlockTimestamp * 1000
+  const initialPositionBlockTimestamp = json.initialPositionBlockTimestamp * 1000
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp }
+  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp, initialPositionBlockTimestamp }
 }
 
-export function toPositionIncreaseJson(json: IQueryAggregatedTradeMap): IQueryAggregatedTradeMap {
+export function toAggregatedTradeListJson<T extends IAggregatedTradeListMap>(json: T): T {
   const aggregatedTradeCloseds = json.aggregatedTradeCloseds?.map(toAggregatedTradeClosedJson) || []
   const aggregatedTradeLiquidateds = json.aggregatedTradeLiquidateds?.map(toAggregatedTradeLiquidatedJson) || []
   const aggregatedTradeOpens = json.aggregatedTradeOpens?.map(toAggregatedTradeOpenJson) || []
 
-
   return { ...json, aggregatedTradeCloseds, aggregatedTradeLiquidateds, aggregatedTradeOpens }
+}
+
+export function toAccountAggregationJson(json: IAccountAggregationMap): IAccountAggregationMap {
+  const totalRealisedPnl = BigInt(json?.totalRealisedPnl)
+
+  return { ...toAggregatedTradeListJson(json),  totalRealisedPnl  }
 }
 

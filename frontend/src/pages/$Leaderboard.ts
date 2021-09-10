@@ -2,8 +2,8 @@ import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseud
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state, $icon } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, now, startWith, switchLatest } from '@most/core'
-import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAggregatedAccountSummary } from 'gambit-middleware'
+import { combine, constant, filter, map, merge, multicast, now, startWith, switchLatest } from '@most/core'
+import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAggregatedAccountSummary, IAggregatedTradeOpen, priceDeltaPercentage, parseFixed, TOKEN_SYMBOL, readableNumber, ARBITRUM_CONTRACTS, BASIS_POINTS_DIVISOR, priceDelta, priceDeltaPercentage2, toAggregatedOpenTradeSummary, calculatePositionDelta, IAggregatedTradeSummary } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -13,6 +13,7 @@ import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
 import { $caretDown } from "../elements/$icons"
+import { klineWS, WSBTCPriceEvent } from "../binance-api"
 
 
 
@@ -22,6 +23,7 @@ export interface ILeaderboard<T extends BaseProvider> {
   claimList: Stream<IClaim[]>
 
   leaderboardQuery: Stream<IAggregatedAccountSummary[]>
+  openAggregatedTrades: Stream<IAggregatedTradeOpen[]>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
@@ -42,12 +44,13 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 ) => {
 
-  const $header = $text(style({ fontSize: '1.45em', letterSpacing: '4px' }))
+  const $header = $text(style({ fontSize: '1.15em', letterSpacing: '4px' }))
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
   const timeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
   const timeFrame = timeFrameToRangeOp(timeFrameState)
+  const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTrade'))
 
 
   const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((tournament) => {
@@ -56,116 +59,215 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     }
   }, config.leaderboardQuery)
 
+  const openPositions: Stream<TablePageResponse<IAggregatedTradeSummary>> = map((data) => {
+    return {
+      data: data.map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.collateral) - formatFixed(a.collateral))
+    }
+  }, config.openAggregatedTrades)
+
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
-        $row(layoutSheet.spacing)(
-          $header(layoutSheet.flex, style({ color: pallete.foreground }))(`Leaderboard`),
+    $row(layoutSheet.spacingBig)(
+      $column(layoutSheet.spacing, style({ maxWidth: '710px', padding: '0 12px', minWidth: '574px' }))(
+        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $row(layoutSheet.spacing)(
+            $header(layoutSheet.flex)(`Top Settled`),
           // $header(layoutSheet.flex)(`Settled`),
           // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
-        ),
-        $row(layoutSheet.flex)(),
+          ),
+          $row(layoutSheet.flex)(),
 
-        $text(style({ color: pallete.foreground }))('Time Frame:'),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
-        )(
-          $text('24Hrs')
+          $text(style({ color: pallete.foreground }))('Time Frame:'),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+          )(
+            $text('24Hrs')
+          ),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+          )(
+            $text('Week')
+          ),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+          )(
+            $text('Month')
+          )
         ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
-        )(
-          $text('Week')
+        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+          $column(layoutSheet.spacing)(
+            switchLatest(map((dataSource) => {
+              return $Table<IAggregatedAccountSummary>({
+                bodyContainerOp: O(layoutSheet.spacingBig),
+                dataSource: now(dataSource),
+                bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '18px' })),
+                columns: [
+                  ...screenUtils.isDesktopScreen ? [{
+                    $head: $text('Rank'),
+                    columnOp: style({ flex: .5, placeContent: 'center' }),
+                    valueOp: map((x: IAggregatedAccountSummary) => {
+                      const idx = dataSource.data.indexOf(x) + 1
+                      return $text(`#${idx}`)
+                    })
+                  }] : [],
+                  {
+                    $head: $text('Account'),
+                    columnOp: style({ flex: 2 }),
+                    valueOp: map(({ address }) => {
+                      return switchLatest(
+                        map((claimList: IClaim[]) => {
+                          const claim = claimList?.find(c => c.address === address) || null
+
+                          const $profileAnchor = $Link({
+                            $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
+                              $AccountPhoto(address, claim),
+                              $AccountLabel(address, claim),
+                            ),
+                            url: `/p/account/${address}`,
+                            route: config.parentRoute.create({ fragment: '2121212' })
+                          })({
+                            click: routeChangeTether()
+                          })
+
+
+                          return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                            $profileAnchor,
+                            $ProfileLinks(address, claim),
+                          )
+                        }, now(null) as any)
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Win / Loss'),
+                    columnOp: style({ flex: 1.25, placeContent: 'center' }),
+                    valueOp: map(x => {
+                      return $text(`${x.profitablePositionsCount}/${x.settledPositionCount - x.profitablePositionsCount}`)
+                    })
+                  },
+                  {
+                    $head: $text('Risk'),
+                    columnOp: O(layoutSheet.spacingTiny, style({ flex: 1, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+                    valueOp: map(x => {
+                      return merge(
+                        $text(style({ fontSize: '.65em' }))(formatReadableUSD(x.collateral)),
+                        $text(`${String(x.leverage)}x`),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('PnL'),
+                    columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                    valueOp: map(x => {
+                      const str = formatReadableUSD(x.realisedPnl - x.fees)
+                      return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
+                    })
+                  },
+                ],
+              })({})
+            }, topGMX))
+          ),
         ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
-        )(
-          $text('Month')
-        )
       ),
-      $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
-        $column(layoutSheet.spacing)(
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $row(layoutSheet.spacing)(
+            $header(layoutSheet.flex)(`Top Open`),
+          // $header(layoutSheet.flex)(`Settled`),
+          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+          ),
+        ),
+        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+          $column(layoutSheet.spacing)(
+            switchLatest(map((dataSource) => {
+              return $Table<IAggregatedTradeSummary>({
+                bodyContainerOp: O(layoutSheet.spacingBig),
+                dataSource: now(dataSource),
+                bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '18px' })),
+                columns: [
+                  {
+                    $head: $text('Account'),
+                    columnOp: style({ flex: 2 }),
+                    valueOp: map(({ account }) => {
+                      return switchLatest(
+                        map((claimList: IClaim[]) => {
+                          const claim = claimList?.find(c => c.address === account) || null
 
-          switchLatest(map((dataSource) => {
-            return $Table<IAggregatedAccountSummary>({
-              bodyContainerOp: O(layoutSheet.spacingBig),
-              dataSource: now(dataSource),
-              bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '30px' })),
-              columns: [
-                ...screenUtils.isDesktopScreen ? [{
-                  $head: $text('Rank'),
-                  columnOp: style({ flex: .5, placeContent: 'center' }),
-                  valueOp: map((x: IAggregatedAccountSummary) => {
-                    const idx = dataSource.data.indexOf(x) + 1
-                    return $text(`#${idx}`)
-                  })
-                }] : [],
-                {
-                  $head: $text('Account'),
-                  columnOp: style({ flex: 3 }),
-                  valueOp: map(({ address }) => {
-                    return switchLatest(
-                      map((claimList: IClaim[]) => {
-                        const claim = claimList?.find(c => c.address === address) || null
-
-                        const $profileAnchor = $Link({
-                          $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
-                            $AccountPhoto(address, claim),
-                            $AccountLabel(address, claim),
-                          ),
-                          url: `/p/account/${address}`,
-                          route: config.parentRoute.create({ fragment: '2121212' })
-                        })({
-                          click: routeChangeTether()
-                        })
+                          const $profileAnchor = $Link({
+                            $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
+                              $AccountPhoto(account, claim),
+                              $AccountLabel(account, claim),
+                            ),
+                            url: `/p/account/${account}`,
+                            route: config.parentRoute.create({ fragment: '2121212' })
+                          })({
+                            click: routeChangeTether()
+                          })
 
 
-                        return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
-                          $profileAnchor,
-                          $ProfileLinks(address, claim),
+                          return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                            $profileAnchor,
+                            $ProfileLinks(account, claim),
+                          )
+                        }, now(null) as any)
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Risk'),
+                    columnOp: O(layoutSheet.spacingTiny, style({ flex: 1, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+                    valueOp: map(pos => {
+
+                      return merge(
+                        $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.collateral)),
+                        $text(`${String(pos.leverage)}x`),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('PnL'),
+                    columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                    valueOp: map((pos) => {
+
+                      const filterByIndexToken = filter((data: WSBTCPriceEvent) => {
+                        return (
+                          pos.indexToken === ARBITRUM_CONTRACTS.BTC && data.s === 'BTCUSDT' ||
+                          pos.indexToken === ARBITRUM_CONTRACTS.WETH && data.s === 'ETHUSDT'
                         )
-                      }, now(null) as any)
-                    )
-                  })
-                },
-                {
-                  $head: $text('Win / Loss'),
-                  columnOp: style({ flex: 1, placeContent: 'center' }),
-                  valueOp: map(x => {
-                    return $text(`${x.profitablePositionsCount}/${x.settledPositionCount - x.profitablePositionsCount}`)
-                  })
-                },
-                {
-                  $head: $text('Leverage'),
-                  columnOp: style({ flex: 1, placeContent: 'center' }),
-                  valueOp: map(x => {
-                    return $text(`${String(x.leverage)}x`)
-                  })
-                },
-                {
-                  $head: $text('Settled PnL'),
-                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                  valueOp: map(x => {
-                    const str = formatReadableUSD(x.realisedPnl - x.fees)
-                    return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
-                  })
-                },
-              ],
-            })({})
-          }, topGMX))
-        ),
+                      })
 
-      ),
+                      const pnlPosition = map(price => {
+                        const markPrice = parseFixed(price.p, 30)
+
+                        return calculatePositionDelta(pos.size, pos.collateral, pos.isLong, pos.averagePrice, markPrice)
+                      }, filterByIndexToken(priceChange))
+
+                      return $column(
+                        $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.negative : pallete.positive }), pnlPosition)))(
+                          map(meta => formatReadableUSD(meta.delta), pnlPosition),
+                        ),
+                        // $text(style({ fontSize: '.65em' }))(
+                        //   map(meta => readableNumber(formatFixed(meta.deltaPercentage, 2)) + '%', pnlPosition),
+                        // ),
+                      )
+                    })
+                  },
+                ],
+              })({})
+            }, openPositions))
+          ),
+        ),
+      )
     ),
 
     {
-      leaderboardQuery: timeFrame,
-      openTradesQuery : now(null),
+      requestAggregatedTradeList: timeFrame,
+      openTradesQuery: now(null),
+      requestOpenAggregatedTrades: timeFrame,
       routeChange
     }
   ]

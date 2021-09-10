@@ -36,8 +36,8 @@ export function shortPostAdress(address: string) {
   return address.slice(address.length -4, address.length)
 }
 
-export function readableUSD(ammount: string) {
-  const parts = ammount.split('.')
+export function readableNumber(ammount: string | number) {
+  const parts = ammount.toString().split('.')
   const [whole = '', decimal = ''] = parts
 
   if (whole === '' && decimal === '') {
@@ -54,7 +54,7 @@ export function readableUSD(ammount: string) {
 
 export function formatReadableUSD(ammount: bigint) {
   const str = formatFixed(ammount, USD_DECIMALS).toLocaleString()
-  return readableUSD(str)
+  return readableNumber(str)
 }
 
 export function shortenTxAddress(address: string) {

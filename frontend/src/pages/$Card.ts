@@ -1,7 +1,7 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, formatFixed, historicalPnLMetric, IClaim, intervalInMsMap, IQueryAggregatedTradeMap, readableUSD, toAggregatedAccountSummary  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, formatFixed, historicalPnLMetric, IAccountAggregationMap, IClaim, intervalInMsMap, readableNumber, toAggregatedAccountSummary  } from 'gambit-middleware'
 import { Stream } from '@most/types'
 import { filter, map, multicast, never, now, switchLatest } from '@most/core'
 import { Route } from '@aelea/router'
@@ -16,7 +16,7 @@ export interface ICard {
   parentRoute: Route
 
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IQueryAggregatedTradeMap>
+  aggregatedTradeList: Stream<IAccountAggregationMap>
 }
 
 
@@ -94,7 +94,7 @@ export const $Card = (config: ICard) => component(() => {
               return $row(layoutSheet.spacingBig, style({ placeContent: 'center', alignItems: 'center' }))(
                 $column(style({ alignItems: 'center' }))(
                   $row(
-                    $text(`${formatFixed(data.leverage, 4).toFixed(1)}x`),
+                    $text(`${data.leverage}x`),
                   ),
                   $text(style({ fontSize: '.6em', color: pallete.foreground }))('Leverage')
                 ),
@@ -147,14 +147,14 @@ export const $Card = (config: ICard) => component(() => {
                     shape: "arrowUp",
                     time: high.time,
                     // size: 0,
-                    text:  readableUSD(String(high.value.toLocaleString()))
+                    text:  readableNumber(String(high.value.toLocaleString()))
                   },
                   {
                     color: pallete.foreground,
                     position: "aboveBar",
                     shape: "arrowDown",
                     time: low.time,
-                    text: readableUSD(String(low.value.toLocaleString()))
+                    text: readableNumber(String(low.value.toLocaleString()))
                   }
                 ])
               }, 100)

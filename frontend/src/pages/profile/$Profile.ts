@@ -1,7 +1,7 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, formatFixed, TOKEN_ADDRESS_MAP, USD_DECIMALS, groupByMapMany, Token, getPositionFee, IClaim, intervalInMsMap, AccountHistoricalDataApi, getPositionMarginFee, formatReadableUSD, IAggregatedTradeClosed, unixTimeTzOffset, IAggregatedAccountSummary, IAggregatedTradeSummary, IQueryAggregatedTradeMap, historicalPnLMetric } from "gambit-middleware"
-import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time, UTCTimestamp } from "lightweight-charts"
+import { ARBITRUM_CONTRACTS, timeTzOffset, TOKEN_ADDRESS_MAP, groupByMapMany, Token, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap } from "gambit-middleware"
+import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
@@ -14,7 +14,6 @@ import { Stream } from "@most/types"
 import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
 import { Behavior } from "@aelea/core"
-import { toAggregatedTradeClosedJson } from "../../logic/utils"
 
 
 
@@ -23,7 +22,7 @@ export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   claimList: Stream<IClaim[]>
 
-  aggregatedAccountSummary: Stream<IQueryAggregatedTradeMap>
+  accountAggregation: Stream<IAccountAggregationMap>
 }
 
 
@@ -35,7 +34,7 @@ export const $Profile = (config: IAccount) => component((
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
   [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, Token>,
   [selectOtherTimeframe, selectOtherTimeframeTether]: Behavior<IBranch, intervalInMsMap>,
-  [aggregatedTradeListQuery, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
 
@@ -50,7 +49,7 @@ export const $Profile = (config: IAccount) => component((
 
   const accountHistoryPnL = multicast(filter(arr => {
     return arr.aggregatedTradeCloseds.length > 0
-  }, config.aggregatedAccountSummary))
+  }, config.accountAggregation))
 
 
   const latestInitiatedPosition = map(h => {
@@ -64,9 +63,9 @@ export const $Profile = (config: IAccount) => component((
     selectedTokenChange
   ])
 
+  
   const historicKline = multicast(switchLatest(combineArray((token, interval) => {
-    const symbol = token.symbol + 'USDT'
-    const klineData = fromPromise(fetchHistoricKline(symbol, { interval, limit: INTERVAL_TICKS }))
+    const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval, limit: INTERVAL_TICKS }))
     // const klineWSData = klineWS(symbol.toLowerCase())
 
     return klineData
@@ -513,7 +512,7 @@ export const $Profile = (config: IAccount) => component((
       )
     ),
 
-    { aggregatedTradeListQuery: now({ account: accountAddress, timeRange: [Date.now() - timeFrameStore.state * INTERVAL_TICKS, Date.now()] }) as Stream<AccountHistoricalDataApi> }
+    { requestAccountAggregation: now({ account: accountAddress, timeRange: [Date.now() - timeFrameStore.state * INTERVAL_TICKS, Date.now()] }) as Stream<AccountHistoricalDataApi> }
   ]
 })
 

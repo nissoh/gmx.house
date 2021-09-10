@@ -15,8 +15,8 @@ import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, LeaderboardApi } from 'gambit-middleware'
-import { accountSummaryJson, toPositionIncreaseJson } from '../logic/utils'
+import { AccountHistoricalDataApi, IAggregatedTradeOpen, LeaderboardApi } from 'gambit-middleware'
+import { accountSummaryJson, toAccountAggregationJson, toAggregatedTradeListJson, toAggregatedTradeOpenJson } from '../logic/utils'
 import { $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior } from "@aelea/core"
@@ -39,9 +39,10 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
-  [leaderboard, leaderboardTether]: Behavior<LeaderboardApi, LeaderboardApi>,
-  [openTrades, openTradesTether]: Behavior<any, LeaderboardApi>,
-  [aggregatedTradeSettled, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [requestAggregatedTradeList, requestAggregatedTradeListTether]: Behavior<LeaderboardApi, LeaderboardApi>,
+  [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<AccountHistoricalDataApi, IAggregatedTradeOpen[]>,
+  [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  // [accountAggregationQuery, accountAggregationQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -74,9 +75,10 @@ export default ({ baseRoute = '' }: Website) => component((
   const claimList = claimListQuery()
 
   const clientApi = helloBackend({
-    aggregatedTradeSettled,
-    leaderboard,
-    // openTrades
+    requestAccountAggregation,
+    requestAggregatedTradeList,
+    requestOpenAggregatedTrades,
+    
   })
 
   return [
@@ -146,10 +148,11 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: rootRoute,
                 parentStore: rootStore,
                 claimList,
-                leaderboardQuery: map(data => data.map(accountSummaryJson), clientApi.leaderboard),
+                openAggregatedTrades: map(x => x.aggregatedTradeOpens.map(toAggregatedTradeOpenJson), clientApi.requestOpenAggregatedTrades),
+                leaderboardQuery: map(data => data.map(accountSummaryJson), clientApi.requestAggregatedTradeList),
               })({
-                leaderboardQuery: leaderboardTether(),
-                openTradesQuery: openTradesTether(),
+                requestAggregatedTradeList: requestAggregatedTradeListTether(),
+                requestOpenAggregatedTrades: requestOpenAggregatedTradesTether(),
                 routeChange: linkClickTether()
               })
             ),
@@ -163,11 +166,9 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: portfolioRoute,
                 parentStore: rootStore,
                 claimList,
-                aggregatedTradeList: map(res => {
-                  return toPositionIncreaseJson(res)
-                }, clientApi.aggregatedTradeSettled)
+                aggregatedTradeList: map(res => toAccountAggregationJson(res.accountAggregation), clientApi.requestAccountAggregation)
               })({
-                aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+                requestAccountAggregation: requestAccountAggregationTether()
               })
             )
           )
@@ -179,11 +180,9 @@ export default ({ baseRoute = '' }: Website) => component((
           $Card({
             parentRoute: cardRoute,
             claimList,
-            aggregatedTradeList: map(res => {
-              return toPositionIncreaseJson(res)
-            }, clientApi.aggregatedTradeSettled)
+            aggregatedTradeList: map(res => toAggregatedTradeListJson(res), clientApi.aggregatedTradeSettled)
           })({
-            aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+            aggregatedTradeListQuery: requestAccountAggregationTether()
           })
         )
       )

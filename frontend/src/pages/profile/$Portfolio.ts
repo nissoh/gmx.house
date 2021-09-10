@@ -1,7 +1,7 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, layoutSheet, state } from '@aelea/ui-components'
 
-import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IClaim, IQueryAggregatedTradeMap  } from 'gambit-middleware'
+import {  AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAccountAggregationMap, IClaim  } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
@@ -15,7 +15,7 @@ export interface IPortfolio<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
   claimList: Stream<IClaim[]>
-  aggregatedTradeList: Stream<IQueryAggregatedTradeMap>
+  aggregatedTradeList: Stream<IAccountAggregationMap>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 
@@ -23,7 +23,7 @@ export interface IPortfolio<T extends BaseProvider> {
 
 
 export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => component((
-  [aggregatedTradeListQuery, aggregatedTradeListQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
   const $header = $text(style({ fontSize: '1.45em', fontWeight: 'lighter', letterSpacing: '4px' }))
@@ -40,14 +40,14 @@ export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => com
         $Profile({
           parentStore: config.parentStore,
           claimList: config.claimList,
-          aggregatedAccountSummary: config.aggregatedTradeList
+          accountAggregation: config.aggregatedTradeList
         })({
-          aggregatedTradeListQuery: aggregatedTradeListQueryTether()
+          requestAccountAggregation: requestAccountAggregationTether()
         })
       ),
     ),
 
-    { aggregatedTradeListQuery }
+    { requestAccountAggregation }
   ]
 })
 

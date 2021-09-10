@@ -1,4 +1,4 @@
-import { ARBITRUM_CONTRACTS, SYMBOL } from "./address"
+import { ARBITRUM_CONTRACTS, TOKEN_SYMBOL } from "./address"
 import { ExtractAndParseEventType } from "./contract"
 import type { Vault } from "./contract/"
 
@@ -6,7 +6,7 @@ export type Address = string
 
 export interface Token {
   name: string;
-  symbol: SYMBOL;
+  symbol: TOKEN_SYMBOL;
   decimals: number;
   address: ARBITRUM_CONTRACTS;
 }
@@ -73,7 +73,8 @@ export interface LeaderboardApi extends HistoricalDataApi {
 }
 
 
-export interface IAggregatedTradeOpen {
+export interface IAggregatedTradeOpen extends IBaseEntity {
+  account: string
   initialPositionBlockTimestamp: number
   initialPosition: IPositionIncrease
 
@@ -92,12 +93,15 @@ export interface IAggregatedTradeLiquidated extends IAggregatedTradeOpen {
   settledBlockTimestamp: number
 }
 
-export interface IQueryAggregatedTradeMap {
+export interface IAggregatedTradeListMap {
   aggregatedTradeOpens: IAggregatedTradeOpen[]
   aggregatedTradeCloseds: IAggregatedTradeClosed[]
   aggregatedTradeLiquidateds: IAggregatedTradeLiquidated[]
 }
 
+export interface IAccountAggregationMap extends IBaseEntity, IAggregatedTradeListMap {
+  totalRealisedPnl: bigint
+}
 
 
 export interface IAggregatedAccountSummary {
@@ -109,18 +113,25 @@ export interface IAggregatedAccountSummary {
   profitablePositionsCount: number
   claim: IClaim | null,
   fees: bigint
+  collateral: bigint
 
-  tradeSummaries: IAggregatedTradeSummary[]
+  tradeSummaries: IAggregatedSettledTradeSummary[]
 }
+
 
 export interface IAggregatedTradeSummary {
   startTimestamp: number
   indexToken: ARBITRUM_CONTRACTS
+  account: string
   size: bigint
+  averagePrice: bigint
   isLong: boolean
   leverage: bigint
   collateral: bigint
-  pnl: bigint
   fee: bigint
+}
+
+export interface IAggregatedSettledTradeSummary extends IAggregatedTradeSummary {
+  pnl: bigint
 }
 

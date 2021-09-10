@@ -1,5 +1,5 @@
 /* eslint-disable prefer-const */
-import { ethereum, store } from "@graphprotocol/graph-ts"
+import { ethereum, store, log, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
 import * as contract from "../generated/gmxVault/gmxVault"
 import * as glpManager from "../generated/glpManager/glpManager"
 
@@ -7,7 +7,7 @@ import {
   ClosePosition,
   DecreasePosition,
   IncreasePosition, LiquidatePosition, UpdatePosition, AggregatedTradeOpen, AggregatedTradeClosed, AggregatedTradeLiquidated,
-  AddLiquidity, RemoveLiquidity
+  AddLiquidity, RemoveLiquidity, AccountAggregation
 } from "../generated/schema"
 
 
@@ -63,12 +63,14 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
   entity.price = event.params.price.toBigDecimal()
   entity.fee = event.params.fee.toBigDecimal()
 
-  // Entities can be written to the store with `.save()`
   entity.save()
+  
 
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
+  let accountAgg = AccountAggregation.load(entity.account)
 
   if (aggTradeOpen === null) {
+
     aggTradeOpen = new AggregatedTradeOpen(tradeKey)
     aggTradeOpen.account = event.params.account.toHex()
 
@@ -77,14 +79,33 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
     aggTradeOpen.increaseList = []
     aggTradeOpen.decreaseList = []
     aggTradeOpen.updateList = []
+
+    if (accountAgg === null) {
+      accountAgg = accountAgg = new AccountAggregation(aggTradeOpen.account)
+
+      accountAgg.totalRealisedPnl = BigDecimal.fromString('0')
+      accountAgg.aggregatedTradeOpens = []
+      accountAgg.aggregatedTradeCloseds = []
+      accountAgg.aggregatedTradeLiquidateds = []
+    }
+
+    let newAcctOpen = accountAgg.aggregatedTradeOpens
+    newAcctOpen.push(aggTradeOpen.id)
+    accountAgg.aggregatedTradeOpens = newAcctOpen
   }
+
+  if (accountAgg) {
+    accountAgg.totalRealisedPnl = accountAgg.totalRealisedPnl.minus(entity.fee)
+    accountAgg.save()
+  }
+  
 
   let increaseList = aggTradeOpen.increaseList
   increaseList.push(entity.id)
   aggTradeOpen.increaseList = increaseList
 
-
   aggTradeOpen.save()
+
 }
 
 export function handleDecreasePosition(event: contract.DecreasePosition): void {
@@ -105,7 +126,7 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
   entity.price = event.params.price.toBigDecimal()
   entity.fee = event.params.fee.toBigDecimal()
 
-  // Entities can be written to the store with `.save()`
+
   entity.save()
 
 
@@ -116,6 +137,19 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
     decreaseList.push(entity.id)
     aggTradeOpen.decreaseList = decreaseList
     aggTradeOpen.save()
+
+    let accountAgg = AccountAggregation.load(aggTradeOpen.account)
+
+    if (accountAgg) {
+      accountAgg.totalRealisedPnl = accountAgg.totalRealisedPnl.minus(entity.fee)
+      accountAgg.save()
+    } else {
+      log.error('unable deduct paid fees into account aggregation #{}', [entity.id])
+    }
+    
+
+  } else {
+    log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
   }
 
 }
@@ -144,9 +178,12 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
 
     aggTradeOpen.updateList = updates
     aggTradeOpen.save()
+  } else {
+    log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
   }
 
 }
+
 export function handleClosePosition(event: contract.ClosePosition): void {
   let tradeKey = event.params.key.toHex()
   let tradeId = eventId(event)
@@ -163,8 +200,9 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   entity.averagePrice = event.params.averagePrice.toBigDecimal()
   entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
 
-  // Entities can be written to the store with `.save()`
+
   entity.save()
+
 
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
@@ -183,6 +221,27 @@ export function handleClosePosition(event: contract.ClosePosition): void {
     settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
 
     settled.save()
+
+
+    let accountAgg = AccountAggregation.load(aggTradeOpen.account)
+
+    if (accountAgg) {
+      let openidx = accountAgg.aggregatedTradeOpens.indexOf(aggTradeOpen.id)
+      accountAgg.aggregatedTradeOpens.splice(openidx, 1)
+      let newarr = accountAgg.aggregatedTradeOpens
+      accountAgg.aggregatedTradeOpens = newarr
+
+      let newClosedArr = accountAgg.aggregatedTradeCloseds
+      newClosedArr.push(settled.id)
+      accountAgg.aggregatedTradeCloseds = newClosedArr
+      accountAgg.totalRealisedPnl = accountAgg.totalRealisedPnl.plus(entity.realisedPnl)
+
+      accountAgg.save()
+
+    } else {
+      log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
+    }
+
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
   }
 
@@ -207,7 +266,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
   entity.markPrice = event.params.markPrice.toBigDecimal()
 
-  // Entities can be written to the store with `.save()`
+
   entity.save()
 
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
@@ -227,6 +286,26 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
     settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
 
     settled.save()
+
+    let accountAgg = AccountAggregation.load(aggTradeOpen.account)
+
+    if (accountAgg) {
+      let openidx = accountAgg.aggregatedTradeOpens.indexOf(aggTradeOpen.id)
+      accountAgg.aggregatedTradeOpens.splice(openidx, 1)
+      let newarr = accountAgg.aggregatedTradeOpens
+      accountAgg.aggregatedTradeOpens = newarr
+
+      let newLiqArr = accountAgg.aggregatedTradeLiquidateds
+      newLiqArr.push(settled.id)
+      accountAgg.aggregatedTradeLiquidateds = newLiqArr
+      accountAgg.totalRealisedPnl = accountAgg.totalRealisedPnl.minus(entity.collateral)
+
+      accountAgg.save()
+
+    } else {
+      log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
+    }
+
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
   }
 

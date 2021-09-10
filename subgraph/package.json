@@ -7,8 +7,14 @@
     "build-graph": "graph build",
     "build-pre-deploy": "yarn run contracts-typecain && yarn run codegen && yarn run build-graph",
     "deploy": "yarn run build-pre-deploy && graph deploy --product hosted-service nissoh/gmx-vault",
+    "zeus-tsql": "npx zeus schema.graphql ./ --ts",
     "create-local": "graph create --node http://localhost:8020/ gmx-vault",
     "remove-local": "graph remove --node http://localhost:8020/ gmx-vault",
     "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 gmx-vault"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-ts": "0.20.1"
+  },
+  "devDependencies": {
   }
 }

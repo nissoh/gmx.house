@@ -147,3 +147,15 @@ type AggregatedTradeLiquidated @entity {
   settledBlockTimestamp: BigDecimal!
 }
 
+type AccountAggregation @entity {
+  id: ID!
+
+  totalRealisedPnl: BigDecimal!
+
+  aggregatedTradeOpens: [AggregatedTradeOpen]!
+  aggregatedTradeCloseds: [AggregatedTradeClosed]!
+  aggregatedTradeLiquidateds: [AggregatedTradeLiquidated]!
+
+}
+
+

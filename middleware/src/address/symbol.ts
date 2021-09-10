@@ -1,5 +1,5 @@
 
-export enum SYMBOL {
+export enum TOKEN_SYMBOL {
   EXRD = 'EXRD',
   SUSHI = 'SUSHI',
   USDC = 'USDC',
