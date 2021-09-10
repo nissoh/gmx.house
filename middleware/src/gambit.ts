@@ -75,7 +75,7 @@ export function calculatePositionDelta(size: bigint, collateral: bigint, isLong:
 
   //   if (hasProfit && delta.mul(BASIS_POINTS_DIVISOR).lte(size.mul(minBps))) {
 
-  if (hasProfit && delta * BASIS_POINTS_DIVISOR <=  size * minBps) {
+  if (hasProfit && delta * BASIS_POINTS_DIVISOR >=  size * minBps) {
     delta = 0n
   }
 

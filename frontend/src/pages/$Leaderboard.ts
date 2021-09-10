@@ -1,9 +1,9 @@
 import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo } from "@aelea/dom"
 import { O, } from '@aelea/utils'
-import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state, $icon } from '@aelea/ui-components'
+import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { combine, constant, filter, map, merge, multicast, now, startWith, switchLatest } from '@most/core'
-import { Account, formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAggregatedAccountSummary, IAggregatedTradeOpen, priceDeltaPercentage, parseFixed, TOKEN_SYMBOL, readableNumber, ARBITRUM_CONTRACTS, BASIS_POINTS_DIVISOR, priceDelta, priceDeltaPercentage2, toAggregatedOpenTradeSummary, calculatePositionDelta, IAggregatedTradeSummary } from 'gambit-middleware'
+import { constant, filter, map, merge, multicast, now, startWith, switchLatest } from '@most/core'
+import { formatFixed, formatReadableUSD, IClaim, intervalInMsMap, LeaderboardApi, IAggregatedAccountSummary, IAggregatedTradeOpen, parseFixed, ARBITRUM_CONTRACTS, toAggregatedOpenTradeSummary, calculatePositionDelta, IAggregatedTradeSummary } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -12,7 +12,6 @@ import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$Acco
 import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
-import { $caretDown } from "../elements/$icons"
 import { klineWS, WSBTCPriceEvent } from "../binance-api"
 
 
@@ -61,7 +60,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const openPositions: Stream<TablePageResponse<IAggregatedTradeSummary>> = map((data) => {
     return {
-      data: data.map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.collateral) - formatFixed(a.collateral))
+      data: data
+        // .filter(a => a.account === '0x9b667fa9ef908407dc90ad0274039fa2fd0007b3')
+        .map(toAggregatedOpenTradeSummary)
+        .sort((a, b) => formatFixed(b.collateral) - formatFixed(a.collateral))
     }
   }, config.openAggregatedTrades)
 
@@ -247,8 +249,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                       }, filterByIndexToken(priceChange))
 
                       return $column(
-                        $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.negative : pallete.positive }), pnlPosition)))(
-                          map(meta => formatReadableUSD(meta.delta), pnlPosition),
+                        $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.positive : pallete.negative }), pnlPosition)))(
+                          map(meta => formatReadableUSD(meta.delta - pos.fee), pnlPosition),
                         ),
                         // $text(style({ fontSize: '.65em' }))(
                         //   map(meta => readableNumber(formatFixed(meta.deltaPercentage, 2)) + '%', pnlPosition),
