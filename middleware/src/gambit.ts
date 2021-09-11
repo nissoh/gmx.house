@@ -112,17 +112,17 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
     isLong: agg.initialPosition.isLong
   }
 
-  agg.increaseList?.forEach((pos) => {
+  agg?.increaseList?.forEach((pos) => {
     cumulativeAccountData.size += BigInt(pos.sizeDelta)
     cumulativeAccountData.collateral += BigInt(pos.collateralDelta)
     cumulativeAccountData.fee += BigInt(pos.fee)
     cumulativeAccountData.leverage += BigInt(pos.sizeDelta) / BigInt(pos.collateralDelta)
   })
 
-  cumulativeAccountData.averagePrice = agg.updateList[0]?.averagePrice ?? 0n
+  cumulativeAccountData.averagePrice = agg?.updateList[0]?.averagePrice ?? 0n
   cumulativeAccountData.leverage = cumulativeAccountData.leverage / BigInt(agg.increaseList.length)
   
-  agg.decreaseList?.forEach((pos) => {
+  agg?.decreaseList?.forEach((pos) => {
     cumulativeAccountData.fee += BigInt(pos.fee)
   })
 
