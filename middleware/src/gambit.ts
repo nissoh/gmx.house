@@ -66,11 +66,11 @@ export function priceDeltaPercentage2(delta: bigint, collateral: bigint) {
   return delta * BASIS_POINTS_DIVISOR / collateral
 }
 
-export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, averagePrice: bigint, price: bigint) {
-  const priceDelta = averagePrice > price ? averagePrice - price : price - averagePrice
-  let delta = size * priceDelta / averagePrice
+export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, marketPrice: bigint, positionPrice: bigint) {
+  const priceDelta = marketPrice > positionPrice ? marketPrice - positionPrice : positionPrice - marketPrice
+  let delta = size * priceDelta / marketPrice
 
-  const hasProfit = isLong ? price > averagePrice : price < averagePrice
+  const hasProfit = isLong ? positionPrice > marketPrice : positionPrice < marketPrice
   const minBps = 150n
 
   //   if (hasProfit && delta.mul(BASIS_POINTS_DIVISOR).lte(size.mul(minBps))) {
@@ -88,23 +88,18 @@ export function calculatePositionDelta(size: bigint, collateral: bigint, isLong:
   }
 }
 
-// export function calculatePositionDelta({ size, collateral, isLong, averagePrice, price }) {
-//   const priceDelta = averagePrice.gt(price) ? averagePrice.sub(price) : price.sub(averagePrice)
-//   let delta = size.mul(priceDelta).div(averagePrice)
-
-//   const hasProfit = isLong ? price.gt(averagePrice) : price.lt(averagePrice)
-//   const minBps = 150
-//   if (hasProfit && delta.mul(BASIS_POINTS_DIVISOR).lte(size.mul(minBps))) {
-//     delta = bigNumberify(0)
-//   }
-
-//   const deltaPercentage = delta.mul(BASIS_POINTS_DIVISOR).div(collateral)
-
-//   return {
-//     delta,
-//     hasProfit,
-//     deltaPercentage
-//   }
+// for longs: nextAveragePrice = (nextPrice * nextSize)/ (nextSize + delta)
+// for shorts: nextAveragePrice = (nextPrice * nextSize) / (nextSize - delta)
+// export function getNextAveragePrice(address: string, size: bigint, marketPrice: bigint, positionPrice: bigint, isLong: boolean, sizeDelta: bigint, lastIncreasedTime: bigint) {
+//     const {hasProfit, delta} = calculatePositionDelta(size, )
+//     uint256 nextSize = _size.add(_sizeDelta);
+//     uint256 divisor;
+//     if (_isLong) {
+//         divisor = hasProfit ? nextSize.add(delta) : nextSize.sub(delta);
+//     } else {
+//         divisor = hasProfit ? nextSize.sub(delta) : nextSize.add(delta);
+//     }
+//     return _nextPrice.mul(nextSize).div(divisor);
 // }
 
 export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggregatedTradeSummary {
@@ -121,11 +116,10 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
     cumulativeAccountData.size += BigInt(pos.sizeDelta)
     cumulativeAccountData.collateral += BigInt(pos.collateralDelta)
     cumulativeAccountData.fee += BigInt(pos.fee)
-    cumulativeAccountData.averagePrice += BigInt(pos.price)
     cumulativeAccountData.leverage += BigInt(pos.sizeDelta) / BigInt(pos.collateralDelta)
   })
 
-  cumulativeAccountData.averagePrice = cumulativeAccountData.averagePrice / BigInt(agg.increaseList.length)
+  cumulativeAccountData.averagePrice = agg.updateList[0]?.averagePrice ?? 0n
   cumulativeAccountData.leverage = cumulativeAccountData.leverage / BigInt(agg.increaseList.length)
   
   agg.decreaseList?.forEach((pos) => {

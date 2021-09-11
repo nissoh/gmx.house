@@ -63,7 +63,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const openPositions: Stream<TablePageResponse<IAggregatedTradeSummary>> = map((data) => {
     return {
       data: data
-        // .filter(a => a.account === '0x9b667fa9ef908407dc90ad0274039fa2fd0007b3')
+        // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')
         .map(toAggregatedOpenTradeSummary)
         .sort((a, b) => formatFixed(b.collateral) - formatFixed(a.collateral))
     }
