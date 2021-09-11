@@ -13,6 +13,8 @@ import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
 import { klineWS, WSBTCPriceEvent } from "../binance-api"
+import { $icon } from "../common/$icons"
+import { $bear, $bull } from "../elements/$icons"
 
 
 
@@ -71,7 +73,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
     $row(layoutSheet.spacingBig)(
-      $column(layoutSheet.spacing, style({ maxWidth: '710px', padding: '0 12px', minWidth: '574px' }))(
+      $column(layoutSheet.spacing, style({ maxWidth: '610px', padding: '0 12px', minWidth: '574px' }))(
         $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
           $row(layoutSheet.spacing)(
             $header(layoutSheet.flex)(`Top Settled`),
@@ -162,7 +164,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     })
                   },
                   {
-                    $head: $text('PnL'),
+                    $head: $text('PnL $'),
                     columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
                     valueOp: map(x => {
                       const str = formatReadableUSD(x.realisedPnl - x.fees)
@@ -192,8 +194,18 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 bodyRowOp: O(layoutSheet.spacingBig, style({ gap: '18px' })),
                 columns: [
                   {
+                    $head: $text('S|L'),
+                    columnOp: style({ minWidth: '38px', flex: 0 }),
+                    valueOp: map(({ isLong }) => {
+                      return $icon({
+                        $content: isLong ? $bull : $bear, 
+                        viewBox: '0 0 32 32'
+                      })
+                    })
+                  },
+                  {
                     $head: $text('Account'),
-                    columnOp: style({ flex: 2 }),
+                    columnOp: style({ flex: 3 }),
                     valueOp: map(({ account }) => {
                       return switchLatest(
                         map((claimList: IClaim[]) => {
@@ -225,13 +237,13 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     valueOp: map(pos => {
 
                       return merge(
-                        $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.collateral)),
+                        $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.collateral - pos.fee)),
                         $text(`${String(pos.leverage)}x`),
                       )
                     })
                   },
                   {
-                    $head: $text('PnL'),
+                    $head: $text('PnL $'),
                     columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
                     valueOp: map((pos) => {
 
@@ -250,7 +262,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
                       return $column(
                         $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.positive : pallete.negative }), pnlPosition)))(
-                          map(meta => formatReadableUSD(meta.delta - pos.fee), pnlPosition),
+                          map(meta => `${meta.hasProfit ? '' : '-'}${formatReadableUSD(meta.delta - pos.fee)}`, pnlPosition),
                         ),
                         // $text(style({ fontSize: '.65em' }))(
                         //   map(meta => readableNumber(formatFixed(meta.deltaPercentage, 2)) + '%', pnlPosition),
