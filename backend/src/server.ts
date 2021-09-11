@@ -1,4 +1,4 @@
-import { Connection, EntityManager, IDatabaseDriver, MikroORM, RequestContext } from '@mikro-orm/core'
+import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
 import express from 'express'
 
 import http from 'http'
@@ -10,7 +10,7 @@ import path from 'path'
 import { accountApi } from './logic/account'
 // import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
-import { requestAccountAggregation, requestAggregatedTradeList, leaderboard, requestOpenAggregatedTrades } from './api'
+import { requestAccountAggregation, requestAggregatedTradeList, requestOpenAggregatedTrades } from './api'
 import { openGraphScreenshot } from './logic/linkOGShot'
 import ws from 'ws'
 

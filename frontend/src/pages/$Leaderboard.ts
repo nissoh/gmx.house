@@ -1,4 +1,4 @@
-import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo } from "@aelea/dom"
+import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo, $node } from "@aelea/dom"
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
@@ -72,7 +72,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $row(layoutSheet.spacingBig)(
+    $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
       $column(layoutSheet.spacing, style({ maxWidth: '610px', padding: '0 12px', minWidth: '574px' }))(
         $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
           $row(layoutSheet.spacing)(

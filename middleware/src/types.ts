@@ -115,7 +115,7 @@ export interface IAggregatedAccountSummary {
   fees: bigint
   collateral: bigint
 
-  tradeSummaries: IAggregatedSettledTradeSummary[]
+  // tradeSummaries: IAggregatedSettledTradeSummary[]
 }
 
 

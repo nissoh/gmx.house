@@ -162,7 +162,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeListMap): IAggr
     }, 0n)
 
     const account: IAggregatedAccountSummary = {
-      address, tradeSummaries, fees, profitablePositionsCount,
+      address, fees, profitablePositionsCount,
       settledPositionCount: aggTradeList.length,
       leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0n) / BigInt(tradeSummaries.length),
       openPnl: null,

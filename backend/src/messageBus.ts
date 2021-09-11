@@ -1,5 +1,5 @@
 import { fromCallback, nullSink, O, Op } from '@aelea/utils'
-import { chain, filter, fromPromise, join, map, mergeArray, multicast, tap } from '@most/core'
+import { chain, empty, filter, fromPromise, join, map, mergeArray, multicast, recoverWith, tap } from '@most/core'
 import { Stream } from '@most/types'
 import { ICommunicationMessage } from 'gambit-middleware'
 import ws, { EventEmitter } from 'ws'
@@ -45,7 +45,7 @@ export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(wss: ws.Server | ws,
   const entriesInMap: [string, Op<any, any>][] = Object.entries(inMap)
   const outMapEntries = entriesInMap.map(async ([topic, op]) => {
     await Promise.resolve()
-    const ww = O(
+    const mapTopics: Stream<string> = O(
       map((msg: WsData) => {
 
         if (msg.data instanceof Buffer) {
@@ -61,10 +61,14 @@ export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(wss: ws.Server | ws,
       }),
       map(({ body }) => body),
       op,
-      map(body => JSON.stringify({ body, topic }))
+      map(body => JSON.stringify({ body, topic })),
+      recoverWith(error => {
+        console.error(error)
+        return mapTopics
+      })
     )(multicastConnection)
 
-    return ww
+    return mapTopics
   }, {} as ILoopMap<OUT>)
 
   const outputStream = mergeArray(outMapEntries.map(O(fromPromise, join)))
