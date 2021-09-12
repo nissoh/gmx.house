@@ -68,14 +68,14 @@ export function priceDeltaPercentage2(delta: bigint, collateral: bigint) {
 
 export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, marketPrice: bigint, positionPrice: bigint) {
   const priceDelta = marketPrice > positionPrice ? marketPrice - positionPrice : positionPrice - marketPrice
-  let delta = size * priceDelta / marketPrice
+  const delta = size * priceDelta / marketPrice
 
   const hasProfit = isLong ? positionPrice > marketPrice : positionPrice < marketPrice
   const minBps = 150n
 
-  if (hasProfit && delta * BASIS_POINTS_DIVISOR >=  size * minBps) {
-    delta = 0n
-  }
+  // if (hasProfit && delta * BASIS_POINTS_DIVISOR >=  size * minBps) {
+  //   delta = 0n
+  // }
 
   const deltaPercentage = delta * BASIS_POINTS_DIVISOR / collateral
 
@@ -143,7 +143,7 @@ export function toAggregatedTradeAverageSummary(agg: IAggregatedTradeClosed | IA
 
   cumulativeAccountData.pnl = isLiquidated
     ? BigInt(agg.settledPosition.collateral)
-    : BigInt(agg.settledPosition.collateral) - cumulativeAccountData.fee
+    : BigInt(agg.settledPosition.realisedPnl) - cumulativeAccountData.fee
 
   return cumulativeAccountData
 }
@@ -192,8 +192,10 @@ export function historicalPnLMetric(historicalData: IAccountAggregationMap, inte
   const closedPosList = historicalData.aggregatedTradeCloseds
   // .filter(t => t.settledPosition)
     .map(aggTrade => {
+
+      const summary = toAggregatedTradeAverageSummary(aggTrade)
       const time = aggTrade.settledBlockTimestamp
-      const value = formatFixed(aggTrade.settledPosition.realisedPnl, USD_DECIMALS)
+      const value = formatFixed(summary.pnl, USD_DECIMALS)
 
       return { value, time }
     })
