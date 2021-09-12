@@ -1,9 +1,11 @@
 import { WebSocketProvider } from "@ethersproject/providers"
 
 
-export const provider = new WebSocketProvider(
-  "wss://arb-mainnet.g.alchemy.com/v2/plN3HlsQHek6-EiZjJO9BmDcqNGbW7X4"
-)
+if (process.env.RPC_ALCHEMY_WSS === undefined) {
+  throw new Error('missing in n RPC')
+}
+
+export const provider = new WebSocketProvider(process.env.RPC_ALCHEMY_WSS)
 
 // const provider = new EtherscanProvider()
 // provider.getHistory('')

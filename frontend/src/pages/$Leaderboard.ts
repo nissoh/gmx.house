@@ -262,7 +262,11 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
                       return $column(
                         $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.positive : pallete.negative }), pnlPosition)))(
-                          map(meta => `${meta.hasProfit ? '' : '-'}${formatReadableUSD(meta.delta - pos.fee)}`, pnlPosition),
+                          map(meta => {
+
+                            const pnl = formatReadableUSD(meta.delta - pos.fee)
+                            return `${meta.hasProfit ? pnl : `${pnl.startsWith('-') ? pnl : '-' + pnl}`}`
+                          }, pnlPosition),
                         ),
                         // $text(style({ fontSize: '.65em' }))(
                         //   map(meta => readableNumber(formatFixed(meta.deltaPercentage, 2)) + '%', pnlPosition),

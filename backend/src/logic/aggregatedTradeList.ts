@@ -134,7 +134,7 @@ const openAggregateTradesQuery = gql`
 ${schemaFragments}
 
 query ($account: ID = "", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
-  aggregatedTradeOpens {
+  aggregatedTradeOpens(first: 1000) {
     ...aggregatedTradeOpenFields
   }
 }

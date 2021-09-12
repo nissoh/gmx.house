@@ -73,8 +73,6 @@ export function calculatePositionDelta(size: bigint, collateral: bigint, isLong:
   const hasProfit = isLong ? positionPrice > marketPrice : positionPrice < marketPrice
   const minBps = 150n
 
-  //   if (hasProfit && delta.mul(BASIS_POINTS_DIVISOR).lte(size.mul(minBps))) {
-
   if (hasProfit && delta * BASIS_POINTS_DIVISOR >=  size * minBps) {
     delta = 0n
   }
@@ -121,6 +119,8 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
 
   if (agg.updateList?.length) {
     cumulativeAccountData.averagePrice = agg.updateList[0].averagePrice ?? 0n
+  } else {
+    console.error(`missing updatelist, account: ${agg.account}`)
   }
 
   
