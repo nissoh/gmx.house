@@ -4,7 +4,8 @@
     "author": "Nissan Hanina <nissanhanina@gmail.com>",
     "private": true,
     "workspaces": [
-        "*"
+        "*",
+        "!(contracts)"
     ],
     "scripts": {
         "build": "yarn workspaces foreach --verbose --topological --parallel run build",
