@@ -1,4 +1,4 @@
-// import { $node, $text, Behavior, component, style, styleBehavior, StyleCSS } from "@aelea/core"
+// import { $node, $text, Behavior, component, style, styleBehavior, StyleCSS } from "@aelea/dom"
 // import { $column, $row, $TextField, InputType, layoutSheet } from "@aelea/ui-components"
 // import { theme } from "@aelea/ui-components-theme"
 // import { combine, constant, map, now, sample, startWith, switchLatest } from "@most/core"

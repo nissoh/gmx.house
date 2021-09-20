@@ -1,0 +1,113 @@
+specVersion: 0.0.2
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: glpManager
+    network: arbitrum-one
+    source:
+      address: "0x321F653eED006AD1C29D174e17d96351BDe22649"
+      abi: glpManager
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.2
+      language: wasm/assemblyscript
+      entities:
+        - AddLiquidity
+        - RemoveLiquidity
+      abis:
+        - name: glpManager
+          file: ../contracts/artifacts/contracts/core/GlpManager.sol/GlpManager.json
+      eventHandlers:
+        - event: AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleAddLiquidity
+        - event: RemoveLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
+          handler: handleRemoveLiquidity
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: gmxVault
+    network: arbitrum-one
+    source:
+      address: "0x489ee077994b6658eafa855c308275ead8097c4a"
+      abi: gmxVault
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.2
+      language: wasm/assemblyscript
+      entities:
+        - ClosePosition
+        - DecreasePosition
+        - IncreasePosition
+        - LiquidatePosition
+        - UpdatePosition
+
+        - AggregatedTradeOpen
+        - AggregatedTradeClosed
+        - AggregatedTradeLiquidated
+
+        # - BuyUSDG
+        # - CollectMarginFees
+        # - CollectSwapFees
+        # - DecreaseGuaranteedUsd
+        # - DecreasePoolAmount
+        # - DecreaseReservedAmount
+        # - DecreaseUsdgAmount
+        # - DirectPoolDeposit
+        # - IncreaseGuaranteedUsd
+        # - IncreasePoolAmount
+        # - IncreaseReservedAmount
+        # - IncreaseUsdgAmount
+        # - SellUSDG
+        # - Swap
+        # - UpdateFundingRate
+        # - UpdatePnl
+      abis:
+        - name: gmxVault
+          file: ../contracts/artifacts/contracts/core/Vault.sol/vault.json
+      eventHandlers:
+        - event: ClosePosition(bytes32,uint256,uint256,uint256,uint256,uint256,int256)
+          handler: handleClosePosition
+        - event: DecreasePosition(bytes32,address,address,address,uint256,uint256,bool,uint256,uint256)
+          handler: handleDecreasePosition
+        - event: IncreasePosition(bytes32,address,address,address,uint256,uint256,bool,uint256,uint256)
+          handler: handleIncreasePosition
+        - event: LiquidatePosition(bytes32,address,address,address,bool,uint256,uint256,uint256,int256,uint256)
+          handler: handleLiquidatePosition
+        - event: UpdatePosition(bytes32,uint256,uint256,uint256,uint256,uint256,int256)
+          handler: handleUpdatePosition
+
+
+        # - event: BuyUSDG(address,address,uint256,uint256,uint256)
+        #   handler: handleBuyUSDG
+        # - event: CollectMarginFees(address,uint256,uint256)
+        #   handler: handleCollectMarginFees
+        # - event: CollectSwapFees(address,uint256,uint256)
+        #   handler: handleCollectSwapFees
+        # - event: DecreaseGuaranteedUsd(address,uint256)
+        #   handler: handleDecreaseGuaranteedUsd
+        # - event: DecreasePoolAmount(address,uint256)
+        #   handler: handleDecreasePoolAmount
+        # - event: DecreaseReservedAmount(address,uint256)
+        #   handler: handleDecreaseReservedAmount
+        # - event: DecreaseUsdgAmount(address,uint256)
+        #   handler: handleDecreaseUsdgAmount
+        # - event: DirectPoolDeposit(address,uint256)
+        #   handler: handleDirectPoolDeposit
+        # - event: IncreaseGuaranteedUsd(address,uint256)
+        #   handler: handleIncreaseGuaranteedUsd
+        # - event: IncreasePoolAmount(address,uint256)
+        #   handler: handleIncreasePoolAmount
+        # - event: IncreaseReservedAmount(address,uint256)
+        #   handler: handleIncreaseReservedAmount
+        # - event: IncreaseUsdgAmount(address,uint256)
+        #   handler: handleIncreaseUsdgAmount
+        # - event: SellUSDG(address,address,uint256,uint256,uint256)
+        #   handler: handleSellUSDG
+        # - event: Swap(address,address,address,uint256,uint256,uint256,uint256)
+        #   handler: handleSwap
+        # - event: UpdateFundingRate(address,uint256)
+        #   handler: handleUpdateFundingRate
+        # - event: UpdatePnl(bytes32,bool,uint256)
+        #   handler: handleUpdatePnl
+
+      file: ./src/mapping.ts

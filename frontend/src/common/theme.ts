@@ -5,7 +5,7 @@ import type { Theme } from '@aelea/ui-components-theme'
 const light: Theme = {
   name: 'light',
   pallete: {
-    primary: '#b573ff',
+    primary: '#2c98f3',
 
     message: '#000000',
 
@@ -23,16 +23,16 @@ const light: Theme = {
 const dark: Theme = {
   name: 'dark',
   pallete: {
-    primary: '#e24183',
+    primary: '#079dfa',
 
     message: '#ffffff',
 
-    background: '#1f0a44',
-    horizon: '#381a63',
+    background: '#0e0f20',
+    horizon: '#16273a',
     middleground: '#502b86',
-    foreground: '#bca4de',
+    foreground: '#8c96a7',
 
-    positive: '#a6f5a6',
+    positive: '#91fbad',
     negative: '#ff3e29',
     indeterminate: '#dccb07',
   }

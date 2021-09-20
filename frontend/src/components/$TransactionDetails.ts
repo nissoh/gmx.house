@@ -1,6 +1,6 @@
-import { attrBehavior } from "@aelea/core"
+import { attrBehavior } from "@aelea/dom"
 import { O } from '@aelea/utils'
-import { $element, $text, Behavior, component, style } from "@aelea/core"
+import { $element, $text, component, style } from "@aelea/dom"
 import { $Button, $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { TransactionReceipt } from "@ethersproject/providers"

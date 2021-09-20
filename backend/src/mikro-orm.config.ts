@@ -1,11 +1,12 @@
 import { Options } from '@mikro-orm/core'
-import { dto } from './dto'
+// import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
+
 
 const options: Options = {
   type: 'mongo',
-  entities: Object.values(dto),
+  entities: [], // Object.values(dto),
   // metadataProvider: TsMorphMetadataProvider,
-  dbName: 'gambit-portal',
+  dbName: 'gmx',
   // highlighter: new MongoHighlighter(),
   // debug: true,
   ensureIndexes: true,

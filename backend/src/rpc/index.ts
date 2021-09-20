@@ -1,13 +1,11 @@
-import { EtherscanProvider, JsonRpcProvider } from "@ethersproject/providers"
+import { WebSocketProvider } from "@ethersproject/providers"
 
 
-export const bscNini = new JsonRpcProvider(
-  "https://bsc-dataseed1.ninicoin.io/",
-  {
-    chainId: 56,
-    name: "bsc-mainnet",
-  }
-)
+if (process.env.RPC_ALCHEMY_WSS === undefined) {
+  throw new Error('missing in n RPC')
+}
+
+export const provider = new WebSocketProvider(process.env.RPC_ALCHEMY_WSS)
 
 // const provider = new EtherscanProvider()
 // provider.getHistory('')

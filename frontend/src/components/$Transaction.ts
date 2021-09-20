@@ -1,5 +1,5 @@
-// import { O } from "@aelea/core"
-// import { $element, $text, attr, Behavior, component, style } from "@aelea/core"
+// import { O } from "@aelea/dom"
+// import { $element, $text, attr, Behavior, component, style } from "@aelea/dom"
 // import { $column, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 // import { pallete, theme } from "@aelea/ui-components-theme"
 // import { TransactionReceipt } from "@ethersproject/providers"

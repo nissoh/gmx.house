@@ -1,6 +1,6 @@
 import { http } from "@aelea/ui-components"
 import { filter, fromPromise, map, merge, multicast, now, skipRepeatsWith, switchLatest, throttle } from "@most/core"
-import { intervalInMsMap, timeTzOffset } from "gambit-middleware"
+import { intervalInMsMap, timeTzOffset, TOKEN_SYMBOL } from "gambit-middleware"
 import { BarData, UTCTimestamp } from "lightweight-charts"
 
 
@@ -11,7 +11,7 @@ import { BarData, UTCTimestamp } from "lightweight-charts"
 export type WSBTCPriceEvent =  {
   e: "trade"                 // Event type
   E: 1617289601815           // Event time
-  s: "BTCUSDT"               // Symbol
+  s: "BTCUSDT" | "ETHUSDT"               // Symbol
   t: 740367356               // Aggregate trade ID
   p: "59024.37000000"        // Price
   q: "0.00411700"            // Quantity
@@ -53,14 +53,15 @@ export interface IBinanceApiParams {
   interval: intervalInMsMap
   startTime?: number
   endTime?: number
+  compareWith?: string
   limit: number
 }
 
 // https://binance-docs.github.io/apidocs/spot/en/#kline-candlestick-data
-export async function fetchHistoricKline(symbol: string, params: IBinanceApiParams) {
+export async function fetchHistoricKline(symbol: TOKEN_SYMBOL, params: IBinanceApiParams) {
   const interval = intervampMap[params.interval as keyof typeof intervampMap]
   const queryParams = new URLSearchParams({
-    symbol,
+    symbol: symbol + (params.compareWith ?? 'USDT'),
     interval,
     limit: String(params.limit)
   })
@@ -99,22 +100,19 @@ export async function fetchHistoricKline(symbol: string, params: IBinanceApiPara
 //   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() }
 // }
 
-export function klineWS(symbol: string) {
-  const url = `wss://stream.binance.com:9443/ws/${symbol}@aggTrade`
+export function klineWS(...action: string[]) {
+  const url = `wss://stream.binance.com:9443/ws`
   const wsInput = now({
     method: "SUBSCRIBE",
-    params: [
-      `${symbol}@aggTrade`
-    ],
+    params: action,
     id: 2
   })
   const wss = filter((data: any) => {
     return Boolean(data.p)
   }, http.fromWebsocket<WSBTCPriceEvent, any>(url, wsInput))
 
-  const throttledWss = throttle(1000, wss)
   const throttleWss = multicast(
-    skipRepeatsWith((prev, next) => prev.p === next.p, throttledWss)  
+    skipRepeatsWith((prev, next) => prev.p === next.p, wss)  
   )
 
   return throttleWss

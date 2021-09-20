@@ -1,183 +1,351 @@
-import { $text, Behavior, event, component, style, styleBehavior, StyleCSS, attr } from '@aelea/core'
-import { combineArray, O, } from '@aelea/utils'
-import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
+import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo, $node, styleInline } from "@aelea/dom"
+import { O, } from '@aelea/utils'
+import { $card, $column, $row, layoutSheet, $Table, state, $seperator } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, startWith, switchLatest } from '@most/core'
-import { formatReadableUSD, getPositionFee, intervalInMsMap } from 'gambit-middleware'
+import { constant, filter, map, merge, mergeArray, multicast, now, snapshot, startWith, switchLatest, tap } from '@most/core'
+import { formatFixed, formatReadableUSD, IClaim, intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeOpen, parseFixed, ARBITRUM_CONTRACTS, toAggregatedOpenTradeSummary, calculatePositionDelta, IAggregatedTradeSummary, IPagableResponse, TOKENS_ARBITRUM, readableNumber, IAggregatedPositionSummary, getLiquidationPriceFromDelta, USD_DECIMALS, getPositionMarginFee, IPageable } from 'gambit-middleware'
 import { Route } from '@aelea/router'
-import { $alert, $anchor } from '../elements/$common'
+import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { leaderBoardQuery, liquidationsQuery } from '../logic/leaderboard'
-import { $AccountProfile } from '../components/$AccountProfile'
-import { LeaderboardApi } from 'gambit-backend'
-import { Account, Claim } from '../logic/types'
-import { isMobileScreen } from '../common/utils'
+import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$AccountProfile'
+import { Behavior, combineArray } from "@aelea/core"
+import { $Link } from "../components/$Link"
+import { screenUtils } from "@aelea/ui-components"
+import { klineWS, WSBTCPriceEvent } from "../binance-api"
+import { $icon, $tokenIconMap } from "../common/$icons"
+import { $bear, $bull } from "../elements/$icons"
+import { $Table2, TablePageResponse } from "../common/$Table2"
 
+
+const filterByIndexToken = (pos: IAggregatedPositionSummary) => filter((data: WSBTCPriceEvent) => {
+  return (
+    pos.indexToken === ARBITRUM_CONTRACTS.BTC && data.s === 'BTCUSDT' ||
+                          pos.indexToken === ARBITRUM_CONTRACTS.WETH && data.s === 'ETHUSDT'
+  )
+})
 
 
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
-  claimList: Stream<Claim[]>
+  claimList: Stream<IClaim[]>
+
+  requestLeaderboardTopList: Stream<IPagableResponse<IAggregatedAccountSummary>>
+  openAggregatedTrades: Stream<IPagableResponse<IAggregatedPositionSummary>>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
 
 
-
-const timeFrameToRangeOp = map((timeSpan: intervalInMsMap): LeaderboardApi => {
-  const now = Date.now()
-
-  return { timeRange: [now - timeSpan, now] }
-})
-
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
   [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
+
+  [routeChange, routeChangeTether]: Behavior<string, string>,
+  [tableTopPnlRequest, tableTopPnlRequestTether]: Behavior<number, number>,
+  [openPositionsRequest, openPositionsRequestTether]: Behavior<number, number>,
+
 ) => {
 
-  const $header = $text(style({ fontSize: '1.45em', letterSpacing: '4px' }))
+  const $header = $text(style({ fontSize: '1.15em', letterSpacing: '4px' }))
+
+  const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTrade'))
+
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
-  const timeFrameState = multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x))))
-  const timeFrame = timeFrameToRangeOp(timeFrameState)
-  
-  
-  const topGambit: Stream<Stream<TablePageResponse<Account>>> = map((params: LeaderboardApi) => {
+  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
 
-    return combineArray((settled, liqs) => {
+  const tableRequestState = combineArray((timeInterval, page): ILeaderboardRequest => {
+    return { timeInterval, offset: page * 20, pageSize: 20 }
+  }, filterByTimeFrameState, tableTopPnlRequest)
 
-      const topMap = settled.reduce((seed, pos) => {
-        const account = seed[pos.account] ??= {
-          address: pos.account,
-          settledPositionCount: 0,
-          claim: null,
-          profitablePositionsCount: 0,
-          realisedPnl: 0n,
-          settledPositions: [],
-        }
+  const tableTopOpenState = map((page): IPageable => {
+    return { offset: page * 20, pageSize: 20 }
+  }, openPositionsRequest)
 
-        account.settledPositions.push(pos)
-        account.settledPositionCount++
 
-        const fee = getPositionFee(pos.size, pos.entryFundingRate, pos.entryFundingRate)
+  const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((res) => {
+    return {
+      data: res.page,
+      pageSize: res.pageSize,
+      offset: res.offset,
+    }
+  }, config.requestLeaderboardTopList)
+
+  const openPositions: Stream<TablePageResponse<IAggregatedPositionSummary>> = map((res) => {
+    return {
+      data: res.page,
+      pageSize: res.pageSize,
+      offset: res.offset,
+      // .filter(a => a.account == '0x7b701ae4c6e540c1254a3168837bc12b0f1c53c2')
+      // .map(toAggregatedOpenTradeSummary)
         
-        account.realisedPnl += pos.realisedPnl + -fee
+    }
+  }, config.openAggregatedTrades)
 
-        if (pos.realisedPnl > 0n) {
-          account.profitablePositionsCount++
-        }
+  const tableRiskColumnCellBody = {
+    $head: $text(style({ fontSize: '1em' }))('Risk'),
+    columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, fontSize: '.65em', flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+    $body: map((pos: IAggregatedTradeSummary) => {
 
-        return seed
-      }, {} as {[account: string]: Account})
-
-      const allAccounts = Object.values(topMap)
-      
-      liqs.forEach(liq => {
-        const liqqedTopAccount = topMap[liq.account]
-        if (liqqedTopAccount) {
-          liqqedTopAccount.realisedPnl -= liq.collateral
-          liqqedTopAccount.settledPositionCount++
-        }
-      })
-
-      return {
-        data: allAccounts
-          .sort((a, b) => Number(b.realisedPnl - a.realisedPnl))
-          // .filter(a => a.realisedPnl > 0)
-      }
-    }, leaderBoardQuery(params), liquidationsQuery(params))
-  }, timeFrame)
-
-
+      return $column(
+        $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+          $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
+          $text(formatReadableUSD(pos.collateral - pos.fee))
+        ),
+        style({ width: '100%' }, $seperator),
+        $text(style({  }))(formatReadableUSD(pos.size)),
+      )
+    })
+  }
 
 
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
-    $column(layoutSheet.spacingBig, style({ maxWidth: '870px', padding: '0 12px', width: '100%', alignSelf: 'center' }))(
-      $row(layoutSheet.spacingSmall, style({ placeContent: 'center' }))(
-        $text('Gambit Kickoff Tournament Has started!'),
-        $anchor(attr({ href: '/p/tournament' }))(
-          $text('Ladder Tournament')
-        ),
-      ),
-      $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
-        $row(
-          $header(layoutSheet.flex)('Top Gambit'),
-        ),
-        $row(layoutSheet.flex)(),
+    $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $row(layoutSheet.spacing)(
+            $header(layoutSheet.flex)(`Top Settled`),
+          // $header(layoutSheet.flex)(`Settled`),
+          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+          ),
+          $row(layoutSheet.flex)(),
 
-        $text(style({ color: pallete.foreground }))('Time Frame:'),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.DAY))
-        )(
-          $text('24Hrs')
+          $text(style({ color: pallete.foreground }))('Time Frame:'),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+          )(
+            $text('24Hrs')
+          ),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+          )(
+            $text('Week')
+          ),
+          $anchor(
+            styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
+            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+          )(
+            $text('Month')
+          )
         ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.WEEK))
-        )(
-          $text('Week')
-        ),
-        $anchor(
-          styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, timeFrameState)),
-          initializeLeaderboardTether(event('click'), constant(intervalInMsMap.MONTH))
-        )(
-          $text('Month')
-        )
-      ),
-      $card(layoutSheet.spacingBig, style({ padding: isMobileScreen ? '16px 8px' : '46px', margin: '0 -12px' }))(
-        $column(layoutSheet.spacing)(
-
-          switchLatest(map((dataSource) => {
-            return $Table<Account>({
-              bodyContainerOp: O(layoutSheet.spacing),
-              dataSource,
+        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+          $column(layoutSheet.spacing)(
+            $Table2<IAggregatedAccountSummary>({
+              bodyContainerOp: O(layoutSheet.spacingBig),
+              dataSource: topGMX,
+              // bodyRowOp: O(layoutSheet.spacing),
               columns: [
                 {
                   $head: $text('Account'),
-                  columnOp: style({ flex: 4 }),
-                  valueOp: map(x => {
+                  columnOp: style({ minWidth: '138px' }),
+                  $body: map(({ account }: IAggregatedTradeSummary) => {
                     return switchLatest(
-                      map(claimList => {
-                        const claim = claimList.find(c => c.address === x.address) || null
-                        return $AccountProfile({ address: x.address, claim })({})
-                      }, config.claimList)
+                      map((claimList: IClaim[]) => {
+                        const claim = claimList?.find(c => c.address === account) || null
+
+                        const $profileAnchor = $Link({
+                          $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
+                            $AccountPhoto(account, claim),
+                            $AccountLabel(account, claim),
+                          ),
+                          url: `/p/account/${account}`,
+                          route: config.parentRoute.create({ fragment: '2121212' })
+                        })({
+                          click: routeChangeTether()
+                        })
+
+
+                        return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                          $profileAnchor,
+                          $ProfileLinks(account, claim),
+                        )
+                      }, now(null) as any)
                     )
                   })
                 },
                 {
-                  $head: $text('Wins'),
-                  columnOp: style({ flex: 1, placeContent: 'center' }),
-                  valueOp: map(x => {
-                    return $text(String(x.profitablePositionsCount))
+                  $head: $text('Win / Loss'),
+                  columnOp: style({ flex: 1.25, placeContent: 'center' }),
+                  $body: map(x => {
+                    return $row(
+                      $text(`${x.profitablePositionsCount}/${x.settledPositionCount - x.profitablePositionsCount}`)
+                    )
                   })
                 },
+                tableRiskColumnCellBody,
                 {
-                  $head: $text('Losses'),
-                  columnOp: style({ flex: 1, placeContent: 'center' }),
-                  valueOp: map(x => {
-                    return $text(String(x.settledPositionCount - x.profitablePositionsCount))
-                  })
-                },
-                {
-                  $head: $text('Realised PnL'),
-                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                  valueOp: map(x => {
-                    const str = formatReadableUSD(x.realisedPnl)
-                    return $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
+                  $head: $text('PnL $'),
+                  columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                  $body: map(x => {
+                    const str = formatReadableUSD(x.pnl - x.fee)
+                    return $row(
+                      $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
+                    )
                   })
                 },
               ],
-            })({})
-          }, topGambit))
+            })({
+              requestList: tableTopPnlRequestTether()
+            })
+          ),
         ),
-
       ),
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+          $row(layoutSheet.spacing)(
+            $header(layoutSheet.flex)(`Top Open`),
+          // $header(layoutSheet.flex)(`Settled`),
+          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+          ),
+        ),
+        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+          $column(layoutSheet.spacing)(
+            $Table2<IAggregatedPositionSummary>({
+              bodyContainerOp: O(layoutSheet.spacingBig),
+              dataSource: openPositions,
+              // headerCellOp: style({ fontSize: '.65em' }),
+              // bodyRowOp: O(layoutSheet.spacing),
+              columns: [
+                {
+                  $head: $text('Entry'),
+                  columnOp: O(style({ minWidth: '80px', position: 'relative', placeContent: 'center', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                    
+                  $body: map(({ isLong, indexToken, averagePrice }) => {
+                    const idx = Object.entries(ARBITRUM_CONTRACTS).find(([k, v]) => v === indexToken)?.[1]
+
+                    if (!idx) {
+                      throw new Error('Unable to find matched token')
+                    }
+
+                    // @ts-ignore
+                    const $token = $tokenIconMap[idx]
+
+                    return $column(
+                      style({ borderRadius: '50%', padding: '3px', left: '10px', top: '-4px', backgroundColor: pallete.background, position: 'absolute', offset: '0 0 0 0', })(
+                        $icon({
+                          $content: isLong ? $bull : $bear, 
+                          viewBox: '0 0 32 32',
+                        })
+                      ),
+                      $icon({
+                        $content: $token, 
+                        viewBox: '0 0 32 32',
+                        width: 24,
+                      }),
+                      $text(style({ fontSize:'.65em' }))(formatReadableUSD(averagePrice)),
+                    )
+                  })
+                },
+                {
+                  $head: $text('Account'),
+                  columnOp: style({ minWidth: '138px' }),
+                  $body: map(({ account }) => {
+                    return switchLatest(
+                      map((claimList: IClaim[]) => {
+                        const claim = claimList?.find(c => c.address === account) || null
+
+                        const $profileAnchor = $Link({
+                          $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }), stylePseudo(':hover', {  textDecoration: 'underline' }))(
+                            $AccountPhoto(account, claim),
+                            $AccountLabel(account, claim),
+                          ),
+                          url: `/p/account/${account}`,
+                          route: config.parentRoute.create({ fragment: '2121212' })
+                        })({
+                          click: routeChangeTether()
+                        })
+
+
+                        return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                          $profileAnchor,
+                          $ProfileLinks(account, claim),
+                        )
+                      }, now(null) as any)
+                    )
+                  })
+                },
+                {
+                  $head: $text(style({ fontSize: '1em' }))('Risk'),
+                  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, fontSize: '.65em', flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+                  $body: map((pos: IAggregatedPositionSummary) => {
+
+                    const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)
+
+                    const positionMarkPrice = filterByIndexToken(pos)(priceChange)
+
+                    const pnlPosition = multicast(map(price => {
+                      const markPrice = parseFixed(price.p, 30)
+
+                      return calculatePositionDelta(pos.size, pos.collateral, pos.isLong, pos.averagePrice, markPrice)
+                    }, filterByIndexToken(pos)(priceChange)))
+
+                    const liqPercentage = snapshot((meta, price) => {
+                      const markPrice = Number(price.p)
+                      const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
+
+                            
+                      const perc = Math.round((markPrice - liquidationPriceUsd) / liquidationPriceUsd * 100)
+
+                      meta.hasProfit
+                            
+                      return `${perc}%`
+                    }, pnlPosition, positionMarkPrice)
+
+                    const ww = styleInline(map((pec) => ({ width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${pec}, ${pallete.foreground} 0)` }), liqPercentage))
+
+                    return $column(
+                      $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+                        $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
+                        $text(formatReadableUSD(pos.collateral - pos.fee))
+                      ),
+                      ww($seperator),
+                      $text(style({  }))(formatReadableUSD(pos.size)),
+                    )
+                  })
+                },
+                {
+                  $head: $text('PnL $'),
+                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                  $body: map((pos) => {
+
+                    const pnlPosition = multicast(map(price => {
+                      const markPrice = parseFixed(price.p, 30)
+
+                      return calculatePositionDelta(pos.size, pos.collateral, pos.isLong, pos.averagePrice, markPrice)
+                    }, filterByIndexToken(pos)(priceChange)))
+
+
+                    return $row(
+                      $text(styleBehavior(map(s => ({ color: s.hasProfit ? pallete.positive : pallete.negative }), pnlPosition)))(
+                        map(meta => {
+
+                          const pnl = formatReadableUSD(meta.delta - pos.fee)
+                          return `${meta.hasProfit ? pnl : `${pnl.startsWith('-') ? pnl : '-' + pnl}`}`
+                        }, pnlPosition),
+                      ),
+                    )
+                  })
+                },
+              ],
+            })({
+              requestList: openPositionsRequestTether()
+            })
+          ),
+        ),
+      )
     ),
+
+    {
+      requestLeaderboardTopList: tableRequestState,
+      requestOpenAggregatedTrades: tableTopOpenState,
+      routeChange
+    }
   ]
 })
 

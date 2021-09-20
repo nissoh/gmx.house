@@ -1,4 +1,4 @@
-import { $wrapNativeElement } from "@aelea/core"
+import { $wrapNativeElement } from "@aelea/dom"
 // @ts-ignore
 import jazzicon from 'jazzicon'
 

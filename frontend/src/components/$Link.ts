@@ -1,9 +1,11 @@
-import { component, Behavior, styleBehavior, StyleCSS, $Branch, $element, style } from "@aelea/core"
+import { component, styleBehavior, StyleCSS, $Branch, $element, style } from "@aelea/dom"
+import { O } from "@aelea/core"
 import { IAnchor, $RouterAnchor } from "@aelea/router"
 import { empty, map } from "@most/core"
 import { pallete } from "@aelea/ui-components-theme"
 import { Stream } from "@most/types"
 import { combineArray } from "@aelea/utils"
+import { Behavior } from "@aelea/core"
 
 
 export interface ILink extends Omit<IAnchor, '$anchor'> {
@@ -34,7 +36,7 @@ export const $Link = ({ url, route, $content, anchorOp, disabled = empty() }: IL
   )($content)
 
   return [
-    $RouterAnchor({ $anchor: $anchorEl, url, route, anchorOp })({
+    $RouterAnchor({ $anchor: $anchorEl, url, route, anchorOp: O(anchorOp || O(), style({ padding: 0 })) })({
       click: clickTether(),
       focus: focusTether(),
       contains: containsTether()

@@ -1,5 +1,6 @@
-import { USD_DECIMALS } from "./constant"
+import { intervalInMsMap, USD_DECIMALS } from "./constant"
 import { CHAIN } from "./provider"
+import { IPagableResponse, IPageable } from "./types"
 
 export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/
 export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/
@@ -11,8 +12,12 @@ export const EXPLORER_URL = {
   [CHAIN.ETH]: "https://etherscan.io/",
   [CHAIN.ETH_KOVAN]: "https://kovan.etherscan.io/",
   [CHAIN.ETH_ROPSTEN]: "https://ropsten.etherscan.io/",
+
   [CHAIN.BSC]: "https://bscscan.com/",
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
+
+  [CHAIN.ARBITRUM]: "https://arbiscan.io/",
+  [CHAIN.ARBITRUM_RINKBY]: "https://rinkeby-explorer.arbitrum.io/",
 } as const
 
 
@@ -28,8 +33,12 @@ export function shortenAddress(address: string, padRight = 4, padLeft = 6) {
   return address.slice(0, padLeft) + "..." + address.slice(address.length -padRight, address.length)
 }
 
-export function readableUSD(ammount: string) {
-  const parts = ammount.split('.')
+export function shortPostAdress(address: string) {
+  return address.slice(address.length -4, address.length)
+}
+
+export function readableNumber(ammount: string | number) {
+  const parts = ammount.toString().split('.')
   const [whole = '', decimal = ''] = parts
 
   if (whole === '' && decimal === '') {
@@ -46,7 +55,7 @@ export function readableUSD(ammount: string) {
 
 export function formatReadableUSD(ammount: bigint) {
   const str = formatFixed(ammount, USD_DECIMALS).toLocaleString()
-  return readableUSD(str)
+  return readableNumber(str)
 }
 
 export function shortenTxAddress(address: string) {
@@ -178,7 +187,7 @@ export const padDecimals = (amount: string, minDecimals: number) => {
 
 
 
-export function getAccountUrl(chainId: CHAIN, account: string) {
+export function getAccountExplorerUrl(chainId: CHAIN, account: string) {
   if (!account) {
     return EXPLORER_URL[chainId]
   }
@@ -236,4 +245,56 @@ export const tzOffset = new Date().getTimezoneOffset() * 60000
 export function timeTzOffset(ms: number): UTCTimestamp {
   return Math.floor((ms - tzOffset) / 1000) as UTCTimestamp
 }
+
+export function unixTimeTzOffset(ms: number): UTCTimestamp {
+  return ms - tzOffset as UTCTimestamp
+}
+
+
+type TimelineTime = {
+  time: number
+}
+
+export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
+  interval: intervalInMsMap, fillMap: (next: T) => R, fillGapMap: (prev: R) => R, squashMap: (prev: R, next: T) => R = fillGapMap
+) {
+  return (timeline: R[], next: T) => {
+    const lastIdx = timeline.length - 1
+    const prev = timeline[lastIdx]
+
+    const barSpan = (next.time - prev.time) / interval
+
+    if (barSpan > 1) {
+      const barSpanCeil = Math.ceil(barSpan)
+
+      for (let index = 1; index < barSpanCeil; index++) {
+        timeline.push({ ...fillGapMap(prev), time: prev.time + interval * index })
+      }
+
+      const time = timeline[timeline.length - 1].time + interval
+
+      timeline.push({ ...fillMap(next), time })
+
+      return timeline
+    }
+    
+    if (barSpan < 1) {
+      timeline.splice(lastIdx, 1, squashMap(prev, next))
+    } else {
+      timeline.push(fillMap(next))
+    }
+
+    return timeline
+  }
+}
+
+
+
+export async function pageableQuery<T, ReqParams extends IPageable>(reqParams: ReqParams, query: Promise<T[]>): Promise<IPagableResponse<T>> {
+  const res = await query
+  const { pageSize, offset } = reqParams
+  const page = res.slice(reqParams.offset, offset + pageSize)
+  return { offset, page, pageSize }
+}
+
 

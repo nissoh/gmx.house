@@ -1,4 +1,4 @@
-import { $Branch, $element, $Node, $text, style, stylePseudo } from "@aelea/core"
+import { $Branch, $element, $Node, $text, style, stylePseudo } from "@aelea/dom"
 import { $ButtonIcon, $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty } from "@most/core"
@@ -20,7 +20,7 @@ export const $alert = ($contnet: $Branch) => $row(layoutSheet.spacingSmall, styl
 )
 
 export const $anchor = $element('a')(
-  stylePseudo(':hover', { color: pallete.primary, fill: pallete.primary }),
+  stylePseudo(':hover', { color: pallete.primary + '!important', fill: pallete.primary }),
   style({
     display: 'flex',
     cursor: 'pointer',

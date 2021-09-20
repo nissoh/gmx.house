@@ -42,24 +42,28 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: 'index.html'
     }),
-    // new CopyPlugin({
-    //   patterns: [
-    //     { from: "404.html" },
-    //     { from: "CNAME" },
-    //   ]
-    // }),
+    new CopyPlugin({
+      patterns: [
+        { from: "favicon.png" }
+      ]
+    }),
   ],
   // node: { crypto: true, stream: true },
   devServer: {
     port: 3000,
+    https: true,
     proxy: {
       '/api': 'http://localhost:5555',
+      '/api-ws': {
+        target: 'ws://localhost:5555',
+        ws: true
+      },
     },
     historyApiFallback: true
   },
   output: {
     clean: true,
     filename: '[name].[contenthash].js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, '../backend/.dist/cjs/public')
   }
 }

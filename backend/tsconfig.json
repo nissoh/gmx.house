@@ -4,12 +4,16 @@
     "outDir": ".dist/cjs",
     "rootDir": "src",
     "types": [
-      "node"
+      "node",
     ],
     "module": "CommonJS",
     "declarationDir": ".dist/types",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "lib": [
+      "es2020",
+      "dom"
+    ],
   },
   "references": [
     {

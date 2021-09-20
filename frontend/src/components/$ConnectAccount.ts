@@ -1,4 +1,5 @@
-import { $text, component, style, Behavior, $Node, attr } from "@aelea/core"
+import { Behavior } from "@aelea/core"
+import { $text, component, style, $Node, attr } from "@aelea/dom"
 import { $column, layoutSheet } from "@aelea/ui-components"
 import { combine, map, merge, switchLatest } from "@most/core"
 import { CHAIN } from "gambit-middleware"
@@ -45,9 +46,9 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
           combine((chain, account) => {
             if (account === undefined)
               return $connectButton
-            if (chain !== CHAIN.BSC)
+            if (chain !== CHAIN.ARBITRUM)
               return $alert(
-                $text('Switch to BSC Network')
+                $text('Switch to Arbitrum Network')
               )
             return config.$display
           }, network, account)

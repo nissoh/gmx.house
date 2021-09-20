@@ -1,40 +1,61 @@
 import { groupByMap } from "@aelea/utils"
 import { Token } from "../types"
-import { BSC_CONTRACTS } from "./contract"
-import { SYMBOL } from "./symbol"
+import { ARBITRUM_CONTRACTS } from "./contract"
+import { TOKEN_SYMBOL } from "./symbol"
 
 export const AddressZero = "0x0000000000000000000000000000000000000000"
 
 export const TOKENS_BSC = [
   {
     name: "Bitcoin",
-    symbol: SYMBOL.BTC,
+    symbol: TOKEN_SYMBOL.BTC,
     decimals: 18,
-    address: BSC_CONTRACTS.BTC,
+    address: ARBITRUM_CONTRACTS.BTC,
   },
   {
     name: "Ethereum",
-    symbol: SYMBOL.ETH,
+    symbol: TOKEN_SYMBOL.ETH,
     decimals: 18,
-    address: BSC_CONTRACTS.ETH,
-  },
-  {
-    name: "Binance Coin",
-    symbol: SYMBOL.BNB,
-    decimals: 18,
-    address: BSC_CONTRACTS.WBNB,
+    address: ARBITRUM_CONTRACTS.WETH,
   },
   {
     name: "USD Gambit",
-    symbol: SYMBOL.USDG,
+    symbol: TOKEN_SYMBOL.USDG,
     decimals: 18,
-    address: BSC_CONTRACTS.USDG
+    address: ARBITRUM_CONTRACTS.USDG
   },
   {
-    name: "USD Binance",
-    symbol: SYMBOL.BUSD,
+    name: "USD Coin",
+    symbol: TOKEN_SYMBOL.BUSD,
+    decimals: 6,
+    address: ARBITRUM_CONTRACTS.USDC
+  }
+] as Token[]
+
+export const TOKENS_ARBITRUM = [
+  {
+    name: "Bitcoin",
+    symbol: TOKEN_SYMBOL.BTC,
     decimals: 18,
-    address: BSC_CONTRACTS.BUSD
+    address: ARBITRUM_CONTRACTS.BTC,
+  },
+  {
+    name: "Ethereum",
+    symbol: TOKEN_SYMBOL.ETH,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.WETH,
+  },
+  {
+    name: "USD Gambit",
+    symbol: TOKEN_SYMBOL.USDG,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.USDG
+  },
+  {
+    name: "USD Coin",
+    symbol: TOKEN_SYMBOL.BUSD,
+    decimals: 6,
+    address: ARBITRUM_CONTRACTS.USDC
   }
 ] as Token[]
 
@@ -49,5 +70,5 @@ export function groupByMapMany<A, B extends keyof any>(list: A[], keyGetter: (v:
 }
 
 
-export const TOKEN_ADDRESS_MAP = groupByMap(TOKENS_BSC, (x) => x.address)
+export const TOKEN_ADDRESS_MAP = groupByMap(TOKENS_ARBITRUM, (x) => x.address)
 

@@ -17,17 +17,17 @@
     },
     "dependencies": {
         "@aelea/utils": "1.1.0",
-        "@ethersproject/abi": "5.3.1",
-        "@ethersproject/abstract-signer": "5.3.0",
-        "@ethersproject/bignumber": "^5.3.0",
-        "@ethersproject/bytes": "5.3.0",
-        "@ethersproject/contracts": "^5.3.0",
-        "@ethersproject/providers": "5.3.1",
+        "@ethersproject/abi": "5.4.1",
+        "@ethersproject/abstract-signer": "5.4.1",
+        "@ethersproject/bignumber": "^5.4.2",
+        "@ethersproject/bytes": "5.4.0",
+        "@ethersproject/contracts": "^5.4.1",
+        "@ethersproject/providers": "5.4.5",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/node": "^15.12.2"
+        "@types/node": "^16.0.0"
     }
 }
