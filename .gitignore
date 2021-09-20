@@ -2,6 +2,7 @@
 .env
 dist
 tsconfig.tsbuildinfo
+node_modules
 
 # yarn Zero-Installs:
 .yarn/*
