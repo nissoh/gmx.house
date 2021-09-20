@@ -17,6 +17,21 @@ export const timespanPassedSinceInvoke = (timespan: number) => {
   }
 }
 
+export const cacheMap = (cacheMap: any) => <T>(key: string, lifespan: number, cacheFn: () => T): T => {
+  const cacheEntry = cacheMap[key]
+  if (cacheEntry && !cacheMap[key].lifespanFn()) {
+    return cacheEntry.item
+  } else {
+
+    const item = cacheFn()
+    const lifespanFn = cacheMap[key]?.lifespanFn ?? timespanPassedSinceInvoke(lifespan)
+    lifespanFn()
+    cacheMap[key] = { item, lifespanFn }
+
+    return item
+  }
+}
+
 export function httpRequest<T>(params: string | http.RequestOptions | URL, postData: any): Promise<T> {
   return new Promise(function(resolve, reject) {
     const req = http.request(params, function(res) {

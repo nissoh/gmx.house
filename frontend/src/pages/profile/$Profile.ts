@@ -48,12 +48,12 @@ export const $Profile = (config: IAccount) => component((
 
 
   const accountHistoryPnL = multicast(filter(arr => {
-    return arr.aggregatedTradeCloseds.length > 0
+    return arr.aggregatedTradeCloseds.length > 0 || arr.aggregatedTradeLiquidateds.length > 0
   }, config.accountAggregation))
 
 
   const latestInitiatedPosition = map(h => {
-    const token = h.aggregatedTradeCloseds[0].initialPosition.indexToken
+    const token = h.aggregatedTradeCloseds[0]?.initialPosition.indexToken|| h.aggregatedTradeLiquidateds[0]?.initialPosition.indexToken
     return TOKEN_ADDRESS_MAP.get(token as ARBITRUM_CONTRACTS)!
   }, accountHistoryPnL)
   // const selectedToken = now(TOKEN_ADDRESS_MAP.get(ARBITRUM_CONTRACTS.ETH)!)

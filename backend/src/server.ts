@@ -10,7 +10,7 @@ import path from 'path'
 import { accountApi } from './logic/account'
 // import { claimApi } from './logic/claimAccount'
 import { helloFrontend } from './messageBus'
-import { requestAccountAggregation, requestAggregatedTradeList, requestOpenAggregatedTrades } from './api'
+import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { openGraphScreenshot } from './logic/linkOGShot'
 import ws from 'ws'
 
@@ -30,10 +30,13 @@ const wss = new ws.Server({ server, path: '/api-ws' })
 
 
 const apiComponent = helloFrontend(wss, {
-  requestAggregatedTradeList,
+  requestAggregatedSettledTradeList,
   requestAccountAggregation,
   requestOpenAggregatedTrades,
+  requestAccountListAggregation,
+  requestLeaderboardTopList,
 })
+
 
 const run = async () => {
   // ORM = await MikroORM.init(config)

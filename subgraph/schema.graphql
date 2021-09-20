@@ -96,7 +96,6 @@ type LiquidatePosition @entity {
 
   isLong: Boolean!
 
-
   size: BigDecimal!
   collateral: BigDecimal!
   reserveAmount: BigDecimal!
@@ -117,7 +116,7 @@ type AggregatedTradeOpen @entity {
   updateList: [UpdatePosition]!
 }
 
-type AggregatedTradeClosed @entity {
+type AggregatedTradeSettled @entity {
   id: ID!
   account: String!
 

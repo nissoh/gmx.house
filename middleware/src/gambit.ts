@@ -1,11 +1,10 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
-import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, USD_DECIMALS } from "./constant"
+import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, LIQUIDATION_FEE, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeListMap, IAggregatedTradeSummary } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeListMap, IAggregatedTradeSummary, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary } from "./types"
 import { fillIntervalGap, formatFixed, timeTzOffset, UTCTimestamp } from "./utils"
-import { IAggregatedTradeOpen } from "."
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -35,12 +34,7 @@ export function getPositionMarginFee(size: bigint) {
   return size - size * (BASIS_POINTS_DIVISOR - MARGIN_FEE_BASIS_POINTS) / BASIS_POINTS_DIVISOR // TODO properly calculate cumulative fees
 }
 
-export function getPositionFee(size: bigint, fundingRate: bigint) {
-  const fundingFee = getPositionCumulativeFundingFee(size, fundingRate)
-  const marginFee = getPositionMarginFee(size)
 
-  return marginFee + fundingFee
-}
 
 export function getLeverage (size = 0n, collateral = 0n, fundingRate = 0n) {
   const fundingFee = getPositionCumulativeFundingFee(size, fundingRate)
@@ -66,7 +60,7 @@ export function priceDeltaPercentage2(delta: bigint, collateral: bigint) {
   return delta * BASIS_POINTS_DIVISOR / collateral
 }
 
-export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, marketPrice: bigint, positionPrice: bigint) {
+export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, marketPrice: bigint, positionPrice: bigint): IPositionDelta {
   const priceDelta = marketPrice > positionPrice ? marketPrice - positionPrice : positionPrice - marketPrice
   const delta = size * priceDelta / marketPrice
 
@@ -86,6 +80,17 @@ export function calculatePositionDelta(size: bigint, collateral: bigint, isLong:
   }
 }
 
+export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, averagePrice: bigint, isLong: boolean) {
+
+  const liquidationAmount = size * BASIS_POINTS_DIVISOR / MAX_LEVERAGE
+
+  const liquidationDelta = collateral - liquidationAmount
+  const priceDelta = liquidationDelta * averagePrice / size
+
+  return isLong ? averagePrice - priceDelta : averagePrice + priceDelta
+}
+
+
 // for longs: nextAveragePrice = (nextPrice * nextSize)/ (nextSize + delta)
 // for shorts: nextAveragePrice = (nextPrice * nextSize) / (nextSize - delta)
 // export function getNextAveragePrice(address: string, size: bigint, marketPrice: bigint, positionPrice: bigint, isLong: boolean, sizeDelta: bigint, lastIncreasedTime: bigint) {
@@ -100,21 +105,21 @@ export function calculatePositionDelta(size: bigint, collateral: bigint, isLong:
 //     return _nextPrice.mul(nextSize).div(divisor);
 // }
 
-export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggregatedTradeSummary {
-  const cumulativeAccountData: IAggregatedTradeSummary = {
+export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggregatedPositionSummary {
+  const cumulativeAccountData: IAggregatedPositionSummary = {
     account: agg.account,
     indexToken: agg.initialPosition.indexToken as ARBITRUM_CONTRACTS,
     startTimestamp: agg.initialPositionBlockTimestamp,
-    leverage: 0n, size: 0n, collateral: 0n, fee: 0n,
+    size: 0n, collateral: 0n, fee: 0n,
     averagePrice: 0n,
-    isLong: agg.initialPosition.isLong
+    isLong: agg.initialPosition.isLong,
+    leverage: 0
   }
 
   agg.increaseList?.forEach((pos) => {
     cumulativeAccountData.size += BigInt(pos.sizeDelta)
     cumulativeAccountData.collateral += BigInt(pos.collateralDelta)
     cumulativeAccountData.fee += BigInt(pos.fee)
-    cumulativeAccountData.leverage += BigInt(pos.sizeDelta) / BigInt(pos.collateralDelta)
   })
 
   if (agg.updateList?.length) {
@@ -122,19 +127,18 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
   } else {
     console.error(`missing updatelist, account: ${agg.account}`)
   }
-
-  
-  cumulativeAccountData.leverage = cumulativeAccountData.leverage / BigInt(agg.increaseList.length)
   
   agg?.decreaseList?.forEach((pos) => {
     cumulativeAccountData.fee += BigInt(pos.fee)
   })
 
+  cumulativeAccountData.leverage = formatFixed(cumulativeAccountData.size) / formatFixed(cumulativeAccountData.collateral)
+
   return cumulativeAccountData
 }
 
 export function toAggregatedTradeAverageSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedSettledTradeSummary {
-  const cumulativeAccountData = {
+  const cumulativeAccountData: IAggregatedSettledTradeSummary = {
     ...toAggregatedOpenTradeSummary(agg),
     pnl: 0n
   }
@@ -142,45 +146,46 @@ export function toAggregatedTradeAverageSummary(agg: IAggregatedTradeClosed | IA
   const isLiquidated = 'markPrice' in agg.settledPosition
 
   cumulativeAccountData.pnl = isLiquidated
-    ? BigInt(agg.settledPosition.collateral)
+    ? BigInt(-agg.settledPosition.collateral)
     : BigInt(agg.settledPosition.realisedPnl) - cumulativeAccountData.fee
+  
 
   return cumulativeAccountData
 }
 
-export function toAggregatedAccountSummary(list: IAggregatedTradeListMap): IAggregatedAccountSummary[] {
+export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap): IAggregatedAccountSummary[] {
   const settledListMap = groupByMapMany([...list.aggregatedTradeLiquidateds, ...list.aggregatedTradeCloseds], a => a.initialPosition.account)
   const allPositions = Object.entries(settledListMap)
 
-  const topMap = allPositions.reduce((seed, [address, aggTradeList]) => {
+  const topMap = allPositions.reduce((seed, [account, allSettled]) => {
 
     let profitablePositionsCount = 0
 
-    const tradeSummaries = aggTradeList.map(toAggregatedTradeAverageSummary)
-    const fees = tradeSummaries.reduce((seed, pos) => seed + BigInt(pos.fee), 0n)
-    const realisedPnl = aggTradeList.reduce((seed, pos) => {
+    const tradeSummaries = allSettled.map(toAggregatedTradeAverageSummary)
+    const fee = tradeSummaries.reduce((seed, pos) => seed + BigInt(pos.fee), 0n)
+    const realisedPnl = allSettled.reduce((seed, pos) => {
       if (pos.settledPosition.realisedPnl > 0n) {
         profitablePositionsCount++
       }
       return seed + BigInt(pos.settledPosition.realisedPnl)
     }, 0n)
 
-    const account: IAggregatedAccountSummary = {
-      address, fees, profitablePositionsCount,
-      settledPositionCount: aggTradeList.length,
-      leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0n) / BigInt(tradeSummaries.length),
-      openPnl: null,
+    const summary: IAggregatedAccountSummary = {
+      account, fee, profitablePositionsCount,
+      settledPositionCount: allSettled.length,
+      leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0) / tradeSummaries.length,
       claim: null,
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
-      realisedPnl: realisedPnl,
+      pnl: realisedPnl,
+      size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n)
     }
 
-    seed.push(account)
+    seed.push(summary)
 
     return seed
   }, [] as IAggregatedAccountSummary[])
 
-  return topMap.sort((a, b) => formatFixed(b.realisedPnl - b.fees) - formatFixed(a.realisedPnl - a.fees))
+  return topMap.sort((a, b) => formatFixed(b.pnl - b.fee) - formatFixed(a.pnl - a.fee))
 }
 
 
@@ -189,7 +194,7 @@ export function historicalPnLMetric(historicalData: IAccountAggregationMap, inte
   const now = Date.now()
 
   const initialDataStartTime = now - interval * ticks
-  const closedPosList = historicalData.aggregatedTradeCloseds
+  const closedPosList = [...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds]
   // .filter(t => t.settledPosition)
     .map(aggTrade => {
 

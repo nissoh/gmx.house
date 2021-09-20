@@ -1,6 +1,4 @@
 import { $Node, $svg, attr } from "@aelea/dom"
-import { mergeArray } from "@most/core"
-import { curry2 } from "@most/prelude"
 import { ARBITRUM_CONTRACTS } from "gambit-middleware"
 
 
@@ -19,7 +17,6 @@ export const $icon = ({ $content, width = 24, height = width, viewBox = `0 0 ${w
     attr({ viewBox, width, height, fill }),
   )($content)
 )
-
 
 export const $logo = $svg('g')(
   $path(

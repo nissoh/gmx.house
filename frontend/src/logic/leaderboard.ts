@@ -2,7 +2,7 @@ import { http } from "@aelea/ui-components"
 import { O } from "@aelea/utils"
 import { filter, fromPromise, map, mergeArray, multicast } from "@most/core"
 import { Stream } from "@most/types"
-import { ICommunicationMessage, IPositionLiquidated, LeaderboardApi } from "gambit-middleware"
+import { ICommunicationMessage, IPositionLiquidated, ILeaderboardRequest } from "gambit-middleware"
 import { positionLiquidatedJson } from "./utils"
 
 
@@ -58,7 +58,7 @@ export const helloBackend = <IN extends ILoopMap<IN>, OUT>(inMap: IN): {[k: stri
 
 
 
-export const liquidationsQuery = (params: LeaderboardApi) => fromPromise(
+export const liquidationsQuery = (params: ILeaderboardRequest) => fromPromise(
   http.fetchJson<IPositionLiquidated[]>(`/api/liquidations`,
     {
       method: 'POST',

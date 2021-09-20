@@ -1,5 +1,6 @@
 import { intervalInMsMap, USD_DECIMALS } from "./constant"
 import { CHAIN } from "./provider"
+import { IPagableResponse, IPageable } from "./types"
 
 export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/
 export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/
@@ -288,5 +289,12 @@ export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
 }
 
 
+
+export async function pageableQuery<T, ReqParams extends IPageable>(reqParams: ReqParams, query: Promise<T[]>): Promise<IPagableResponse<T>> {
+  const res = await query
+  const { pageSize, offset } = reqParams
+  const page = res.slice(reqParams.offset, offset + pageSize)
+  return { offset, page, pageSize }
+}
 
 

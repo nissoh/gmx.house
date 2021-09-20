@@ -1,3 +1,4 @@
+import { intervalInMsMap } from "."
 import { ARBITRUM_CONTRACTS, TOKEN_SYMBOL } from "./address"
 import { ExtractAndParseEventType } from "./contract"
 import type { Vault } from "./contract/"
@@ -22,14 +23,6 @@ export interface Transaction {
 
 export interface IBaseEntity {
   id: string
-}
-
-export interface IPosition extends IBaseEntity {
-  key: string
-  account: string
-  collateralToken: string
-  indexToken: ARBITRUM_CONTRACTS
-  isLong: boolean
 }
 
 
@@ -69,7 +62,17 @@ export interface AccountHistoricalDataApi extends HistoricalDataApi {
   account?: string
 }
 
-export interface LeaderboardApi extends HistoricalDataApi {
+export interface IPageable {
+  offset: number
+  pageSize: number
+}
+
+export interface IPagableResponse<T> extends IPageable {
+  page: T[]
+}
+
+export interface ILeaderboardRequest extends IPageable {
+  timeInterval: intervalInMsMap
 }
 
 
@@ -83,6 +86,12 @@ export interface IAggregatedTradeOpen extends IBaseEntity {
   updateList: IPositionUpdate[]
 }
 
+export interface IPositionDelta {
+  delta: bigint
+  hasProfit: boolean
+  deltaPercentage: bigint
+}
+
 export interface IAggregatedTradeClosed extends IAggregatedTradeOpen {
   settledPosition: IPositionClose
   settledBlockTimestamp: number
@@ -93,10 +102,13 @@ export interface IAggregatedTradeLiquidated extends IAggregatedTradeOpen {
   settledBlockTimestamp: number
 }
 
-export interface IAggregatedTradeListMap {
-  aggregatedTradeOpens: IAggregatedTradeOpen[]
+export interface IAggregatedTradeSettledListMap {
   aggregatedTradeCloseds: IAggregatedTradeClosed[]
   aggregatedTradeLiquidateds: IAggregatedTradeLiquidated[]
+}
+
+export interface IAggregatedTradeListMap extends IAggregatedTradeSettledListMap {
+  aggregatedTradeOpens: IAggregatedTradeOpen[]
 }
 
 export interface IAccountAggregationMap extends IBaseEntity, IAggregatedTradeListMap {
@@ -104,34 +116,34 @@ export interface IAccountAggregationMap extends IBaseEntity, IAggregatedTradeLis
 }
 
 
-export interface IAggregatedAccountSummary {
-  address: string
-  realisedPnl: bigint
-  openPnl: bigint | null
-  leverage: bigint
-  settledPositionCount: number
-  profitablePositionsCount: number
-  claim: IClaim | null,
-  fees: bigint
-  collateral: bigint
-
-  // tradeSummaries: IAggregatedSettledTradeSummary[]
-}
-
-
 export interface IAggregatedTradeSummary {
-  startTimestamp: number
-  indexToken: ARBITRUM_CONTRACTS
-  account: string
   size: bigint
-  averagePrice: bigint
-  isLong: boolean
-  leverage: bigint
+  leverage: number
   collateral: bigint
   fee: bigint
+  account: string
 }
 
 export interface IAggregatedSettledTradeSummary extends IAggregatedTradeSummary {
   pnl: bigint
+}
+
+export interface IAggregatedPositionSummary extends IAggregatedTradeSummary {
+  startTimestamp: number
+  indexToken: ARBITRUM_CONTRACTS
+  account: string
+  averagePrice: bigint
+  isLong: boolean
+}
+
+
+export interface IAggregatedAccountSummary extends IAggregatedSettledTradeSummary {
+  pnl: bigint
+  settledPositionCount: number
+  profitablePositionsCount: number
+  claim: IClaim | null,
+  collateral: bigint
+
+  // tradeSummaries: IAggregatedSettledTradeSummary[]
 }
 

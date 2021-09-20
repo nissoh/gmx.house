@@ -6,7 +6,7 @@ import { $anchor } from "../elements/$common"
 import { $gmx } from "./$icons"
 
 
-export const $tradeGMX = $anchor(attr({ href: 'https://gmx.financial/trade' }), stylePseudo(':hover', { fill: `${pallete.message} !important` }), style({ textDecoration: 'none', color: 'red' }))(
+export const $tradeGMX = $anchor(attr({ href: 'https://gmx.io/trade' }), stylePseudo(':hover', { fill: `${pallete.message} !important` }), style({ textDecoration: 'none' }))(
   $ButtonPrimary({
     $content: $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
       $icon({ $content: $gmx, width: '18px', viewBox: '0 0 32 32' }),

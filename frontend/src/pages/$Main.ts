@@ -15,12 +15,11 @@ import { $Portfolio } from './profile/$Portfolio'
 import { claimListQuery } from '../logic/claim'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, IAggregatedTradeOpen, LeaderboardApi } from 'gambit-middleware'
-import { accountSummaryJson, toAccountAggregationJson, toAggregatedTradeListJson, toAggregatedTradeOpenJson } from '../logic/utils'
+import { AccountHistoricalDataApi, IAggregatedAccountSummary, IAggregatedTradeOpen, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedPositionSummary } from 'gambit-middleware'
+import { accountSummaryJson, toAccountAggregationJson, toAggregatedPositionSummary, toAggregatedTradeListJson, toAggregatedTradeOpenJson } from '../logic/utils'
 import { $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior } from "@aelea/core"
-import { $Card } from "./$Card"
 
 
 
@@ -39,8 +38,9 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
-  [requestAggregatedTradeList, requestAggregatedTradeListTether]: Behavior<LeaderboardApi, LeaderboardApi>,
-  [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<AccountHistoricalDataApi, IAggregatedTradeOpen[]>,
+  // [requestAccountListAggregation, requestAccountListAggregationTether]: Behavior<LeaderboardApi, LeaderboardApi>,
+  [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
+  [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   // [accountAggregationQuery, accountAggregationQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
@@ -60,7 +60,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
-  const tournamentRoute = pagesRoute.create({ fragment: 'tournament', title: 'Gambit Tournament' })
+  // const tournamentRoute = pagesRoute.create({ fragment: 'tournament', title: 'Gambit Tournament' })
   const portfolioRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   const cardRoute = rootRoute.create({
@@ -76,9 +76,9 @@ export default ({ baseRoute = '' }: Website) => component((
 
   const clientApi = helloBackend({
     requestAccountAggregation,
-    requestAggregatedTradeList,
+    requestLeaderboardTopList,
     requestOpenAggregatedTrades,
-    
+    // requestAccountListAggregation,
   })
 
   return [
@@ -131,7 +131,7 @@ export default ({ baseRoute = '' }: Website) => component((
         ),
 
         router.contains(pagesRoute)(
-          $column(layoutSheet.spacingBig, style({ maxWidth: '1024px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
+          $column(layoutSheet.spacingBig, style({ maxWidth: '1080px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
             $row(layoutSheet.spacing, style({ padding: screenUtils.isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
               screenUtils.isDesktopScreen
                 ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
@@ -148,10 +148,14 @@ export default ({ baseRoute = '' }: Website) => component((
                 parentRoute: rootRoute,
                 parentStore: rootStore,
                 claimList,
-                openAggregatedTrades: map(x => x.aggregatedTradeOpens.map(toAggregatedTradeOpenJson), clientApi.requestOpenAggregatedTrades),
-                leaderboardQuery: map(data => data.map(accountSummaryJson), clientApi.requestAggregatedTradeList),
+                openAggregatedTrades: map((x: IPagableResponse<IAggregatedPositionSummary>) => ({ ...x, page: x.page.map(toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
+                requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
+                  page: data.page.map(accountSummaryJson),
+                  offset: data.offset,
+                  pageSize: data.pageSize
+                }), clientApi.requestLeaderboardTopList),
               })({
-                requestAggregatedTradeList: requestAggregatedTradeListTether(),
+                requestLeaderboardTopList: requestLeaderboardTopListTether(),
                 requestOpenAggregatedTrades: requestOpenAggregatedTradesTether(),
                 routeChange: linkClickTether()
               })
@@ -177,13 +181,13 @@ export default ({ baseRoute = '' }: Website) => component((
       
       router.contains(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
-          $Card({
-            parentRoute: cardRoute,
-            claimList,
-            aggregatedTradeList: map(res => toAggregatedTradeListJson(res), clientApi.aggregatedTradeSettled)
-          })({
-            aggregatedTradeListQuery: requestAccountAggregationTether()
-          })
+          // $Card({
+          //   parentRoute: cardRoute,
+          //   claimList,
+          //   aggregatedTradeList: map(res => toAggregatedTradeListJson(res), clientApi.aggregatedTradeSettled)
+          // })({
+          //   aggregatedTradeListQuery: requestAccountAggregationTether()
+          // })
         )
       )
 

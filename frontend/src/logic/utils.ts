@@ -1,6 +1,6 @@
 import {
   IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
-  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeListMap
+  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeListMap, IAggregatedPositionSummary, IAggregatedTradeSummary
 } from "gambit-middleware"
 
 
@@ -58,13 +58,12 @@ export function positionUpdateJson(json: IPositionUpdate): IPositionUpdate {
 }
 
 export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccountSummary {
-  const leverage = BigInt(json?.leverage)
-  const realisedPnl = BigInt(json?.realisedPnl)
-  const fees = BigInt(json?.fees)
+  const pnl = BigInt(json?.pnl)
+  const fee = BigInt(json?.fee)
   const collateral = BigInt(json?.collateral)
-  const openPnl = json.openPnl ? BigInt(json?.openPnl) : null
+  const size = BigInt(json?.size)
 
-  return { ...json, collateral, realisedPnl, leverage, fees, openPnl }
+  return { ...json, collateral, pnl, fee, size }
 }
 
 
@@ -107,5 +106,19 @@ export function toAccountAggregationJson(json: IAccountAggregationMap): IAccount
   const totalRealisedPnl = BigInt(json?.totalRealisedPnl)
 
   return { ...toAggregatedTradeListJson(json),  totalRealisedPnl  }
+}
+
+export function toAggregatedTradeSummary<T extends IAggregatedTradeSummary>(json: T): T {
+  const size = BigInt(json.size)
+  const collateral = BigInt(json.collateral)
+  const fee = BigInt(json.fee)
+
+  return { ...json, size, collateral, fee  }
+}
+
+export function toAggregatedPositionSummary(json: IAggregatedPositionSummary): IAggregatedPositionSummary {
+  const averagePrice = BigInt(json.averagePrice)
+
+  return { ...toAggregatedTradeSummary(json), averagePrice  }
 }
 
