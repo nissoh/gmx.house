@@ -261,18 +261,25 @@ export const requestAccountListAggregation = O(
   awaitPromises
 )
 
-
+let www: any = null
 const openTradesCacheMap = cacheMap({})
 export const requestOpenAggregatedTrades = O(
   map(async (queryParams: IPageable) => {
 
     const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
+      console.log('fetching open positions')
       const list = await queryGraph(openAggregateTradesQuery, {})
-      return (list.aggregatedTradeOpens as IAggregatedTradeOpen[]).map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
+      const sortedList = (list.aggregatedTradeOpens as IAggregatedTradeOpen[]).map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
+      return sortedList
     })
 
-    console.log(queryParams)
+    console.log(www === cacheQuery)
+
+    www = cacheQuery
+
     const query = pageableQuery(queryParams, cacheQuery)
+
+    
     
     return query
   }),
