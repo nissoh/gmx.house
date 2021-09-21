@@ -1,18 +1,15 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
-import express from 'express'
-
-import http from 'http'
-import { readFileSync } from 'fs'
-import config from './mikro-orm.config'
 import { newDefaultScheduler } from '@most/scheduler'
-
+import express from 'express'
+import { readFileSync } from 'fs'
+import http from 'http'
 import path from 'path'
-import { accountApi } from './logic/account'
-// import { claimApi } from './logic/claimAccount'
-import { helloFrontend } from './messageBus'
-import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
-import { openGraphScreenshot } from './logic/linkOGShot'
 import ws from 'ws'
+import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
+import { accountApi } from './logic/account'
+import { openGraphScreenshot } from './logic/linkOGShot'
+import { helloFrontend } from './messageBus'
+
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -26,8 +23,59 @@ const port = process.env.PORT
 const server = http.createServer(app)
 
 // const wss = new ws('wss://api.thegraph.com/subgraphs/name/nissoh/gmx-vault')
-const wss = new ws.Server({ server, path: '/api-ws' })
+const wss = new ws.Server({ server, path: '/api-ws', })
+const liveClients = new Map<ws, {ws: ws, isAlive: boolean}>()
 
+wss.on('connection', function connection(ws) {
+  const client = liveClients.get(ws)
+
+  if (client) {
+    client.isAlive = true
+  }
+
+  ws.on('pong', heartbeat)
+})
+
+const interval = setInterval(function ping() {
+  wss.clients.forEach(function each(ws) {
+    const client = liveClients.get(ws)
+
+    if (!client) {
+      return
+    }
+
+    if (client.isAlive === false) {
+      liveClients.delete(ws)
+      return ws.terminate()
+    }
+
+    client.isAlive = false
+    ws.ping()
+  })
+}, 30000)
+
+wss.on('close', function close() {
+  clearInterval(interval)
+})
+
+function heartbeat() {
+  // @ts-ignore
+  const client = liveClients.get(this)
+
+  if (client) {
+    client.isAlive = true
+  }
+}
+
+
+// wss.on('connection', function connection(ws) {
+//   connections.set(ws, { ws, isAlive: true })
+
+//   ws.on('pong', (ws) => {
+//     console.log(ws)
+//     // connections.get(this.)
+//   })
+// })
 
 const apiComponent = helloFrontend(wss, {
   requestAggregatedSettledTradeList,

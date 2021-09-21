@@ -1,9 +1,9 @@
 import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo, $node, styleInline } from "@aelea/dom"
 import { O, } from '@aelea/utils'
-import { $card, $column, $row, layoutSheet, $Table, state, $seperator } from '@aelea/ui-components'
+import { $card, $column, $row, layoutSheet, state, $seperator } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, filter, map, merge, mergeArray, multicast, now, snapshot, startWith, switchLatest, tap } from '@most/core'
-import { formatFixed, formatReadableUSD, IClaim, intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeOpen, parseFixed, ARBITRUM_CONTRACTS, toAggregatedOpenTradeSummary, calculatePositionDelta, IAggregatedTradeSummary, IPagableResponse, TOKENS_ARBITRUM, readableNumber, IAggregatedPositionSummary, getLiquidationPriceFromDelta, USD_DECIMALS, getPositionMarginFee, IPageable } from 'gambit-middleware'
+import { constant, filter, map, multicast, now, snapshot, startWith, switchLatest } from '@most/core'
+import { formatFixed, formatReadableUSD, IClaim, intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, parseFixed, ARBITRUM_CONTRACTS, calculatePositionDelta, IAggregatedTradeSummary, IPagableResponse, IAggregatedPositionSummary, getLiquidationPriceFromDelta, USD_DECIMALS, getPositionMarginFee, IPageable } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -20,8 +20,7 @@ import { $Table2, TablePageResponse } from "../common/$Table2"
 
 const filterByIndexToken = (pos: IAggregatedPositionSummary) => filter((data: WSBTCPriceEvent) => {
   return (
-    pos.indexToken === ARBITRUM_CONTRACTS.BTC && data.s === 'BTCUSDT' ||
-                          pos.indexToken === ARBITRUM_CONTRACTS.WETH && data.s === 'ETHUSDT'
+    pos.indexToken === ARBITRUM_CONTRACTS.BTC && data.s === 'BTCUSDT' || pos.indexToken === ARBITRUM_CONTRACTS.WETH && data.s === 'ETHUSDT'
   )
 })
 
@@ -40,7 +39,7 @@ export interface ILeaderboard<T extends BaseProvider> {
 
 
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
-  [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
+  [topPnlTimeframeChange, topPnlTimeframeChangeTether]: Behavior<any, intervalInMsMap>,
 
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [tableTopPnlRequest, tableTopPnlRequestTether]: Behavior<number, number>,
@@ -55,24 +54,21 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
-  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
+  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
   const tableRequestState = combineArray((timeInterval, page): ILeaderboardRequest => {
-    return { timeInterval, offset: page * 20, pageSize: 20 }
+    const newLocal = {
+      timeInterval,
+      offset: page * 20,
+      pageSize: 20
+    }
+    return newLocal
   }, filterByTimeFrameState, tableTopPnlRequest)
 
   const tableTopOpenState = map((page): IPageable => {
     return { offset: page * 20, pageSize: 20 }
   }, openPositionsRequest)
 
-
-  const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((res) => {
-    return {
-      data: res.page,
-      pageSize: res.pageSize,
-      offset: res.offset,
-    }
-  }, config.requestLeaderboardTopList)
 
   const openPositions: Stream<TablePageResponse<IAggregatedPositionSummary>> = map((res) => {
     return {
@@ -101,7 +97,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     })
   }
 
-
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
   return [
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
@@ -117,19 +112,19 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $text(style({ color: pallete.foreground }))('Time Frame:'),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
           )(
             $text('24Hrs')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
           )(
             $text('Week')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
           )(
             $text('Month')
           )
@@ -138,7 +133,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $column(layoutSheet.spacing)(
             $Table2<IAggregatedAccountSummary>({
               bodyContainerOp: O(layoutSheet.spacingBig),
-              dataSource: topGMX,
+              filterChange: topPnlTimeframeChange,
+              dataSource: map((res) => {
+                return {
+                  data: res.page,
+                  pageSize: res.pageSize,
+                  offset: res.offset,
+                }
+              }, config.requestLeaderboardTopList),
               // bodyRowOp: O(layoutSheet.spacing),
               columns: [
                 {
@@ -191,7 +193,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
               ],
             })({
-              requestList: tableTopPnlRequestTether()
+              scrollIndex: tableTopPnlRequestTether(),
             })
           ),
         ),
@@ -334,7 +336,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
               ],
             })({
-              requestList: openPositionsRequestTether()
+              scrollIndex: openPositionsRequestTether()
             })
           ),
         ),

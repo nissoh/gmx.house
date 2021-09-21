@@ -1,6 +1,7 @@
 {
   "name": "gmx-subgraph",
   "license": "MIT",
+  "private": true,
   "scripts": {
     "codegen": "graph codegen",
     "contracts-typecain": "yarn workspace gambit-contracts run typechain",

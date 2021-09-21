@@ -1,5 +1,5 @@
 import { fromCallback, nullSink, O, Op } from '@aelea/utils'
-import { chain, empty, filter, fromPromise, join, map, mergeArray, multicast, recoverWith, tap } from '@most/core'
+import { chain, filter, fromPromise, join, map, mergeArray, multicast, recoverWith, tap } from '@most/core'
 import { Stream } from '@most/types'
 import { ICommunicationMessage } from 'gambit-middleware'
 import ws, { EventEmitter } from 'ws'
