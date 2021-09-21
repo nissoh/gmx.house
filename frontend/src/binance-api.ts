@@ -1,11 +1,16 @@
 import { http } from "@aelea/ui-components"
 import { filter, fromPromise, map, merge, multicast, now, skipRepeatsWith, switchLatest, throttle } from "@most/core"
-import { intervalInMsMap, timeTzOffset, TOKEN_SYMBOL } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, intervalInMsMap, timeTzOffset, TOKEN_SYMBOL } from "gambit-middleware"
 import { BarData, UTCTimestamp } from "lightweight-charts"
 
 
 
-
+export const PRICE_EVENT_TICKER_MAP = {
+  [ARBITRUM_CONTRACTS.WBTC]: 'BTCUSDT',
+  [ARBITRUM_CONTRACTS.WETH]: 'ETHUSDT',
+  [ARBITRUM_CONTRACTS.LINK]: 'LINKUSDT',
+  [ARBITRUM_CONTRACTS.UNI]: 'UNIUSDT',
+} as const
 
 
 export type WSBTCPriceEvent =  {

@@ -52,7 +52,8 @@ export const $caretDown = $svg('path')(attr({ d: 'M4.616.296c.71.32 1.326.844 2.
 
 export const $Table2 = <T, FilterState = never>({
   dataSource, columns, scrollConfig, cellOp,
-  headerCellOp, bodyCellOp, bodyContainerOp,
+  headerCellOp, bodyCellOp,
+  bodyContainerOp = O(),
   sortChange = never(),
   filterChange = never(),
   $sortArrowDown = $caretDown
@@ -130,7 +131,6 @@ export const $Table2 = <T, FilterState = never>({
   const $body = switchLatest(map(() =>
     $VirtualScroll({
       ...scrollConfig,
-      containerOps: bodyContainerOp,
       dataSource: map((res): ScrollResponse => {
         const $items = (Array.isArray(res) ? res : res.data).map(rowData => $rowContainer(
           ...columns.map(col => O(cellBodyOp, col.columnOp || O())(
@@ -155,7 +155,7 @@ export const $Table2 = <T, FilterState = never>({
   , startWith(null, merge(sortByChange, filterChange))))
 
   return [
-    $column(
+    $column(bodyContainerOp)(
       $header,
       $body,
     ),

@@ -20,7 +20,6 @@ export type ScrollResponse = $Branch[] | IScrollPagableReponse
 export interface QuantumScroll {
   dataSource: Stream<ScrollResponse>
 
-  resetScrollIndex?: Stream<any>
   $loader?: $Node
 
   containerOps?: Op<IBranch, IBranch>
@@ -30,15 +29,13 @@ export interface QuantumScroll {
 const $defaultLoader = $text(style({ color: pallete.foreground, padding: '3px 10px' }))('loading...')
 
 
-export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader: $loading = $defaultLoader, resetScrollIndex = empty() }: QuantumScroll) => component((
+export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader = $defaultLoader }: QuantumScroll) => component((
   [intersecting, intersectingTether]: Behavior<IBranch, IntersectionObserverEntry>,
 ) => {
 
   const multicastDatasource = multicast(dataSource)
-  const initiateScrolling = merge(now(null), resetScrollIndex)
 
-  const scrollReuqestWithInitial: Stream<ScrollRequest> = multicast(tap(x => {
-  }, switchLatest(constant(skip(1, scan(seed => seed + 1, -1, intersecting)), initiateScrolling))))
+  const scrollReuqestWithInitial: Stream<ScrollRequest> = skip(1, scan(seed => seed + 1, -1, intersecting))
 
   const $container = $column(
     designSheet.customScroll,
@@ -60,7 +57,7 @@ export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader: $loadi
   const delayDatasource = delay(45, multicastDatasource)
   const loadState = merge(
     map(data => ({ $intermediate: $observer, data }), delayDatasource),
-    map(() => ({ $intermediate: $loading, }), scrollReuqestWithInitial)
+    map(() => ({ $intermediate: $loader, }), scrollReuqestWithInitial)
   )
   
   const $itemLoader = loop((seed, state) => {

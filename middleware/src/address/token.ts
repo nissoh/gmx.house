@@ -10,7 +10,7 @@ export const TOKENS_BSC = [
     name: "Bitcoin",
     symbol: TOKEN_SYMBOL.BTC,
     decimals: 18,
-    address: ARBITRUM_CONTRACTS.BTC,
+    address: ARBITRUM_CONTRACTS.WBTC,
   },
   {
     name: "Ethereum",
@@ -37,7 +37,7 @@ export const TOKENS_ARBITRUM = [
     name: "Bitcoin",
     symbol: TOKEN_SYMBOL.BTC,
     decimals: 18,
-    address: ARBITRUM_CONTRACTS.BTC,
+    address: ARBITRUM_CONTRACTS.WBTC,
   },
   {
     name: "Ethereum",

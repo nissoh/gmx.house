@@ -52,7 +52,7 @@ export const $eth = $svg('g')(
 
 
 export const $tokenIconMap = {
-  [ARBITRUM_CONTRACTS.BTC]: $btc,
+  [ARBITRUM_CONTRACTS.WBTC]: $btc,
   [ARBITRUM_CONTRACTS.WETH]: $eth,
   [ARBITRUM_CONTRACTS.USDC]: $usd,
   [ARBITRUM_CONTRACTS.UNI]: $uni,

@@ -12,16 +12,17 @@ import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$Acco
 import { Behavior, combineArray } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
-import { klineWS, WSBTCPriceEvent } from "../binance-api"
+import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $icon, $tokenIconMap } from "../common/$icons"
 import { $bear, $bull } from "../elements/$icons"
-import { $Table2, TablePageResponse } from "../common/$Table2"
+import { $Table2, TableColumn, TablePageResponse } from "../common/$Table2"
 
 
 const filterByIndexToken = (pos: IAggregatedPositionSummary) => filter((data: WSBTCPriceEvent) => {
-  return (
-    pos.indexToken === ARBITRUM_CONTRACTS.BTC && data.s === 'BTCUSDT' || pos.indexToken === ARBITRUM_CONTRACTS.WETH && data.s === 'ETHUSDT'
-  )
+  // @ts-ignore
+  const token = PRICE_EVENT_TICKER_MAP[pos.indexToken]
+  
+  return token === data.s
 })
 
 
@@ -49,7 +50,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const $header = $text(style({ fontSize: '1.15em', letterSpacing: '4px' }))
 
-  const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTrade'))
+  const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTrade', 'linkusdt@aggTrade', 'uniusdt@aggTrade'))
 
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
@@ -73,22 +74,26 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const openPositions: Stream<TablePageResponse<IAggregatedPositionSummary>> = map((res) => {
     return {
-      data: res.page,
+      data: res.page
+        // .filter(a => (
+        //   a.account == '0xfcb2229fb2da163b50f09de04cc1980de76f343c'.toLocaleLowerCase()
+        //   // || a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'.toLocaleLowerCase()
+        // ))
+      ,
       pageSize: res.pageSize,
       offset: res.offset,
-      // .filter(a => a.account == '0x7b701ae4c6e540c1254a3168837bc12b0f1c53c2')
       // .map(toAggregatedOpenTradeSummary)
         
     }
   }, config.openAggregatedTrades)
 
-  const tableRiskColumnCellBody = {
-    $head: $text(style({ fontSize: '1em' }))('Risk'),
-    columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, fontSize: '.65em', flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+  const tableRiskColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
+    $head: $text('Risk'),
+    columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
     $body: map((pos: IAggregatedTradeSummary) => {
 
-      return $column(
-        $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+      return $column(style({ alignItems: 'center', fontSize: '.65em' }))(
+        $row(layoutSheet.spacingTiny)(
           $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
           $text(formatReadableUSD(pos.collateral - pos.fee))
         ),
@@ -133,7 +138,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
           $column(layoutSheet.spacing)(
             $Table2<IAggregatedAccountSummary>({
-              bodyContainerOp: O(layoutSheet.spacingBig),
+              bodyContainerOp: layoutSheet.spacing,
+              scrollConfig: {
+                containerOps: O(layoutSheet.spacingBig)
+              },
               filterChange: topPnlTimeframeChange,
               dataSource: map((res) => {
                 return {
@@ -210,7 +218,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
           $column(layoutSheet.spacing)(
             $Table2<IAggregatedPositionSummary>({
-              bodyContainerOp: O(layoutSheet.spacingBig),
+              bodyContainerOp: layoutSheet.spacing,
+              scrollConfig: {
+                containerOps: O(layoutSheet.spacingBig)
+              },
               dataSource: openPositions,
               // headerCellOp: style({ fontSize: '.65em' }),
               // bodyRowOp: O(layoutSheet.spacing),
@@ -293,11 +304,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                       const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
 
                             
-                      const perc = Math.round((markPrice - liquidationPriceUsd) / liquidationPriceUsd * 100)
+                      const perc = Math.round(liquidationPriceUsd / markPrice * 100)
+                      const value = perc > 100 ? 0 : perc
 
-                      meta.hasProfit
-                            
-                      return `${perc}%`
+                      return `${value}%`
                     }, pnlPosition, positionMarkPrice)
 
                     const ww = styleInline(map((pec) => ({ width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${pec}, ${pallete.foreground} 0)` }), liqPercentage))
@@ -305,7 +315,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     return $column(
                       $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
                         $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
-                        $text(formatReadableUSD(pos.collateral - pos.fee))
+                        $text(formatReadableUSD(pos.collateral - pos.fee)),
+                        $text(formatReadableUSD(liquidationPrice))
                       ),
                       ww($seperator),
                       $text(style({  }))(formatReadableUSD(pos.size)),
