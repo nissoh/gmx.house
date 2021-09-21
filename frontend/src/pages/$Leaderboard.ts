@@ -319,7 +319,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                       $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
                         $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
                         $text(formatReadableUSD(pos.collateral - pos.fee)),
-                        $text(formatReadableUSD(liquidationPrice))
+                        // $text(formatReadableUSD(liquidationPrice))
                       ),
                       ww($seperator),
                       $text(style({  }))(formatReadableUSD(pos.size)),
