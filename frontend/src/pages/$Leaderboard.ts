@@ -25,6 +25,9 @@ const filterByIndexToken = (pos: IAggregatedPositionSummary) => filter((data: WS
   return token === data.s
 })
 
+function easeInExpo(x: number) {
+  return x === 0 ? 0 : Math.pow(2, 10 * x - 10)
+}
 
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
@@ -75,10 +78,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const openPositions: Stream<TablePageResponse<IAggregatedPositionSummary>> = map((res) => {
     return {
       data: res.page
-        // .filter(a => (
-        //   a.account == '0xfcb2229fb2da163b50f09de04cc1980de76f343c'.toLocaleLowerCase()
-        //   // || a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'.toLocaleLowerCase()
-        // ))
+      // .filter(a => (
+      //   a.account == '0x15d3435f25eb464ea86853037da94137bd76ef70'
+      //   // || a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'.toLocaleLowerCase()
+      // ))
       ,
       pageSize: res.pageSize,
       offset: res.offset,
@@ -302,10 +305,10 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     const liqPercentage = snapshot((meta, price) => {
                       const markPrice = Number(price.p)
                       const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
-
                             
-                      const perc = Math.round(liquidationPriceUsd / markPrice * 100)
-                      const value = perc > 100 ? 0 : perc
+                      const weight = pos.isLong ? liquidationPriceUsd / markPrice : markPrice /liquidationPriceUsd
+                      const perc = Math.round(easeInExpo(weight) * 100)
+                      const value = perc > 100 ? 100 : perc
 
                       return `${value}%`
                     }, pnlPosition, positionMarkPrice)
