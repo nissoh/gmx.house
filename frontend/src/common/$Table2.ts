@@ -10,7 +10,7 @@ import { $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 
 export type TablePageResponse<T> = T[] | Omit<IScrollPagableReponse, '$items'> & { data: T[] }
 
-export interface TableOption<T> {
+export interface TableOption<T, FilterState> {
   columns: TableColumn<T>[]
 
   dataSource: Stream<TablePageResponse<T>>
@@ -23,6 +23,7 @@ export interface TableOption<T> {
   bodyCellOp?: Op<INode, INode>
 
   sortChange?: Stream<ISortBy<T>>
+  filterChange?: Stream<FilterState>
   $sortArrowDown?: $Node
 }
 
@@ -49,14 +50,15 @@ export interface ISortBy<T> {
 export const $caretDown = $svg('path')(attr({ d: 'M4.616.296c.71.32 1.326.844 2.038 1.163L13.48 4.52a6.105 6.105 0 005.005 0l6.825-3.061c.71-.32 1.328-.84 2.038-1.162l.125-.053A3.308 3.308 0 0128.715 0a3.19 3.19 0 012.296.976c.66.652.989 1.427.989 2.333 0 .906-.33 1.681-.986 2.333L18.498 18.344a3.467 3.467 0 01-1.14.765c-.444.188-.891.291-1.345.314a3.456 3.456 0 01-1.31-.177 2.263 2.263 0 01-1.038-.695L.95 5.64A3.22 3.22 0 010 3.309C0 2.403.317 1.628.95.98c.317-.324.68-.568 1.088-.732a3.308 3.308 0 011.24-.244 3.19 3.19 0 011.338.293z' }))()
 
 
-export const $Table2 = <T>({
+export const $Table2 = <T, FilterState = never>({
   dataSource, columns, scrollConfig, cellOp,
   headerCellOp, bodyCellOp, bodyContainerOp,
   sortChange = never(),
+  filterChange = never(),
   $sortArrowDown = $caretDown
-}: TableOption<T>) => component((
-  [requestList, requestListTether]: Behavior<ScrollRequest, ScrollRequest>,
-  [sortBy, sortByTether]: Behavior<INode, keyof T>
+}: TableOption<T, FilterState>) => component((
+  [scrollIndex, scrollIndexTether]: Behavior<ScrollRequest, ScrollRequest>,
+  [sortByChange, sortByChangeTether]: Behavior<INode, keyof T>
 ) => {
 
 
@@ -83,14 +85,14 @@ export const $Table2 = <T>({
 
   const $rowHeaderContainer = $rowContainer(style({ overflowY: 'scroll' }), stylePseudo('::-webkit-scrollbar', { backgroundColor: 'transparent', width: '6px' }))
 
-  const sortState = chain((state) => {
+  const sortBy = chain((state) => {
     const changeState = scan((seed, change): ISortBy<T> => {
       const direction = seed.name === change ?
         seed.direction === 'asc' ? 'desc' : 'asc'
         : 'desc'
       
       return { direction, name: change }
-    }, state, sortBy)
+    }, state, sortByChange)
 
     return startWith(state, changeState)
   }, sortChange)
@@ -99,7 +101,7 @@ export const $Table2 = <T>({
     ...columns.map(col => {
 
       if (col.sortBy) {
-        const behavior = sortByTether(
+        const behavior = sortByChangeTether(
           nodeEvent('click'),
           constant(col.sortBy)
         )
@@ -112,7 +114,7 @@ export const $Table2 = <T>({
               $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'asc' ? pallete.foreground : '' : pallete.foreground, svgOps: style({ transform: 'rotate(180deg)' }), width: '6px', viewBox: '0 0 32 19.43' }),
               $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'desc' ? pallete.foreground : '' : pallete.foreground, width: '6px', viewBox: '0 0 32 19.43' })
             )
-          }, sortState))
+          }, sortBy))
         )
       }
             
@@ -125,35 +127,32 @@ export const $Table2 = <T>({
   )
 
 
-  const $body = $VirtualScroll({
-    ...scrollConfig,
-    containerOps: bodyContainerOp,
-    dataSource: map((res): ScrollResponse => {
-      const $items = (Array.isArray(res) ? res : res.data).map(rowData => 
-        $rowContainer(
+  const $body = switchLatest(map(() =>
+    $VirtualScroll({
+      ...scrollConfig,
+      containerOps: bodyContainerOp,
+      dataSource: map((res): ScrollResponse => {
+        const $items = (Array.isArray(res) ? res : res.data).map(rowData => $rowContainer(
           ...columns.map(col => O(cellBodyOp, col.columnOp || O())(
             switchLatest(col.$body(now(rowData)))
-          )
-          )
-        )
-      )
+          ))
+        ))
 
-      if (Array.isArray(res)) {
-        return $items
-      } else {
-        return {
-          $items,
-          offset: res.offset,
-          pageSize: res.pageSize
+        if (Array.isArray(res)) {
+          return $items
+        } else {
+          return {
+            $items,
+            offset: res.offset,
+            pageSize: res.pageSize
+          }
         }
-      }
 
-
-      return $items
-    }, dataSource)
-  })({
-    scrollRequest: requestListTether()
-  })
+      }, dataSource)
+    })({
+      scrollIndex: scrollIndexTether()
+    })
+  , startWith(null, merge(sortByChange, filterChange))))
 
   return [
     merge(
@@ -162,8 +161,9 @@ export const $Table2 = <T>({
     ),
 
     {
-      requestList,
-      sortBy: sortState
+      scrollIndex,
+      sortBy,
+      filterChange
     }
   ]
 

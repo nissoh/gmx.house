@@ -1,5 +1,5 @@
 
-import { chain, delay, empty, filter, loop, map, merge, mergeArray, multicast, scan, skip, startWith, switchLatest } from "@most/core"
+import { chain, constant, delay, empty, filter, loop, map, merge, mergeArray, multicast, now, scan, skip, startWith, switchLatest, tap } from "@most/core"
 import { Stream } from '@most/types'
 import { O, Op, Behavior } from '@aelea/core'
 import { $Branch, component, IBranch, style, $text, $Node, $custom } from '@aelea/dom'
@@ -20,7 +20,7 @@ export type ScrollResponse = $Branch[] | IScrollPagableReponse
 export interface QuantumScroll {
   dataSource: Stream<ScrollResponse>
 
-
+  resetScrollIndex?: Stream<any>
   $loader?: $Node
 
   containerOps?: Op<IBranch, IBranch>
@@ -30,13 +30,15 @@ export interface QuantumScroll {
 const $defaultLoader = $text(style({ color: pallete.foreground, padding: '3px 10px' }))('loading...')
 
 
-export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader: $loading = $defaultLoader }: QuantumScroll) => component((
+export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader: $loading = $defaultLoader, resetScrollIndex = empty() }: QuantumScroll) => component((
   [intersecting, intersectingTether]: Behavior<IBranch, IntersectionObserverEntry>,
 ) => {
 
   const multicastDatasource = multicast(dataSource)
+  const initiateScrolling = merge(now(null), resetScrollIndex)
 
-  const scrollReuqestWithInitial: Stream<ScrollRequest> = skip(1, scan(seed => seed + 1, -1, intersecting))
+  const scrollReuqestWithInitial: Stream<ScrollRequest> = multicast(tap(x => {
+  }, switchLatest(constant(skip(1, scan(seed => seed + 1, -1, intersecting)), initiateScrolling))))
 
   const $container = $column(
     designSheet.customScroll,
@@ -89,6 +91,6 @@ export const $VirtualScroll = ({ dataSource, containerOps = O(), $loader: $loadi
       )
     ),
 
-    { scrollRequest: scrollReuqestWithInitial }
+    { scrollIndex: scrollReuqestWithInitial }
   ]
 })

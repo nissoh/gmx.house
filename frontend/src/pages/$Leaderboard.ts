@@ -40,7 +40,7 @@ export interface ILeaderboard<T extends BaseProvider> {
 
 
 export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) => component((
-  [initializeLeaderboard, initializeLeaderboardTether]: Behavior<any, intervalInMsMap>,
+  [topPnlTimeframeChange, topPnlTimeframeChangeTether]: Behavior<any, intervalInMsMap>,
 
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [tableTopPnlRequest, tableTopPnlRequestTether]: Behavior<number, number>,
@@ -55,24 +55,22 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const timeFrameStore = config.parentStore('timeframe', intervalInMsMap.DAY)
 
-  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(initializeLeaderboard, map(x => x)))))
+  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
   const tableRequestState = combineArray((timeInterval, page): ILeaderboardRequest => {
-    return { timeInterval, offset: page * 20, pageSize: 20 }
+    const newLocal = {
+      timeInterval,
+      offset: page * 20,
+      pageSize: 20
+    }
+    console.log(newLocal)
+    return newLocal
   }, filterByTimeFrameState, tableTopPnlRequest)
 
   const tableTopOpenState = map((page): IPageable => {
     return { offset: page * 20, pageSize: 20 }
   }, openPositionsRequest)
 
-
-  const topGMX: Stream<TablePageResponse<IAggregatedAccountSummary>> = map((res) => {
-    return {
-      data: res.page,
-      pageSize: res.pageSize,
-      offset: res.offset,
-    }
-  }, config.requestLeaderboardTopList)
 
   const openPositions: Stream<TablePageResponse<IAggregatedPositionSummary>> = map((res) => {
     return {
@@ -117,19 +115,19 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $text(style({ color: pallete.foreground }))('Time Frame:'),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
           )(
             $text('24Hrs')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
           )(
             $text('Week')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
-            initializeLeaderboardTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
           )(
             $text('Month')
           )
@@ -138,7 +136,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $column(layoutSheet.spacing)(
             $Table2<IAggregatedAccountSummary>({
               bodyContainerOp: O(layoutSheet.spacingBig),
-              dataSource: topGMX,
+              filterChange: topPnlTimeframeChange,
+              dataSource: map((res) => {
+                return {
+                  data: res.page,
+                  pageSize: res.pageSize,
+                  offset: res.offset,
+                }
+              }, config.requestLeaderboardTopList),
               // bodyRowOp: O(layoutSheet.spacing),
               columns: [
                 {
@@ -191,7 +196,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
               ],
             })({
-              requestList: tableTopPnlRequestTether()
+              scrollIndex: tableTopPnlRequestTether(),
             })
           ),
         ),
@@ -334,7 +339,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 },
               ],
             })({
-              requestList: openPositionsRequestTether()
+              scrollIndex: openPositionsRequestTether()
             })
           ),
         ),
