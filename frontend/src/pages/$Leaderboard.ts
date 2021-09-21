@@ -62,6 +62,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       offset: page * 20,
       pageSize: 20
     }
+    console.log(newLocal)
     return newLocal
   }, filterByTimeFrameState, tableTopPnlRequest)
 
