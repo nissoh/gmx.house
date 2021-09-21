@@ -45,7 +45,7 @@
         "express-promise-router": "^4.1.0",
         "express-session": "^1.17.2",
         "gambit-middleware": "workspace:*",
-        "graphql": "^15.5.3",
+        "graphql": "^15.6.0",
         "isomorphic-fetch": "^3.0.0",
         "puppeteer": "10.2.0",
         "ws": "^8.2.2"
@@ -54,7 +54,7 @@
         "@types/express": "^4.17.13",
         "@types/express-serve-static-core": "^4.17.24",
         "@types/express-session": "^1.17.4",
-        "@types/node": "15.6.1",
+        "@types/node": "15.14.9",
         "@types/ws": "^7.4.7",
         "ts-node": "^10.2.1",
         "ts-node-dev": "^1.1.8",
