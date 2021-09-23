@@ -6,6 +6,8 @@ export enum TOKEN_SYMBOL {
   USDT = 'USDT',
   ETH = 'ETH',
   BTC = "BTC",
+  UNI = "UNI",
+  LINK = "LINK",
   WBNB = "WBNB",
   BNB = "BNB",
   USDG = "USDG",

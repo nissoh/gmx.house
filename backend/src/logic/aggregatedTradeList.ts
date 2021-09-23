@@ -225,9 +225,9 @@ export const requestLeaderboardTopList = O(
     const now = Date.now()
 
     const timeStart = now - queryParams.timeInterval
-    const params = { timeStart: timeStart / 1000, timeEnd: now / 1000 }
+    const params = { timeStart: Math.floor(timeStart / 1000), timeEnd: Math.floor(now / 1000) }
 
-    const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), intervalInMsMap.MIN15, async () => {
+    const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), intervalInMsMap.MIN, async () => {
       const list = await queryGraph(aggregatedSettledTradesMapQuery, params)
       return toAggregatedAccountSummary(list)
     })

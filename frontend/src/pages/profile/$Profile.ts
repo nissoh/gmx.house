@@ -1,6 +1,6 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, TOKEN_ADDRESS_MAP, groupByMapMany, Token, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap } from "gambit-middleware"
+import { ARBITRUM_CONTRACTS, timeTzOffset, TOKEN_ADDRESS_MAP, groupByMapMany, Token, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, IAggregatedPositionSummary, toAggregatedAccountSummary, IAggregatedAccountSummary, toAggregatedTradeSettledSummary, IAggregatedSettledTradeSummary } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
@@ -14,6 +14,8 @@ import { Stream } from "@most/types"
 import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
 import { Behavior } from "@aelea/core"
+import { $Table2 } from "../../common/$Table2"
+import { entyColumnTable } from "../common"
 
 
 
@@ -327,41 +329,66 @@ export const $Profile = (config: IAccount) => component((
 
         $node(),
 
+        // $Table2<IAggregatedSettledTradeSummary>({
+        //   bodyContainerOp: layoutSheet.spacing,
+        //   scrollConfig: {
+        //     containerOps: O(layoutSheet.spacingBig)
+        //   },
+        //   dataSource: map(data => {
+
+        //     const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
+        //       .sort((a, b) => b.initialPositionBlockTimestamp - a.initialPositionBlockTimestamp)
+        //       .map(toAggregatedTradeSettledSummary)
+        //     return settledList
+            
+        //   }, config.accountAggregation),
+        //   // headerCellOp: style({ fontSize: '.65em' }),
+        //   // bodyRowOp: O(layoutSheet.spacing),
+        //   columns: [
+        //     entyColumnTable,
+        //     // accountTableColumn,
+        //     // riskColumnTableWithLiquidationIndicator,
+        //     // pnlColumnLivePnl,
+        //   ],
+        // })({
+        //   scrollIndex: openPositionsRequestTether()
+        // })
+
 
         // $AccountProfile({ address: accountAddress, claim: null })({}),
 
         // $labeledDivider('Realised PnL'),
 
-        switchLatest(
-          combineArray((pnlData, activeToken) => {
-            const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
+        // switchLatest(
+        //   combineArray((pnlData, activeToken) => {
+        //     const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
 
-            const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-              const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
+        //     const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
+        //       const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
 
-              const selectedTokenBehavior = O(
-                style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
-                selectedTokenChangeTether(
-                  nodeEvent('click'),
-                  constant(token)
-                )
-              )
+        //       const selectedTokenBehavior = O(
+        //         style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
+        //         selectedTokenChangeTether(
+        //           nodeEvent('click'),
+        //           constant(token)
+        //         )
+        //       )
 
-              // @ts-ignore
-              const $tokenIcon = $tokenIconMap[contract]
+        //       // @ts-ignore
+        //       const $tokenIcon = $tokenIconMap[contract]
 
-              return selectedTokenBehavior(
-                $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
-              )
-            })
+        //       return selectedTokenBehavior(
+        //         $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
+        //       )
+        //     })
 
-            const $container = screenUtils.isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
+        //     const $container = screenUtils.isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
 
-            return $container(layoutSheet.spacing)(
-              ...$tokenChooser
-            )
-          }, accountHistoryPnL, selectedToken)
-        ),
+        //     return $container(layoutSheet.spacing)(
+        //       ...$tokenChooser
+        //     )
+        //   }, accountHistoryPnL, selectedToken)
+        // ),
 
       ),
 

@@ -1,50 +1,17 @@
 /* eslint-disable prefer-const */
-import { ethereum, store, log, BigDecimal, BigInt } from "@graphprotocol/graph-ts"
+import { ethereum, store, log, BigInt } from "@graphprotocol/graph-ts"
 import * as contract from "../generated/gmxVault/gmxVault"
-import * as glpManager from "../generated/glpManager/glpManager"
 
 import {
   ClosePosition,
   DecreasePosition,
   IncreasePosition, LiquidatePosition, UpdatePosition, AggregatedTradeOpen, AggregatedTradeClosed, AggregatedTradeLiquidated,
-  AddLiquidity, RemoveLiquidity, AccountAggregation
+  AccountAggregation
 } from "../generated/schema"
 
 
 const eventId = (ev: ethereum.Event): string => ev.transaction.hash.toHex() + "-" + ev.logIndex.toString()
 
-export function handleAddLiquidity(event: glpManager.AddLiquidity): void {
-  let id = eventId(event)
-
-  let entity = new AddLiquidity(id)
-
-  entity.account = event.params.account.toHex()
-  entity.token = event.params.token.toHex()
-
-  entity.amount = event.params.amount.toBigDecimal()
-  entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
-  entity.glpSupply = event.params.glpSupply.toBigDecimal()
-  entity.usdgAmount = event.params.usdgAmount.toBigDecimal()
-  entity.mintAmount = event.params.mintAmount.toBigDecimal()
-
-  entity.save()
-}
-
-export function handleRemoveLiquidity(event: glpManager.RemoveLiquidity): void {
-  let id = eventId(event)
-
-  let entity = new RemoveLiquidity(id)
-
-  entity.account = event.params.account.toHex()
-  entity.token = event.params.token.toHex()
-  entity.glpAmount = event.params.glpAmount.toBigDecimal()
-  entity.aumInUsdg = event.params.aumInUsdg.toBigDecimal()
-  entity.glpSupply = event.params.glpSupply.toBigDecimal()
-  entity.usdgAmount = event.params.usdgAmount.toBigDecimal()
-  entity.amountOut = event.params.amountOut.toBigDecimal()
-
-  entity.save()
-}
 
 export function handleIncreasePosition(event: contract.IncreasePosition): void {
   let tradeKey = event.params.key.toHex()
@@ -58,10 +25,10 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
 
   entity.isLong = event.params.isLong
 
-  entity.collateralDelta = event.params.collateralDelta.toBigDecimal()
-  entity.sizeDelta = event.params.sizeDelta.toBigDecimal()
-  entity.price = event.params.price.toBigDecimal()
-  entity.fee = event.params.fee.toBigDecimal()
+  entity.collateralDelta = event.params.collateralDelta
+  entity.sizeDelta = event.params.sizeDelta
+  entity.price = event.params.price
+  entity.fee = event.params.fee
 
   entity.save()
   
@@ -74,7 +41,7 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
     aggTradeOpen = new AggregatedTradeOpen(tradeKey)
     aggTradeOpen.account = event.params.account.toHex()
 
-    aggTradeOpen.initialPositionBlockTimestamp = event.block.timestamp.toBigDecimal()
+    aggTradeOpen.initialPositionBlockTimestamp = event.block.timestamp.toI32() as BigInt
     aggTradeOpen.initialPosition = entity.id
     aggTradeOpen.increaseList = []
     aggTradeOpen.decreaseList = []
@@ -83,7 +50,7 @@ export function handleIncreasePosition(event: contract.IncreasePosition): void {
     if (accountAgg === null) {
       accountAgg = accountAgg = new AccountAggregation(aggTradeOpen.account)
 
-      accountAgg.totalRealisedPnl = BigDecimal.fromString('0')
+      accountAgg.totalRealisedPnl = new BigInt(0)
       accountAgg.aggregatedTradeOpens = []
       accountAgg.aggregatedTradeCloseds = []
       accountAgg.aggregatedTradeLiquidateds = []
@@ -121,10 +88,10 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
 
   entity.isLong = event.params.isLong
 
-  entity.collateralDelta = event.params.collateralDelta.toBigDecimal()
-  entity.sizeDelta = event.params.sizeDelta.toBigDecimal()
-  entity.price = event.params.price.toBigDecimal()
-  entity.fee = event.params.fee.toBigDecimal()
+  entity.collateralDelta = event.params.collateralDelta
+  entity.sizeDelta = event.params.sizeDelta
+  entity.price = event.params.price
+  entity.fee = event.params.fee
 
 
   entity.save()
@@ -144,12 +111,12 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
       accountAgg.totalRealisedPnl = accountAgg.totalRealisedPnl.minus(entity.fee)
       accountAgg.save()
     } else {
-      log.error('unable deduct paid fees into account aggregation #{}', [entity.id])
+      log.error('unable deduct paid fees into account aggregation: #{}', [entity.id])
     }
     
 
   } else {
-    log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
+    log.error('unable to attach entity to account aggregation: aggregatedId: #{}', [entity.id])
   }
 
 }
@@ -161,12 +128,12 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
 
   entity.key = event.params.key.toHex()
 
-  entity.size = event.params.size.toBigDecimal()
-  entity.collateral = event.params.collateral.toBigDecimal()
-  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
-  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
-  entity.averagePrice = event.params.averagePrice.toBigDecimal()
-  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
+  entity.size = event.params.size
+  entity.collateral = event.params.collateral
+  entity.reserveAmount = event.params.reserveAmount
+  entity.realisedPnl = event.params.realisedPnl
+  entity.averagePrice = event.params.averagePrice
+  entity.entryFundingRate = event.params.entryFundingRate
 
   entity.save()
 
@@ -193,12 +160,12 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   entity.key = event.params.key.toHex()
 
 
-  entity.size = event.params.size.toBigDecimal()
-  entity.collateral = event.params.collateral.toBigDecimal()
-  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
-  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
-  entity.averagePrice = event.params.averagePrice.toBigDecimal()
-  entity.entryFundingRate = event.params.entryFundingRate.toBigDecimal()
+  entity.size = event.params.size
+  entity.collateral = event.params.collateral
+  entity.reserveAmount = event.params.reserveAmount
+  entity.realisedPnl = event.params.realisedPnl
+  entity.averagePrice = event.params.averagePrice
+  entity.entryFundingRate = event.params.entryFundingRate
 
 
   entity.save()
@@ -218,7 +185,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
     settled.increaseList = aggTradeOpen.increaseList
     settled.updateList = aggTradeOpen.updateList
 
-    settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
+    settled.settledBlockTimestamp = event.block.timestamp.toI32() as BigInt
 
     settled.save()
 
@@ -260,11 +227,11 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
 
   entity.isLong = event.params.isLong
 
-  entity.size = event.params.size.toBigDecimal()
-  entity.collateral = event.params.collateral.toBigDecimal()
-  entity.reserveAmount = event.params.reserveAmount.toBigDecimal()
-  entity.realisedPnl = event.params.realisedPnl.toBigDecimal()
-  entity.markPrice = event.params.markPrice.toBigDecimal()
+  entity.size = event.params.size
+  entity.collateral = event.params.collateral
+  entity.reserveAmount = event.params.reserveAmount
+  entity.realisedPnl = event.params.realisedPnl
+  entity.markPrice = event.params.markPrice
 
 
   entity.save()
@@ -283,7 +250,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
     settled.increaseList = aggTradeOpen.increaseList
     settled.updateList = aggTradeOpen.updateList
 
-    settled.settledBlockTimestamp = event.block.timestamp.toBigDecimal()
+    settled.settledBlockTimestamp = event.block.timestamp.toI32() as BigInt
 
     settled.save()
 

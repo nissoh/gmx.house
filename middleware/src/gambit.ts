@@ -1,9 +1,9 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
-import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, LIQUIDATION_FEE, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
+import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeListMap, IAggregatedTradeSummary, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary } from "./types"
 import { fillIntervalGap, formatFixed, timeTzOffset, UTCTimestamp } from "./utils"
 
 
@@ -123,7 +123,7 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
   })
 
   if (agg.updateList?.length) {
-    cumulativeAccountData.averagePrice = agg.updateList[0].averagePrice ?? 0n
+    cumulativeAccountData.averagePrice = BigInt(agg.updateList[0].averagePrice) ?? 0n
   } else {
     console.error(`missing updatelist, account: ${agg.account}`)
   }
@@ -137,7 +137,7 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
   return cumulativeAccountData
 }
 
-export function toAggregatedTradeAverageSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedSettledTradeSummary {
+export function toAggregatedTradeSettledSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedSettledTradeSummary {
   const cumulativeAccountData: IAggregatedSettledTradeSummary = {
     ...toAggregatedOpenTradeSummary(agg),
     pnl: 0n
@@ -161,7 +161,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
 
     let profitablePositionsCount = 0
 
-    const tradeSummaries = allSettled.map(toAggregatedTradeAverageSummary)
+    const tradeSummaries = allSettled.map(toAggregatedTradeSettledSummary)
     const fee = tradeSummaries.reduce((seed, pos) => seed + BigInt(pos.fee), 0n)
     const realisedPnl = allSettled.reduce((seed, pos) => {
       if (pos.settledPosition.realisedPnl > 0n) {
@@ -177,7 +177,8 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
       claim: null,
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
       pnl: realisedPnl,
-      size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n)
+      size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n),
+      averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length)
     }
 
     seed.push(summary)
@@ -198,7 +199,7 @@ export function historicalPnLMetric(historicalData: IAccountAggregationMap, inte
   // .filter(t => t.settledPosition)
     .map(aggTrade => {
 
-      const summary = toAggregatedTradeAverageSummary(aggTrade)
+      const summary = toAggregatedTradeSettledSummary(aggTrade)
       const time = aggTrade.settledBlockTimestamp
       const value = formatFixed(summary.pnl, USD_DECIMALS)
 

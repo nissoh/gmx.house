@@ -54,6 +54,7 @@ export function positionUpdateJson(json: IPositionUpdate): IPositionUpdate {
   const entryFundingRate = BigInt(json?.entryFundingRate)
   const realisedPnl = BigInt(json?.realisedPnl)
   const reserveAmount = BigInt(json?.reserveAmount)
+
   return { ...json, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount, }
 }
 
@@ -62,8 +63,9 @@ export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregated
   const fee = BigInt(json?.fee)
   const collateral = BigInt(json?.collateral)
   const size = BigInt(json?.size)
+  const averagePrice = BigInt(json?.averagePrice)
 
-  return { ...json, collateral, pnl, fee, size }
+  return { ...json, collateral, pnl, fee, size, averagePrice }
 }
 
 

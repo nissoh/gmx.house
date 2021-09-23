@@ -122,6 +122,7 @@ export interface IAggregatedTradeSummary {
   collateral: bigint
   fee: bigint
   account: string
+  averagePrice: bigint
 }
 
 export interface IAggregatedSettledTradeSummary extends IAggregatedTradeSummary {
@@ -132,13 +133,11 @@ export interface IAggregatedPositionSummary extends IAggregatedTradeSummary {
   startTimestamp: number
   indexToken: ARBITRUM_CONTRACTS
   account: string
-  averagePrice: bigint
   isLong: boolean
 }
 
 
 export interface IAggregatedAccountSummary extends IAggregatedSettledTradeSummary {
-  pnl: bigint
   settledPositionCount: number
   profitablePositionsCount: number
   claim: IClaim | null,

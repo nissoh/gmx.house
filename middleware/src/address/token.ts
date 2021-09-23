@@ -5,32 +5,6 @@ import { TOKEN_SYMBOL } from "./symbol"
 
 export const AddressZero = "0x0000000000000000000000000000000000000000"
 
-export const TOKENS_BSC = [
-  {
-    name: "Bitcoin",
-    symbol: TOKEN_SYMBOL.BTC,
-    decimals: 18,
-    address: ARBITRUM_CONTRACTS.WBTC,
-  },
-  {
-    name: "Ethereum",
-    symbol: TOKEN_SYMBOL.ETH,
-    decimals: 18,
-    address: ARBITRUM_CONTRACTS.WETH,
-  },
-  {
-    name: "USD Gambit",
-    symbol: TOKEN_SYMBOL.USDG,
-    decimals: 18,
-    address: ARBITRUM_CONTRACTS.USDG
-  },
-  {
-    name: "USD Coin",
-    symbol: TOKEN_SYMBOL.BUSD,
-    decimals: 6,
-    address: ARBITRUM_CONTRACTS.USDC
-  }
-] as Token[]
 
 export const TOKENS_ARBITRUM = [
   {
@@ -44,6 +18,18 @@ export const TOKENS_ARBITRUM = [
     symbol: TOKEN_SYMBOL.ETH,
     decimals: 18,
     address: ARBITRUM_CONTRACTS.WETH,
+  },
+  {
+    name: "Chainlink",
+    symbol: TOKEN_SYMBOL.LINK,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.LINK,
+  },
+  {
+    name: "Uniswap",
+    symbol: TOKEN_SYMBOL.UNI,
+    decimals: 18,
+    address: ARBITRUM_CONTRACTS.UNI,
   },
   {
     name: "USD Gambit",
