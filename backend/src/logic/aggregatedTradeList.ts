@@ -156,7 +156,7 @@ query ($timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10, $offset: Int = 2
 const openAggregateTradesQuery = gql`
 ${schemaFragments}
 
-query ($account: ID = "", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
+query {
   aggregatedTradeOpens(first: 1000) {
     ...aggregatedTradeOpenFields
   }
@@ -182,6 +182,7 @@ query ($account: String = "0xba9366ce37aa833eab8f12d599977a16e470e34e", $timeSta
 const client = createClient({
   fetch: fetch as any,
   url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault',
+  requestPolicy: 'network-only'
 })
 
 
