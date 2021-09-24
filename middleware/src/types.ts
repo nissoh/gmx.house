@@ -129,12 +129,16 @@ export interface IAggregatedSettledTradeSummary extends IAggregatedTradeSummary 
   pnl: bigint
 }
 
-export interface IAggregatedPositionSummary extends IAggregatedTradeSummary {
+export interface IAggregatedPositionSummaryAbstract extends IAggregatedTradeSummary {
   startTimestamp: number
   indexToken: ARBITRUM_CONTRACTS
   account: string
   isLong: boolean
 }
+
+export interface IAggregatedPositionSummary extends IAggregatedPositionSummaryAbstract, IAggregatedTradeSummary {}
+
+export interface IAggregatedPositionSettledSummary extends IAggregatedPositionSummaryAbstract, IAggregatedSettledTradeSummary {}
 
 
 export interface IAggregatedAccountSummary extends IAggregatedSettledTradeSummary {

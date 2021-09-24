@@ -2,14 +2,14 @@ import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseud
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, now, startWith, switchLatest } from '@most/core'
+import { constant, map, multicast, now, snapshot, startWith, switchLatest } from '@most/core'
 import { IClaim, intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedPositionSummary, IPageable } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$AccountProfile'
-import { Behavior, combineArray } from "@aelea/core"
+import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
 import { $Table2, TablePageResponse } from "../common/$Table2"
@@ -21,7 +21,6 @@ import { entyColumnTable, pnlColumnLivePnl, pnlColumnTable, riskColumnTableWithL
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
-  claimList: Stream<IClaim[]>
 
   requestLeaderboardTopList: Stream<IPagableResponse<IAggregatedAccountSummary>>
   openAggregatedTrades: Stream<IPagableResponse<IAggregatedPositionSummary>>
@@ -48,7 +47,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
-  const tableRequestState = combineArray((timeInterval, page): ILeaderboardRequest => {
+  const tableRequestState = snapshot((timeInterval, page): ILeaderboardRequest => {
     const newLocal = {
       timeInterval,
       offset: page * 20,
@@ -67,8 +66,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     return {
       data: res.page
       // .filter(a => (
-      //   a.account == '0x15d3435f25eb464ea86853037da94137bd76ef70'
-      // // || a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'.toLocaleLowerCase()
+      //   a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'
+      //   // || a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70'.toLocaleLowerCase()
       // ))
       ,
       pageSize: res.pageSize,
@@ -132,19 +131,19 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
             topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
           )(
-            $text('24Hrs')
+            $text('24 Hours')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
             topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
           )(
-            $text('Week')
+            $text('7 Days')
           ),
           $anchor(
             styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
             topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
           )(
-            $text('Month')
+            $text('1 Month')
           )
         ),
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(

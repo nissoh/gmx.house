@@ -124,7 +124,7 @@ const run = async () => {
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
       const profilePageMatches = req.originalUrl.match(/(\/p\/account\/|0x[a-fA-F0-9]{40}$)/g)
-      res.setHeader('content-type', 'text/html; charset=utf-8')
+      // res.setHeader('content-type', 'text/html; charset=utf-8')
 
       const fullUrl = 'https://' + req.get('host')
 
@@ -136,7 +136,7 @@ const run = async () => {
           .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
           .replace(/\$OG_IMAGE/g, `${fullUrl}/api/og-account?account=${matchedAdress}`)
         
-        res.end(ogHtmlFile)
+        res.render(ogHtmlFile)
       } else {
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Commuinity')
@@ -144,11 +144,8 @@ const run = async () => {
           .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
           .replace(/\$OG_IMAGE/g, ``)
 
-        res.end(ogHtmlFile)
+        res.render(ogHtmlFile)
       }
-
-      
-
       
     } else {
       next()

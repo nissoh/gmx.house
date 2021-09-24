@@ -167,8 +167,8 @@ query {
 const aggregatedSettledTradesMapQuery = gql`
 ${schemaFragments}
 
-query ($account: String = "0xba9366ce37aa833eab8f12d599977a16e470e34e", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
-  aggregatedTradeCloseds(first: 1000, where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
+query ($account: String = "0xba9366ce37aa833eab8f12d599977a16e470e34e", $offset: Int = 0, $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
+  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
       ...aggregatedTradeClosedFields
   }
   aggregatedTradeLiquidateds(first: 1000, where: {initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
@@ -228,10 +228,26 @@ export const requestLeaderboardTopList = O(
     const timeStart = now - queryParams.timeInterval
     const params = { timeStart: Math.floor(timeStart / 1000), timeEnd: Math.floor(now / 1000) }
 
-    const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), intervalInMsMap.MIN, async () => {
-      const list = await queryGraph(aggregatedSettledTradesMapQuery, params)
-      return toAggregatedAccountSummary(list)
+    const fethPage = async (offset: number): Promise<any> => {
+      const list = await queryGraph(aggregatedSettledTradesMapQuery, { ...params, offset })
+
+      if (list.aggregatedTradeCloseds.length === 1000) {
+        const newPage = await fethPage(offset + 1000)
+
+        return { aggregatedTradeLiquidateds: list.aggregatedTradeLiquidateds, aggregatedTradeCloseds: [...list.aggregatedTradeCloseds, ...newPage.aggregatedTradeCloseds] }
+      }
+
+      return list
+    }
+
+    const cacheLife = queryParams.timeInterval > intervalInMsMap.DAY ? intervalInMsMap.MIN15 : intervalInMsMap.MIN
+    const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), cacheLife, async () => {
+      const list = await fethPage(0)
+      const summary = toAggregatedAccountSummary(list)
+
+      return summary
     })
+    
 
     return pageableQuery(queryParams, cacheQuery)
   }),
@@ -262,7 +278,6 @@ export const requestAccountListAggregation = O(
   awaitPromises
 )
 
-let www: any = null
 const openTradesCacheMap = cacheMap({})
 export const requestOpenAggregatedTrades = O(
   map(async (queryParams: IPageable) => {
@@ -270,19 +285,17 @@ export const requestOpenAggregatedTrades = O(
     const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
       console.log('fetching open positions')
       const list = await queryGraph(openAggregateTradesQuery, {})
-      const sortedList = (list.aggregatedTradeOpens as IAggregatedTradeOpen[]).map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
+      const sortedList = (list.aggregatedTradeOpens as IAggregatedTradeOpen[])
+        // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')
+        .map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
       return sortedList
     })
 
-    console.log(www === cacheQuery)
-
-    www = cacheQuery
-
-    const query = pageableQuery(queryParams, cacheQuery)
+    const query = await pageableQuery(queryParams, cacheQuery)
 
     
     
-    return query
+    return { ...query, page: query.page }
   }),
   awaitPromises
 )

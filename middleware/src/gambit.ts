@@ -3,7 +3,7 @@ import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary, IAggregatedPositionSettledSummary } from "./types"
 import { fillIntervalGap, formatFixed, timeTzOffset, UTCTimestamp } from "./utils"
 
 
@@ -122,8 +122,9 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
     cumulativeAccountData.fee += BigInt(pos.fee)
   })
 
-  if (agg.updateList?.length) {
-    cumulativeAccountData.averagePrice = BigInt(agg.updateList[0].averagePrice) ?? 0n
+  const updateListLength = agg.updateList?.length
+  if (updateListLength) {
+    cumulativeAccountData.averagePrice = BigInt(agg.updateList[updateListLength - 1].averagePrice) ?? 0n
   } else {
     console.error(`missing updatelist, account: ${agg.account}`)
   }
@@ -137,8 +138,8 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
   return cumulativeAccountData
 }
 
-export function toAggregatedTradeSettledSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedSettledTradeSummary {
-  const cumulativeAccountData: IAggregatedSettledTradeSummary = {
+export function toAggregatedTradeSettledSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedPositionSettledSummary {
+  const cumulativeAccountData: IAggregatedPositionSettledSummary = {
     ...toAggregatedOpenTradeSummary(agg),
     pnl: 0n
   }

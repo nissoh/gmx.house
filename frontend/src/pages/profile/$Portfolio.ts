@@ -14,7 +14,6 @@ import { $Profile } from "./$Profile"
 export interface IPortfolio<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
-  claimList: Stream<IClaim[]>
   aggregatedTradeList: Stream<IAccountAggregationMap>
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
@@ -39,7 +38,6 @@ export const $Portfolio = <T extends BaseProvider>(config: IPortfolio<T>) => com
       router.match(accountRoute)(
         $Profile({
           parentStore: config.parentStore,
-          claimList: config.claimList,
           accountAggregation: config.aggregatedTradeList
         })({
           requestAccountAggregation: requestAccountAggregationTether()

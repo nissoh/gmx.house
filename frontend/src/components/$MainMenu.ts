@@ -18,11 +18,10 @@ import { Behavior } from "@aelea/core"
 
 interface MainMenu {
   parentRoute: Route
-  containerOp?: Op<IBranch, IBranch>,
-  claimList: Stream<IClaim[]>
+  containerOp?: Op<IBranch, IBranch>
 }
 
-export const $MainMenu = ({ parentRoute, containerOp = O(), claimList }: MainMenu) => component((
+export const $MainMenu = ({ parentRoute, containerOp = O() }: MainMenu) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<string, string>,
 ) => {

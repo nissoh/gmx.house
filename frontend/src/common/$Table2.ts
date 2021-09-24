@@ -1,4 +1,4 @@
-import { chain, constant, map, merge, never, now, scan, startWith, switchLatest, until } from "@most/core"
+import { chain, constant, map, merge, never, now, scan, startWith, switchLatest, tap, until } from "@most/core"
 import { Stream } from "@most/types"
 import { $Node, $svg, attr, component, INode, nodeEvent, style, stylePseudo } from '@aelea/dom'
 import { pallete } from "@aelea/ui-components-theme"
@@ -64,7 +64,7 @@ export const $Table2 = <T, FilterState = never>({
 
 
   const cellStyle = O(
-    style({ padding: '3px 6px', overflowWrap: 'break-word', alignItems: 'center' }),
+    style({ padding: '3px 6px', overflowWrap: 'break-word' }),
     layoutSheet.flex,
   )
 
@@ -128,6 +128,7 @@ export const $Table2 = <T, FilterState = never>({
   )
 
 
+  const newLocal = merge(sortByChange, filterChange)
   const $body = switchLatest(map(() =>
     $VirtualScroll({
       ...scrollConfig,
@@ -152,7 +153,7 @@ export const $Table2 = <T, FilterState = never>({
     })({
       scrollIndex: scrollIndexTether()
     })
-  , startWith(null, merge(sortByChange, filterChange))))
+  , startWith(null, newLocal)))
 
   return [
     $column(bodyContainerOp)(

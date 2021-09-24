@@ -54,8 +54,6 @@ export default ({ baseRoute = '' }: Website) => component((
     return frags
   }, changes)
 
-  $cubes()
-
 
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
@@ -72,7 +70,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
   const rootStore = state.createLocalStorageChain('store')
 
-  const claimList = claimListQuery()
+  // const claimList = claimListQuery()
 
   const clientApi = helloBackend({
     requestAccountAggregation,
@@ -120,7 +118,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
                 ),
                 $node(),
-                $MainMenu({ parentRoute: pagesRoute, claimList })({
+                $MainMenu({ parentRoute: pagesRoute })({
                   routeChange: linkClickTether()
                 })
               ),
@@ -139,7 +137,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 })
                 : empty(),
               screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
-              $MainMenu({ parentRoute: pagesRoute, claimList, containerOp: style({ padding: '34px, 20px' }) })({
+              $MainMenu({ parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether()
               })
             ),
@@ -147,7 +145,6 @@ export default ({ baseRoute = '' }: Website) => component((
               $Leaderboard({
                 parentRoute: rootRoute,
                 parentStore: rootStore,
-                claimList,
                 openAggregatedTrades: map((x: IPagableResponse<IAggregatedPositionSummary>) => ({ ...x, page: x.page.map(toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
                 requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
                   page: data.page.map(accountSummaryJson),
@@ -169,7 +166,6 @@ export default ({ baseRoute = '' }: Website) => component((
               $Portfolio({
                 parentRoute: portfolioRoute,
                 parentStore: rootStore,
-                claimList,
                 aggregatedTradeList: map(res => toAccountAggregationJson(res.accountAggregation), clientApi.requestAccountAggregation)
               })({
                 requestAccountAggregation: requestAccountAggregationTether()

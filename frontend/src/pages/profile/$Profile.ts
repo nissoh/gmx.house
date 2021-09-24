@@ -1,12 +1,12 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
-import { $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { ARBITRUM_CONTRACTS, timeTzOffset, TOKEN_ADDRESS_MAP, groupByMapMany, Token, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, IAggregatedPositionSummary, toAggregatedAccountSummary, IAggregatedAccountSummary, toAggregatedTradeSettledSummary, IAggregatedSettledTradeSummary } from "gambit-middleware"
+import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
+import { ARBITRUM_CONTRACTS, timeTzOffset, TOKEN_ADDRESS_MAP, groupByMapMany, Token, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, IAggregatedPositionSummary, toAggregatedAccountSummary, IAggregatedAccountSummary, toAggregatedTradeSettledSummary, IAggregatedSettledTradeSummary, IAggregatedPositionSettledSummary } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
-import { $anchor, $seperator, $tokenLabel } from "../../elements/$common"
+import { $alert, $anchor, $seperator, $tokenLabel } from "../../elements/$common"
 import { screenUtils, state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
 import { $Chart } from "../../components/chart/$Chart"
@@ -15,14 +15,13 @@ import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
 import { Behavior } from "@aelea/core"
 import { $Table2 } from "../../common/$Table2"
-import { entyColumnTable } from "../common"
+import { entyColumnTable, pnlColumnLivePnl, pnlColumnTable, riskColumnTableWithLiquidationIndicator } from "../common"
 
 
 
 
 export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
-  claimList: Stream<IClaim[]>
 
   accountAggregation: Stream<IAccountAggregationMap>
 }
@@ -36,7 +35,7 @@ export const $Profile = (config: IAccount) => component((
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
   [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, Token>,
   [selectOtherTimeframe, selectOtherTimeframeTether]: Behavior<IBranch, intervalInMsMap>,
-  [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [requestAccountAggregationPage, requestAccountAggregationPageTether]: Behavior<number, number>,
 ) => {
 
 
@@ -126,6 +125,12 @@ export const $Profile = (config: IAccount) => component((
       
 
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
+
+        $row(style({ placeContent: 'center' }))(
+          $alert(
+            $text('Profile page is still WIP')
+          )
+        ),
 
         $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
           $text(style({ color: pallete.foreground }))('Chart Interval:'),
@@ -329,66 +334,104 @@ export const $Profile = (config: IAccount) => component((
 
         $node(),
 
-        // $Table2<IAggregatedSettledTradeSummary>({
-        //   bodyContainerOp: layoutSheet.spacing,
-        //   scrollConfig: {
-        //     containerOps: O(layoutSheet.spacingBig)
-        //   },
-        //   dataSource: map(data => {
-
-        //     const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
-        //       .sort((a, b) => b.initialPositionBlockTimestamp - a.initialPositionBlockTimestamp)
-        //       .map(toAggregatedTradeSettledSummary)
-        //     return settledList
-            
-        //   }, config.accountAggregation),
-        //   // headerCellOp: style({ fontSize: '.65em' }),
-        //   // bodyRowOp: O(layoutSheet.spacing),
-        //   columns: [
-        //     entyColumnTable,
-        //     // accountTableColumn,
-        //     // riskColumnTableWithLiquidationIndicator,
-        //     // pnlColumnLivePnl,
-        //   ],
-        // })({
-        //   scrollIndex: openPositionsRequestTether()
-        // })
-
-
-        // $AccountProfile({ address: accountAddress, claim: null })({}),
 
         // $labeledDivider('Realised PnL'),
 
-        // switchLatest(
-        //   combineArray((pnlData, activeToken) => {
-        //     const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
+        $column(
+          switchLatest(
+            combineArray((pnlData, activeToken) => {
+              const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
 
-        //     const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-        //       const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
+              const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
+                const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
 
-        //       const selectedTokenBehavior = O(
-        //         style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
-        //         selectedTokenChangeTether(
-        //           nodeEvent('click'),
-        //           constant(token)
-        //         )
-        //       )
+                const selectedTokenBehavior = O(
+                  style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
+                  selectedTokenChangeTether(
+                    nodeEvent('click'),
+                    constant(token)
+                  )
+                )
 
-        //       // @ts-ignore
-        //       const $tokenIcon = $tokenIconMap[contract]
+                // @ts-ignore
+                const $tokenIcon = $tokenIconMap[contract]
 
-        //       return selectedTokenBehavior(
-        //         $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
-        //       )
-        //     })
+                return selectedTokenBehavior(
+                  $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
+                )
+              })
 
-        //     const $container = screenUtils.isDesktopScreen ? $column : $row(style({ padding: '0 10px' }))
+            
 
-        //     return $container(layoutSheet.spacing)(
-        //       ...$tokenChooser
-        //     )
-        //   }, accountHistoryPnL, selectedToken)
-        // ),
+              return $row(
+                ...$tokenChooser
+              )
+            }, accountHistoryPnL, selectedToken)
+          ),
+
+          $card(layoutSheet.spacingBig, style({ padding: '16px 8px' }))(
+            $Table2<IAggregatedPositionSettledSummary>({
+              bodyContainerOp: layoutSheet.spacing,
+              scrollConfig: {
+                containerOps: O(layoutSheet.spacingBig)
+              },
+              dataSource: map((data) => {
+
+                const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
+                  // .filter(trade => trade.initialPosition.indexToken === token.address)
+                  .sort((a, b) => b.initialPositionBlockTimestamp - a.initialPositionBlockTimestamp)
+                  .map(toAggregatedTradeSettledSummary)
+                return settledList
+            
+              }, config.accountAggregation),
+              // headerCellOp: style({ fontSize: '.65em' }),
+              // bodyRowOp: O(layoutSheet.spacing),
+              // filterChange: selectedToken,
+              columns: [
+                {
+                  $head: $text('Settled'),
+                  // columnOp: O(style({  flexDirection: 'column' }), layoutSheet.spacingTiny),
+
+                  $body: map((pos) => {
+                    const intervals = [
+                      { label: 'year', seconds: 31536000 },
+                      { label: 'month', seconds: 2592000 },
+                      { label: 'day', seconds: 86400 },
+                      { label: 'hour', seconds: 3600 },
+                      { label: 'minute', seconds: 60 },
+                      { label: 'second', seconds: 1 }
+                    ] as const
+
+                    function timeSince(date: Date) {
+                      const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+                      const interval = intervals.find(i => i.seconds < seconds)
+
+                      if (!interval)
+                        return ''
+                      const count = Math.floor(seconds / interval.seconds)
+                      return `${count} ${interval.label}${count !== 1 ? 's' : ''} ago`
+                    }
+
+                    return $column(style({ fontSize:'.65em' }))(
+                      $column(style({ position: 'relative' }))(
+                        $text(timeSince(new Date(pos.startTimestamp))),
+                        $text(new Date(pos.startTimestamp).toLocaleDateString("en-US")),
+                      ),
+                    )
+                  })
+                },
+                entyColumnTable,
+                // accountTableColumn,
+                riskColumnTableWithLiquidationIndicator,
+                pnlColumnTable,
+              ],
+            })({
+              scrollIndex: requestAccountAggregationPageTether()
+            })
+          ),
+        )
+
+
 
       ),
 

@@ -65,7 +65,7 @@ export const pnlColumnTable = {
 
 export const entyColumnTable: TableColumn<IAggregatedPositionSummary> = {
   $head: $text('Entry'),
-  columnOp: O(style({ minWidth: '80px', position: 'relative', placeContent: 'center', flexDirection: 'column' }), layoutSheet.spacingTiny),
+  columnOp: O(style({ maxWidth: '65px', placeContent: 'center', flexDirection: 'column' }), layoutSheet.spacingTiny),
 
   $body: map(({ isLong, indexToken, averagePrice }) => {
     const idx = Object.entries(ARBITRUM_CONTRACTS).find(([k, v]) => v === indexToken)?.[1]
@@ -78,27 +78,31 @@ export const entyColumnTable: TableColumn<IAggregatedPositionSummary> = {
     // @ts-ignore
     const $token = $tokenIconMap[idx]
 
-    return $column(
-      style({ borderRadius: '50%', padding: '3px', left: '10px', top: '-4px', backgroundColor: pallete.background, position: 'absolute', offset: '0 0 0 0', })(
-        $icon({
-          $content: isLong ? $bull : $bear,
-          viewBox: '0 0 32 32',
-        })
-      ),
-      $icon({
-        $content: $token,
-        viewBox: '0 0 32 32',
-        width: 24,
-      }),
-      $text(style({ fontSize: '.65em' }))(formatReadableUSD(averagePrice))
+    return $row(style({ placeContent: 'center', alignItems: 'center' }))(
+      $column(layoutSheet.spacingTiny)(
+        $row(style({ position: 'relative', alignSelf: 'center' }))(
+          style({ borderRadius: '50%', padding: '3px', left: '-18px', top: '0', backgroundColor: pallete.background, position: 'absolute', offset: '0 0 0 0', })(
+            $icon({
+              $content: isLong ? $bull : $bear,
+              viewBox: '0 0 32 32',
+            })
+          ),
+          $icon({
+            $content: $token,
+            viewBox: '0 0 32 32',
+            width: 24,
+          }),
+        ),  
+        $text(style({ fontSize: '.65em' }))(formatReadableUSD(averagePrice))
+      )
     )
   })
 }
 
 
 export const riskColumnTableWithLiquidationIndicator: TableColumn<IAggregatedPositionSummary> = {
-  $head: $text(style({ fontSize: '1em' }))('Risk'),
-  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, fontSize: '.65em', flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+  $head: $text('Risk'),
+  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
   $body: map((pos: IAggregatedPositionSummary) => {
 
     const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)
@@ -124,10 +128,12 @@ export const riskColumnTableWithLiquidationIndicator: TableColumn<IAggregatedPos
 
     const ww = styleInline(map((pec) => ({ width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${pec}, ${pallete.foreground} 0)` }), liqPercentage))
 
-    return $column(
+    const newLocal = formatReadableUSD(liquidationPrice)
+    return $column(style({ fontSize: '.65em', alignItems: 'center' }))(
       $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
         $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
-        $text(formatReadableUSD(pos.collateral - pos.fee))
+        $text(formatReadableUSD(pos.collateral - pos.fee)),
+        $text(newLocal)
       ),
       ww($seperator),
       $text(style({}))(formatReadableUSD(pos.size))
