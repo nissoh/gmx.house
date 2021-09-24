@@ -7,7 +7,7 @@ import { ARBITRUM_CONTRACTS, calculatePositionDelta, formatFixed, formatReadable
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $icon, $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
-import { $bear, $bull } from "../elements/$icons"
+import { $bear, $bull, $skull } from "../elements/$icons"
 
 
 const filterByIndexToken = (pos: IAggregatedPositionSummary) => filter((data: WSBTCPriceEvent) => {
@@ -133,10 +133,16 @@ export const riskColumnTableWithLiquidationIndicator: TableColumn<IAggregatedPos
       $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
         $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`),
         $text(formatReadableUSD(pos.collateral - pos.fee)),
-        $text(newLocal)
       ),
       ww($seperator),
-      $text(style({}))(formatReadableUSD(pos.size))
+      $row(style({ gap: '2px', alignItems: 'center' }))(
+        $icon({
+          $content: $skull,
+          width: 12,
+          viewBox: '0 0 32 32',
+        }),
+        $text(newLocal)
+      )
     )
   })
 }
