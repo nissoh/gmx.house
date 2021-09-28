@@ -19,22 +19,17 @@ export const timespanPassedSinceInvoke = (timespan: number) => {
 
 export const cacheMap = (cacheMap: any) => async <T>(key: string, lifespan: number, cacheFn: () => Promise<T>): Promise<T> => {
   const cacheEntry = cacheMap[key]
+
   if (cacheEntry && !cacheMap[key].lifespanFn()) {
     return cacheEntry.item
   } else {
-
-    try {
-      const item = await cacheFn()
-      const lifespanFn = cacheMap[key]?.lifespanFn ?? timespanPassedSinceInvoke(lifespan)
-      lifespanFn()
-      cacheMap[key] = { item, lifespanFn }
-      return item
-    } catch (e) {
-      console.error(e)
-
-      return Promise.reject(e)
-    }
+    const item = cacheFn()
+    const lifespanFn = cacheMap[key]?.lifespanFn ?? timespanPassedSinceInvoke(lifespan)
+    lifespanFn()
+    cacheMap[key] = { item, lifespanFn }
+    return item
   }
+
 }
 
 export function httpRequest<T>(params: string | http.RequestOptions | URL, postData: any): Promise<T> {

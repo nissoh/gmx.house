@@ -65,7 +65,7 @@ export const pnlColumnTable = {
 
 export const entyColumnTable: TableColumn<IAggregatedPositionSummary> = {
   $head: $text('Entry'),
-  columnOp: O(style({ maxWidth: '65px', placeContent: 'center', flexDirection: 'column' }), layoutSheet.spacingTiny),
+  columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
 
   $body: map(({ isLong, indexToken, averagePrice }) => {
     const idx = Object.entries(ARBITRUM_CONTRACTS).find(([k, v]) => v === indexToken)?.[1]
@@ -78,22 +78,22 @@ export const entyColumnTable: TableColumn<IAggregatedPositionSummary> = {
     // @ts-ignore
     const $token = $tokenIconMap[idx]
 
-    return $row(style({ placeContent: 'center', alignItems: 'center' }))(
-      $column(layoutSheet.spacingTiny)(
-        $row(style({ position: 'relative', alignSelf: 'center' }))(
-          style({ borderRadius: '50%', padding: '3px', left: '-18px', top: '0', backgroundColor: pallete.background, position: 'absolute', offset: '0 0 0 0', })(
-            $icon({
-              $content: isLong ? $bull : $bear,
-              viewBox: '0 0 32 32',
-            })
-          ),
+    return $row(
+      $column(layoutSheet.spacingTiny, style({ alignSelf: 'flex-start' }))(
+        $row(style({ position: 'relative', flexDirection: 'row-reverse', alignSelf: 'center' }))(
           $icon({
             $content: $token,
             viewBox: '0 0 32 32',
             width: 24,
           }),
+          style({ borderRadius: '50%', padding: '3px', marginRight: '-5px', backgroundColor: pallete.background, })(
+            $icon({
+              $content: isLong ? $bull : $bear,
+              viewBox: '0 0 32 32',
+            })
+          ),
         ),  
-        $text(style({ fontSize: '.65em' }))(formatReadableUSD(averagePrice))
+        $text(style({ fontSize: '.65em', textAlign: 'center' }))(formatReadableUSD(averagePrice))
       )
     )
   })
@@ -102,7 +102,7 @@ export const entyColumnTable: TableColumn<IAggregatedPositionSummary> = {
 
 export const riskColumnTableWithLiquidationIndicator: TableColumn<IAggregatedPositionSummary> = {
   $head: $text('Risk'),
-  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
   $body: map((pos: IAggregatedPositionSummary) => {
 
     const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)

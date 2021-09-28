@@ -1,11 +1,17 @@
 
-import { awaitPromises, loop, map } from '@most/core'
-import { intervalInMsMap, ILeaderboardRequest, AccountHistoricalDataApi, IAccountAggregationMap, IAggregatedTradeListMap, toAggregatedAccountSummary, IAggregatedAccountSummary, IAggregatedTradeOpen, pageableQuery, IPagableResponse, IPageable, toAggregatedOpenTradeSummary, formatFixed } from 'gambit-middleware'
-import { cacheMap, timespanPassedSinceInvoke } from '../utils'
+import { awaitPromises, map } from '@most/core'
+import {
+  intervalInMsMap, ILeaderboardRequest, AccountHistoricalDataApi,
+  IAccountAggregationMap, toAggregatedAccountSummary, pageableQuery,
+  IPageable, toAggregatedOpenTradeSummary, formatFixed, IPageChainlinkPricefeed,
+  IAggregatedTradeSettledListMap, ITimerange, IAccountQueryParamApi,
+  IChainlinkPrice, IAggregatedTradeOpenListMap, IAggregatedTradeClosed, IIdentifiableEntity
+} from 'gambit-middleware'
+import { cacheMap } from '../utils'
 import { O } from '@aelea/utils'
-import { createClient, gql, OperationResult, TypedDocumentNode } from '@urql/core'
+import { gql, TypedDocumentNode } from '@urql/core'
 import fetch from 'isomorphic-fetch'
-import { DocumentNode } from 'graphql'
+import { prepareClient } from './common'
 
 
 const schemaFragments = `
@@ -72,10 +78,11 @@ fragment aggregatedTradeClosedFields on AggregatedTradeClosed {
   id
   account
 
+  indexedAt
+
   initialPositionBlockTimestamp
   initialPosition { ...increasePositionFields }
 
-  settledBlockTimestamp
   settledPosition {
     ...closePositionFields
   }
@@ -90,10 +97,13 @@ fragment aggregatedTradeClosedFields on AggregatedTradeClosed {
 
 fragment aggregatedTradeLiquidatedFields on AggregatedTradeLiquidated {
   id
+  indexedAt
+
   account
+
   initialPositionBlockTimestamp
   initialPosition { ...increasePositionFields }
-  settledBlockTimestamp
+
   settledPosition { ...liquidatePositionFields }
   initialPosition { ...increasePositionFields }
   increaseList { ...increasePositionFields }
@@ -103,57 +113,55 @@ fragment aggregatedTradeLiquidatedFields on AggregatedTradeLiquidated {
 
 fragment aggregatedTradeOpenFields on AggregatedTradeOpen {
   id
+  indexedAt
+
   account
+
   initialPosition { ...increasePositionFields }
   increaseList { ...increasePositionFields }
   decreaseList { ...decreasePositionFields }
   updateList { ...updatePositionFields }
 }
 
+fragment accountAggregationFields on AccountAggregation {
+  id
+  totalRealisedPnl
+
+  aggregatedTradeCloseds {
+    ...aggregatedTradeClosedFields
+  }
+  aggregatedTradeLiquidateds {
+    ...aggregatedTradeLiquidatedFields
+  }
+  aggregatedTradeOpens {
+    ...aggregatedTradeOpenFields
+  }
+}
+
 `
 
-const accountAggregationQuery = gql`
+const accountAggregationQuery: TypedDocumentNode<{accountAggregation: IAccountAggregationMap}, IPageable & ITimerange & IAccountQueryParamApi> = gql`
 ${schemaFragments}
 
-query ($account: ID = "", $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
+query ($account: ID, $from: Int = 0, $to: Int = 9e10,  $offset: Int = 0, $pageSize: Int = 1000) {
   accountAggregation(id: $account) {
-    id
-    totalRealisedPnl
-    aggregatedTradeCloseds (where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
-      ...aggregatedTradeClosedFields
-    }
-    aggregatedTradeLiquidateds (where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
-      ...aggregatedTradeLiquidatedFields
-    }
-    aggregatedTradeOpens {
-      ...aggregatedTradeOpenFields
-    }
+    ...accountAggregationFields
   }
 }
 
 `
 
-const accountListAggregationQuery = gql`
+const accountListAggregationQuery: TypedDocumentNode<{ accountAggregations: IAccountAggregationMap[] }, IPageable & ITimerange> = gql`
 ${schemaFragments}
 
-query ($timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10, $offset: Int = 20, $pageSize: Int = 20, $orderBy: AccountAggregation_orderBy = totalRealisedPnl, $orderDirection: OrderDirection = desc) {
+query ($from: Int = 0, $to: Int = 9e10, $offset: Int = 0, $pageSize: Int = 1000, $orderBy: AccountAggregation_orderBy = totalRealisedPnl, $orderDirection: OrderDirection = desc) {
   accountAggregations(first: $pageSize, skip: $offset, orderBy: $orderBy, orderDirection: $orderDirection) {
-    id
-    totalRealisedPnl
-    aggregatedTradeCloseds (where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
-      ...aggregatedTradeClosedFields
-    }
-    aggregatedTradeLiquidateds (where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
-      ...aggregatedTradeLiquidatedFields
-    }
-    aggregatedTradeOpens {
-      ...aggregatedTradeOpenFields
-    }
+    ...accountAggregationFields
   }
 }
 `
 
-const openAggregateTradesQuery = gql`
+const openAggregateTradesQuery: TypedDocumentNode<IAggregatedTradeOpenListMap> = gql`
 ${schemaFragments}
 
 query {
@@ -163,25 +171,52 @@ query {
 }
 `
 
-
-const aggregatedSettledTradesMapQuery = gql`
+const aggregatedSettledTradesMapQuery: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
 ${schemaFragments}
 
-query ($account: String = "0xba9366ce37aa833eab8f12d599977a16e470e34e", $offset: Int = 0, $timeStart: BigDecimal = 0, $timeEnd: BigDecimal = 9e10) {
-  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {settledBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
+  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {indexedAt_gt: $from, indexedAt_lt: $to}) {
       ...aggregatedTradeClosedFields
   }
-  aggregatedTradeLiquidateds(first: 1000, where: {initialPositionBlockTimestamp_gt: $timeStart, settledBlockTimestamp_lt: $timeEnd}) {
+  aggregatedTradeLiquidateds(first: 1000, where: {indexedAt_gt: $from, indexedAt_lt: $to}) {
     ...aggregatedTradeLiquidatedFields
+  }
+}
+`
+
+const aggregatedClosedTradeQuery: TypedDocumentNode<{aggregatedTradeClosed: IAggregatedTradeClosed}, IIdentifiableEntity> = gql`
+${schemaFragments}
+
+query ($id: String) {
+  aggregatedTradeClosed(id: $id) {
+      ...aggregatedTradeClosedFields
+  }
+}
+`
+
+const chainlinkPricefeedQuery: TypedDocumentNode<{rounds: IChainlinkPrice[]}, IPageChainlinkPricefeed> = gql`
+
+query ($feedAddress: String, $offset: Int = 0, $orderDirection: OrderDirection = desc, $orderBy: Round_orderBy = unixTimestamp) {
+  rounds(first: 1000, skip: $offset, orderBy: $orderBy, orderDirection: $orderDirection, where: { feed: $feedAddress }) {
+    unixTimestamp,
+    value
   }
 }
 
 `
 
 
-const client = createClient({
+
+const vaultClient = prepareClient({
   fetch: fetch as any,
   url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault',
+  requestPolicy: 'network-only'
+})
+
+
+const chainlinkClient = prepareClient({
+  fetch: fetch as any,
+  url: 'https://api.thegraph.com/subgraphs/name/deividask/chainlink',
   requestPolicy: 'network-only'
 })
 
@@ -190,31 +225,29 @@ const client = createClient({
 
 export const requestAccountAggregation = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
-    
-    const data = client.query(accountAggregationQuery, queryParams).toPromise()
-      .then((res: OperationResult<IAccountAggregationMap>) => {
-        if (res.data) {
-          return res.data
-        } else {
-          return Promise.reject(`Unable to query data: ${res.error?.message}`)
-        }
-      })
 
-    return data
+    const now = Date.now()
+    const start = now - queryParams.timeInterval
+    const from = Math.floor(start / 1000)
+    const to = Math.floor(Date.now() / 1000)
+    const account = queryParams.account
+    
+    const data = await vaultClient(accountAggregationQuery, { from, to, account, offset: 0, pageSize: 1000 })
+    return data.accountAggregation
   }),
   awaitPromises
 )
 
 export const requestAggregatedSettledTradeList = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
+    const now = Date.now()
 
-    const [timeStart = 0, timeEnd = Infinity] = queryParams.timeRange || []
-    const account = 'account' in queryParams ? queryParams.account : ''
-    const params = { timeStart: timeStart / 1000, timeEnd: timeEnd / 1000, account: account ?? '' }
+    const from = Math.floor(now - queryParams.timeInterval / 1000)
+    const to = Math.floor(Date.now() / 1000)
 
-    const allAccounts = queryGraph(aggregatedSettledTradesMapQuery, params).then(toAggregatedAccountSummary)
-
-    return allAccounts
+    const allAccounts = await vaultClient(aggregatedSettledTradesMapQuery, { from, to, offset: 0, pageSize: 1000 })
+    
+    return toAggregatedAccountSummary(allAccounts)
   }),
   awaitPromises
 )
@@ -226,10 +259,12 @@ export const requestLeaderboardTopList = O(
     const now = Date.now()
 
     const timeStart = now - queryParams.timeInterval
-    const params = { timeStart: Math.floor(timeStart / 1000), timeEnd: Math.floor(now / 1000) }
+    const from = Math.floor(timeStart / 1000)
+    const to = Math.floor(now / 1000)
+    
 
-    const fethPage = async (offset: number): Promise<any> => {
-      const list = await queryGraph(aggregatedSettledTradesMapQuery, { ...params, offset })
+    const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
+      const list = await vaultClient(aggregatedSettledTradesMapQuery, { from, to, pageSize: 1000, offset })
 
       if (list.aggregatedTradeCloseds.length === 1000) {
         const newPage = await fethPage(offset + 1000)
@@ -255,26 +290,18 @@ export const requestLeaderboardTopList = O(
 )
 
 export const requestAccountListAggregation = O(
-  loop((seed, queryParams: ILeaderboardRequest) => {
+  map(async (queryParams: ILeaderboardRequest) => {
 
-    // const cacheTimespanPasses = seed.cacheAgeFn()
+    const now = Date.now()
 
-    // if (!cacheTimespanPasses) {
-    //   return { seed, value: seed.cache }
-    // }
+    const timeStart = now - queryParams.timeInterval
+    const from = Math.floor(timeStart / 1000)
+    const to = Math.floor(now / 1000)
 
-    const allAccounts = queryGraph(accountListAggregationQuery, queryParams).then(res => {
-      return toAggregatedAccountSummary(res.accountAggregations)
-    })
-  
-    seed.cache = allAccounts
+    const allAccounts = await vaultClient(accountListAggregationQuery, { from, to, offset: 0, pageSize: 1000 })
 
-    return {
-      seed,
-      value: allAccounts
-    }
-
-  }, { cache: Promise.resolve([]) as Promise<IAggregatedAccountSummary[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
+    return allAccounts.accountAggregations
+  }),
   awaitPromises
 )
 
@@ -284,8 +311,8 @@ export const requestOpenAggregatedTrades = O(
 
     const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
       console.log('fetching open positions')
-      const list = await queryGraph(openAggregateTradesQuery, {})
-      const sortedList = (list.aggregatedTradeOpens as IAggregatedTradeOpen[])
+      const list = await vaultClient(openAggregateTradesQuery, {})
+      const sortedList = list.aggregatedTradeOpens
         // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')
         .map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
       return sortedList
@@ -301,59 +328,29 @@ export const requestOpenAggregatedTrades = O(
 )
 
 
-// export const tournament = O(
-//   loop((seed, s: string) => {
 
-//     const cacheTimespanPasses = seed.cacheAgeFn()
+export const requestChainlinkPricefeed = O(
+  map(async (queryParams: IPageChainlinkPricefeed) => {
+    console.log(queryParams)
 
-//     if (!cacheTimespanPasses) {
-//       return { seed, value: seed.cache }
-//     }
+    const priceFeedQuery = await chainlinkClient(chainlinkPricefeedQuery, queryParams)
 
-//     const start = Date.UTC(2021, 5, 14, 12, 0, 0, 0)
-//     const end = Date.UTC(2021, 5, 30, 12, 0, 0, 0)
-//     const allAccounts = getAggratedSettledTrades({ timeRange: [start, end] })
-
-//     seed.cache = allAccounts
-
-//     return {
-//       seed,
-//       value: allAccounts
-//     }
-//   }, { cache: Promise.resolve([]) as Promise<AggregatedTradeSettled[]>, cacheAgeFn: timespanPassedSinceInvoke(intervalInMsMap.MIN15) }),
-//   awaitPromises
-// )
-
-async function queryGraph<Data = any, Variables extends object = {}>(
-  document: DocumentNode | TypedDocumentNode<Data, Variables> | string,
-  params: Variables
-) {
-
-  const data = client.query(document, params)
-    .toPromise()
-    .then((res) => {
-      if (res.data) {
-        return res.data
-      } else {
-        return Promise.reject(`Unable to query data: ${res.error?.message}`)
-      }
-    })
-
-  return data
-}
+    return priceFeedQuery.rounds
+  }),
+  awaitPromises
+)
 
 
 
+export const requestAggregatedSettleTrade = O(
+  map(async (queryParams: IIdentifiableEntity) => {
 
-// leaderboardApi.post('/liquidations', async (req, res) => {
-//   const queryParams: HistoricalDataApi = req.body
+    const priceFeedQuery = await vaultClient(aggregatedClosedTradeQuery, queryParams)
+    return priceFeedQuery.aggregatedTradeClosed
+  }),
+  awaitPromises
+)
 
-//   const modelList = await EM.find(
-//     dto.PositionLiquidated, {
-//       createdAt: getTimespanParams(queryParams),
-//     })
-//   res.json(modelList)
-// })
 
 
 

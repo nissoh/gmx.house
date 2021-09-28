@@ -1,12 +1,12 @@
 import {
   IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
-  IPositionUpdate, IBaseEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeListMap, IAggregatedPositionSummary, IAggregatedTradeSummary
+  IPositionUpdate, IIdentifiableEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpenListMap, IAggregatedPositionSummary, IAggregatedTradeSummary, IAggregatedTradeSettledListMap
 } from "gambit-middleware"
 
 
 
 
-function baseEntityJson<T extends  IBaseEntity>(json: T): T {
+function baseEntityJson<T extends  IIdentifiableEntity>(json: T): T {
   return { ...json }
 }
 
@@ -71,37 +71,40 @@ export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregated
 
 // IAggregatedTradeOpen
 export function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: T): T {
+  const indexedAt = Math.floor(json.indexedAt * 1000)
+
   const decreaseList = json.decreaseList?.map(positionDecreaseJson) || []
   const increaseList = json.increaseList?.map(positionIncreaseJson) || []
   const updateList = json.updateList?.map(positionUpdateJson) || []
   const initialPosition = positionIncreaseJson(json.initialPosition)
-  const initialPositionBlockTimestamp = json.initialPositionBlockTimestamp * 1000
 
-  return { ...json, initialPositionBlockTimestamp, decreaseList, increaseList, updateList, initialPosition }
+  return { ...json, indexedAt, decreaseList, increaseList, updateList, initialPosition }
 }
 
 export function toAggregatedTradeClosedJson(json: IAggregatedTradeClosed): IAggregatedTradeClosed {
-  const settledPosition = positonCloseJson(json.settledPosition)
-  const settledBlockTimestamp = json.settledBlockTimestamp * 1000
-  const initialPositionBlockTimestamp = json.initialPositionBlockTimestamp * 1000
+  const indexedAt = Math.floor(json.indexedAt * 1000)
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp, initialPositionBlockTimestamp }
+  const settledPosition = positonCloseJson(json.settledPosition)
+  const initialPositionBlockTimestamp = Math.floor(json.initialPositionBlockTimestamp * 1000)
+
+  return { ...toAggregatedTradeOpenJson(json), settledPosition, initialPositionBlockTimestamp, indexedAt }
 }
 
 export function toAggregatedTradeLiquidatedJson(json: IAggregatedTradeLiquidated): IAggregatedTradeLiquidated {
-  const settledPosition = positionLiquidatedJson(json.settledPosition)
-  const settledBlockTimestamp = json.settledBlockTimestamp * 1000
-  const initialPositionBlockTimestamp = json.initialPositionBlockTimestamp * 1000
+  const indexedAt = Math.floor(json.indexedAt * 1000)
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, settledBlockTimestamp, initialPositionBlockTimestamp }
+  const settledPosition = positionLiquidatedJson(json.settledPosition)
+  const initialPositionBlockTimestamp = Math.floor(json.initialPositionBlockTimestamp * 1000)
+
+  return { ...toAggregatedTradeOpenJson(json), settledPosition, initialPositionBlockTimestamp, indexedAt }
 }
 
-export function toAggregatedTradeListJson<T extends IAggregatedTradeListMap>(json: T): T {
+export function toAggregatedTradeListJson<T extends IAggregatedTradeSettledListMap>(json: T): T {
   const aggregatedTradeCloseds = json.aggregatedTradeCloseds?.map(toAggregatedTradeClosedJson) || []
   const aggregatedTradeLiquidateds = json.aggregatedTradeLiquidateds?.map(toAggregatedTradeLiquidatedJson) || []
-  const aggregatedTradeOpens = json.aggregatedTradeOpens?.map(toAggregatedTradeOpenJson) || []
+  // const aggregatedTradeOpens = json.aggregatedTradeOpens?.map(toAggregatedTradeOpenJson) || []
 
-  return { ...json, aggregatedTradeCloseds, aggregatedTradeLiquidateds, aggregatedTradeOpens }
+  return { ...json, aggregatedTradeCloseds, aggregatedTradeLiquidateds }
 }
 
 export function toAccountAggregationJson(json: IAccountAggregationMap): IAccountAggregationMap {

@@ -2,28 +2,28 @@ specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
-  - kind: ethereum/contract
-    name: glpManager
-    network: arbitrum-one
-    source:
-      address: "0x321F653eED006AD1C29D174e17d96351BDe22649"
-      abi: glpManager
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.2
-      language: wasm/assemblyscript
-      entities:
-        - AddLiquidity
-        - RemoveLiquidity
-      abis:
-        - name: glpManager
-          file: ../contracts/artifacts/contracts/core/GlpManager.sol/GlpManager.json
-      eventHandlers:
-        - event: AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
-          handler: handleAddLiquidity
-        - event: RemoveLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
-          handler: handleRemoveLiquidity
-      file: ./src/mapping.ts
+  # - kind: ethereum/contract
+  #   name: glpManager
+  #   network: arbitrum-one
+  #   source:
+  #     address: "0x321F653eED006AD1C29D174e17d96351BDe22649"
+  #     abi: glpManager
+  #   mapping:
+  #     kind: ethereum/events
+  #     apiVersion: 0.0.2
+  #     language: wasm/assemblyscript
+  #     entities:
+  #       - AddLiquidity
+  #       - RemoveLiquidity
+  #     abis:
+  #       - name: glpManager
+  #         file: ../contracts/artifacts/contracts/core/GlpManager.sol/GlpManager.json
+  #     eventHandlers:
+  #       - event: AddLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
+  #         handler: handleAddLiquidity
+  #       - event: RemoveLiquidity(address,address,uint256,uint256,uint256,uint256,uint256)
+  #         handler: handleRemoveLiquidity
+  #     file: ./src/mapping.ts
   - kind: ethereum/contract
     name: gmxVault
     network: arbitrum-one

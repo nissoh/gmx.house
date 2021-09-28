@@ -30,7 +30,7 @@ export interface IAccount {
 const INTERVAL_TICKS = 140
 
 
-export const $Profile = (config: IAccount) => component((
+export const $Portfolio = (config: IAccount) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
   [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, Token>,
@@ -75,7 +75,7 @@ export const $Profile = (config: IAccount) => component((
 
   const historicalPnl = multicast(
     combineArray((historicalData, interval) => {
-      return historicalPnLMetric(historicalData, interval, INTERVAL_TICKS)
+      return historicalPnLMetric([...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds], interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
 
@@ -340,7 +340,7 @@ export const $Profile = (config: IAccount) => component((
         $column(
           switchLatest(
             combineArray((pnlData, activeToken) => {
-              const tokens = groupByMapMany(pnlData.aggregatedTradeCloseds, pos => pos.initialPosition.indexToken)
+              const tokens = groupByMapMany([...pnlData.aggregatedTradeCloseds, ...pnlData.aggregatedTradeLiquidateds], pos => pos.initialPosition.indexToken)
 
               const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
                 const token = TOKEN_ADDRESS_MAP.get(contract as ARBITRUM_CONTRACTS)!
@@ -375,6 +375,7 @@ export const $Profile = (config: IAccount) => component((
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
+              
               dataSource: map((data) => {
 
                 const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
@@ -414,8 +415,8 @@ export const $Profile = (config: IAccount) => component((
 
                     return $column(style({ fontSize:'.65em' }))(
                       $column(style({ position: 'relative' }))(
-                        $text(timeSince(new Date(pos.startTimestamp))),
-                        $text(new Date(pos.startTimestamp).toLocaleDateString("en-US")),
+                        $text(timeSince(new Date(pos.settledTimestamp))),
+                        $text(new Date(pos.settledTimestamp).toLocaleDateString("en-US")),
                       ),
                     )
                   })
@@ -492,28 +493,26 @@ export const $Profile = (config: IAccount) => component((
 
 
                 setTimeout(() => {
-                  const fstTick = historicKline[0]
-                  const increasePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
+                  const increasePosMarkers = [...accountHistoryPnL.aggregatedTradeCloseds, ...accountHistoryPnL.aggregatedTradeLiquidateds]
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken)
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pos.initialPosition.isLong ? pallete.positive : pallete.negative,
                         position: "aboveBar",
                         shape: pos.initialPosition.isLong ? 'arrowUp' : 'arrowDown',
-                        time: timeTzOffset(pos.initialPositionBlockTimestamp),
+                        time: timeTzOffset(pos.indexedAt),
                       }
                     })
                   const closePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !('markPrice' in pos.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
-                      // const fee = getPositionMarginFee(pos.settledPosition.size)
 
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
                         text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl),
-                        time: timeTzOffset(pos.settledBlockTimestamp),
+                        time: timeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
                   const liquidatedPosMarkers = accountHistoryPnL.aggregatedTradeLiquidateds
@@ -524,7 +523,7 @@ export const $Profile = (config: IAccount) => component((
                         position: "belowBar",
                         shape: 'square',
                         text: '$-' + formatReadableUSD(pos.settledPosition!.collateral),
-                        time: timeTzOffset(pos.settledBlockTimestamp),
+                        time: timeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
                   
@@ -582,7 +581,12 @@ export const $Profile = (config: IAccount) => component((
       )
     ),
 
-    { requestAccountAggregation: now({ account: accountAddress, timeRange: [Date.now() - timeFrameStore.state * INTERVAL_TICKS, Date.now()] }) as Stream<AccountHistoricalDataApi> }
+    {
+      requestAccountAggregation: now({
+        account: accountAddress,
+        timeInterval: timeFrameStore.state * INTERVAL_TICKS
+      }) as Stream<AccountHistoricalDataApi>
+    }
   ]
 })
 

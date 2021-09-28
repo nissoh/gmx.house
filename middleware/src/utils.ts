@@ -2,8 +2,8 @@ import { intervalInMsMap, USD_DECIMALS } from "./constant"
 import { CHAIN } from "./provider"
 import { IPagableResponse, IPageable } from "./types"
 
-export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/
-export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/
+export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/i
+export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/i
 export const VALID_FRACTIONAL_NUMBER_REGEXP = /^-?(0|[1-9]\d*)(\.\d+)?$/
 
 const EMPTY_MESSAGE = '-'
@@ -256,7 +256,7 @@ type TimelineTime = {
 }
 
 export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
-  interval: intervalInMsMap, fillMap: (next: T) => R, fillGapMap: (prev: R) => R, squashMap: (prev: R, next: T) => R = fillGapMap
+  interval: intervalInMsMap, fillMap: (next: T) => R, fillGapMap: (prev: R, next: T) => R, squashMap: (prev: R, next: T) => R = fillGapMap
 ) {
   return (timeline: R[], next: T) => {
     const lastIdx = timeline.length - 1
@@ -268,7 +268,7 @@ export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
       const barSpanCeil = Math.ceil(barSpan)
 
       for (let index = 1; index < barSpanCeil; index++) {
-        timeline.push({ ...fillGapMap(prev), time: prev.time + interval * index })
+        timeline.push({ ...fillGapMap(prev, next), time: prev.time + interval * index })
       }
 
       const time = timeline[timeline.length - 1].time + interval

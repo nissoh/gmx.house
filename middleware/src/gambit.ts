@@ -109,7 +109,7 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
   const cumulativeAccountData: IAggregatedPositionSummary = {
     account: agg.account,
     indexToken: agg.initialPosition.indexToken as ARBITRUM_CONTRACTS,
-    startTimestamp: agg.initialPositionBlockTimestamp,
+    startTimestamp: agg.indexedAt,
     size: 0n, collateral: 0n, fee: 0n,
     averagePrice: 0n,
     isLong: agg.initialPosition.isLong,
@@ -141,7 +141,8 @@ export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggreg
 export function toAggregatedTradeSettledSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedPositionSettledSummary {
   const cumulativeAccountData: IAggregatedPositionSettledSummary = {
     ...toAggregatedOpenTradeSummary(agg),
-    pnl: 0n
+    pnl: 0n,
+    settledTimestamp: agg.initialPositionBlockTimestamp,
   }
 
   const isLiquidated = 'markPrice' in agg.settledPosition
@@ -179,7 +180,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
       pnl: realisedPnl,
       size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n),
-      averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length)
+      averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length),
     }
 
     seed.push(summary)
@@ -191,17 +192,16 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
 }
 
 
-export function historicalPnLMetric(historicalData: IAccountAggregationMap, interval: intervalInMsMap, ticks: number) {
+export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggregatedTradeLiquidated>, interval: intervalInMsMap, ticks: number, endtime = Date.now()) {
   let accumulated = 0
-  const now = Date.now()
 
-  const initialDataStartTime = now - interval * ticks
-  const closedPosList = [...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds]
+  const initialDataStartTime = endtime - interval * ticks
+  const closedPosList = list
   // .filter(t => t.settledPosition)
     .map(aggTrade => {
 
       const summary = toAggregatedTradeSettledSummary(aggTrade)
-      const time = aggTrade.settledBlockTimestamp
+      const time = aggTrade.initialPositionBlockTimestamp
       const value = formatFixed(summary.pnl, USD_DECIMALS)
 
       return { value, time }
@@ -217,7 +217,7 @@ export function historicalPnLMetric(historicalData: IAccountAggregationMap, inte
 
 
   if (sortedParsed.length) {
-    sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: now as UTCTimestamp })
+    sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: endtime as UTCTimestamp })
   }
 
 

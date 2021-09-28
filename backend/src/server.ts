@@ -5,7 +5,7 @@ import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
 import ws from 'ws'
-import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
+import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestAggregatedSettleTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { accountApi } from './logic/account'
 import { openGraphScreenshot } from './logic/linkOGShot'
 import { helloFrontend } from './messageBus'
@@ -83,6 +83,8 @@ const apiComponent = helloFrontend(wss, {
   requestOpenAggregatedTrades,
   requestAccountListAggregation,
   requestLeaderboardTopList,
+  requestChainlinkPricefeed,
+  requestAggregatedSettleTrade,
 })
 
 
