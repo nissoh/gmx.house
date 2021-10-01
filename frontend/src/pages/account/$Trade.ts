@@ -303,6 +303,8 @@ export const $Trade = (config: ITrade) => component((
                   })
                 }
 
+
+
                 if (data.length > 10) {
                 
                   if (low.value !== high.value) {
@@ -333,6 +335,13 @@ export const $Trade = (config: ITrade) => component((
                         })
 
                       series.setMarkers([...increaseMarkers, ...decreaseMarkers])
+
+                      series.applyOptions({
+                        scaleMargins: {
+                          top: 0.6,
+                          bottom: 0
+                        }
+                      })
 
                     }, 50)
                   }
