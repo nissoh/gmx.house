@@ -14,7 +14,13 @@ import { $bear, $bull } from "../../elements/$icons"
 import { $leverage, $seperator } from "../../elements/$common"
 import { filterByIndexToken, priceChange } from "../common"
 
-
+interface IWWW {
+  delta: bigint;
+  deltaPercentage: bigint;
+  value: number;
+  time: number;
+  price: bigint;
+}
 
 export interface ITrade {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
@@ -38,6 +44,7 @@ export const $Trade = (config: ITrade) => component((
 
   const settledPosition = multicast(config.aggregatedTrade)
   const tradeSummary = multicast(map(toAggregatedOpenTradeSummary, settledPosition))
+
 
   
   const parsedPricefeed = map(feed => {
@@ -64,7 +71,7 @@ export const $Trade = (config: ITrade) => component((
       time: number;
     }
     
-    function getVal(priceFeed: feedValue) {
+    function getVal(priceFeed: feedValue): IWWW {
       const matchedIncreaseIdx = trade.updateList.findIndex((ip, idx) =>
         trade.updateList[trade.updateList.length - idx - 1].indexedAt <= priceFeed.time
       )
@@ -72,29 +79,35 @@ export const $Trade = (config: ITrade) => component((
       const updateIdx = (trade.updateList.length - 1) + -matchedIncreaseIdx
       const pos = trade.updateList[updateIdx]
       const delta = calculatePositionDelta(priceFeed.value, trade.initialPosition.isLong, pos)
-      const val = formatFixed((delta.delta), 30)
+      const value = formatFixed((delta.delta), 30)
       // const val = formatFixed((delta.hasProfit ? delta.delta : -delta.delta) - summary.fee, 30)
 
-      return val
+      return { value, time: priceFeed.time, price: priceFeed.value, ...delta }
     }
     
-    
+    const initialTick: IWWW = {
+      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary.trade.updateList[0]),
+      time: startTime,
+      price: pricefeed[0].value,
+      value: 0
+    }
+
 
     const filled = pricefeed
       .reduce(
         fillIntervalGap(
           intervalTime,
           (priceFeed) => {
-            return { time: priceFeed.time, price: priceFeed.value, value: getVal(priceFeed) }
+            return getVal(priceFeed)
           },
           (prev, priceFeed) => {
-            return { time: priceFeed.time, price: priceFeed.value, value: getVal(priceFeed) }
+            return getVal(priceFeed)
           },
           (prev, priceFeed) => {
-            return { ...prev, time: prev.time, price: priceFeed.value, value: getVal(priceFeed) }
+            return { ...getVal(priceFeed), time: prev.time }
           }
         ),
-        [{ time: startTime, value: 0, price: pricefeed[0].value }] as { time: number; value: number, price: bigint} []
+        [initialTick]
       )
       // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
 
@@ -109,48 +122,19 @@ export const $Trade = (config: ITrade) => component((
   const pnlCrosshairMoveMode = skipRepeats(map(hasSeriesFn, pnlCrosshairMove))
   const pnlCrossHairChange = filter(hasSeriesFn, pnlCrosshairMove)
 
-  const chartPnLCounter = switchLatest(combineArray((mode, summary, historicPnl) => {
+  const chartPnLCounter = multicast(switchLatest(combineArray((mode, summary, historicPnl) => {
     const newLocal = mode
       ? map((cross) => {
-        // const series = cross?.seriesPrices
-        // const next = series?.entries()?.next()
-
-        // const historicPrice = parseFixed(next.value[1], 30)
-        // const deltaPercentage = formatFixed(historicPrice * BASIS_POINTS_DIVISOR / summary.collateral, 2)
-        const spot = historicPnl.find(tick => cross.time === tick.time)!
-        const posDelta = calculatePositionDelta(spot?.price, summary.isLong, summary)
-
-        return posDelta
+        const aaa = historicPnl.find(tick => cross.time === tick.time)!
+        // const newLocal_1 = aaa.price
+        return aaa
       }, pnlCrossHairChange)
       : 'settledPosition' in summary.trade
-        ? map(summary => {
-          // const trade: IAggregatedTradeSettledAll = (summary as IAggregatedPositionSettledSummary).trade
-
-          // const settledSummary = toAggregatedTradeSettledSummary(trade)
-
-          // const delta = settledSummary.pnl - settledSummary.fee
-          // const deltaPercentage = delta * BASIS_POINTS_DIVISOR / settledSummary.collateral
-          // const fixedPnl = formatFixed(deltaPercentage, 2)
-
-          const lastFeedPrice = historicPnl[historicPnl.length - 1]
-          const posDelta = calculatePositionDelta(lastFeedPrice.price, summary.isLong, summary)
-
-          return posDelta
-
-        }, now(summary))
-        : map((price) => {
-          const markPrice = parseFixed(price.p, 30)
-          const posDelta = calculatePositionDelta(markPrice, summary.isLong, summary)
-
-          return posDelta
-
-          // return formatFixed(posDelta.hasProfit ? posDelta.deltaPercentage : -posDelta.deltaPercentage, 2)
-        }, filterByIndexToken(summary)(priceChange))
+        ? map(x => calculatePositionDelta(historicPnl[historicPnl.length - 1].price, summary.isLong, summary), now(null))
+        : map((price) => calculatePositionDelta(parseFixed(price.p, 30), summary.isLong, summary), filterByIndexToken(summary)(priceChange))
     
     return newLocal
-  }, startWith(false, pnlCrosshairMoveMode), tradeSummary, historicPnL))
-
-
+  }, startWith(false, pnlCrosshairMoveMode), tradeSummary, historicPnL)))
 
 
 
@@ -172,7 +156,7 @@ export const $Trade = (config: ITrade) => component((
     $container(
 
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
-        $column(style({ position: 'relative', width: '720px', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
+        $column(style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
 
           $column(
             switchLatest(
@@ -288,6 +272,7 @@ export const $Trade = (config: ITrade) => component((
 
                 // @ts-ignore
                 series.setData(data)
+                
 
                 const high = data[data.reduce((seed, b, idx) => b.value > data[seed].value ? idx : seed, Math.min(6, data.length - 1))]
                 const low = data[data.reduce((seed, b, idx) => b.value <= data[seed].value ? idx : seed, 0)]
@@ -336,12 +321,7 @@ export const $Trade = (config: ITrade) => component((
 
                       series.setMarkers([...increaseMarkers, ...decreaseMarkers])
 
-                      series.applyOptions({
-                        scaleMargins: {
-                          top: 0.6,
-                          bottom: 0
-                        }
-                      })
+   
 
                     }, 50)
                   }
@@ -350,7 +330,7 @@ export const $Trade = (config: ITrade) => component((
 
                 series.applyOptions({
                   scaleMargins: {
-                    top: .45,
+                    top: 0.6,
                     bottom: 0
                   }
                 })
@@ -376,7 +356,7 @@ export const $Trade = (config: ITrade) => component((
               }),
             })({
               crosshairMove: pnlCrosshairMoveTether(
-                skipRepeatsWith((a, b) => a.point?.x === b.point?.x),
+                // skipRepeatsWith((a, b) => a.point?.x === b.point?.x),
                 multicast
               )
             })
