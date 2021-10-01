@@ -1,15 +1,14 @@
 import { http } from "@aelea/ui-components"
-import { filter, fromPromise, map, merge, multicast, now, skipRepeatsWith, switchLatest, throttle } from "@most/core"
-import { ARBITRUM_CONTRACTS, intervalInMsMap, timeTzOffset, TOKEN_SYMBOL } from "gambit-middleware"
-import { BarData, UTCTimestamp } from "lightweight-charts"
+import { filter, multicast, now, skipRepeatsWith } from "@most/core"
+import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, intervalInMsMap, TOKEN_SYMBOL } from "gambit-middleware"
 
 
 
 export const PRICE_EVENT_TICKER_MAP = {
-  [ARBITRUM_CONTRACTS.WBTC]: 'BTCUSDT',
-  [ARBITRUM_CONTRACTS.WETH]: 'ETHUSDT',
-  [ARBITRUM_CONTRACTS.LINK]: 'LINKUSDT',
-  [ARBITRUM_CONTRACTS.UNI]: 'UNIUSDT',
+  [ARBITRUM_TRADEABLE_ADDRESS.WBTC]: 'BTCUSDT',
+  [ARBITRUM_TRADEABLE_ADDRESS.WETH]: 'ETHUSDT',
+  [ARBITRUM_TRADEABLE_ADDRESS.LINK]: 'LINKUSDT',
+  [ARBITRUM_TRADEABLE_ADDRESS.UNI]: 'UNIUSDT',
 } as const
 
 
@@ -88,7 +87,7 @@ export async function fetchHistoricKline(symbol: TOKEN_SYMBOL, params: IBinanceA
       low: Number(low),
       close: Number(close),
       open: Number(open),
-      time,
+      time: time / 1000 | 0,
       high: Number(high),
     }
   })

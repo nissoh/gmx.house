@@ -1,5 +1,5 @@
 import { $Node, $svg, attr } from "@aelea/dom"
-import { ARBITRUM_CONTRACTS } from "gambit-middleware"
+import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS } from "gambit-middleware"
 
 
 interface Icon {
@@ -52,10 +52,10 @@ export const $eth = $svg('g')(
 
 
 export const $tokenIconMap = {
-  [ARBITRUM_CONTRACTS.WBTC]: $btc,
-  [ARBITRUM_CONTRACTS.WETH]: $eth,
-  [ARBITRUM_CONTRACTS.USDC]: $usd,
-  [ARBITRUM_CONTRACTS.UNI]: $uni,
-  [ARBITRUM_CONTRACTS.LINK]: $link,
+  [ARBITRUM_TRADEABLE_ADDRESS.WBTC]: $btc,
+  [ARBITRUM_TRADEABLE_ADDRESS.WETH]: $eth,
+  [ARBITRUM_ADDRESS.USDC]: $usd,
+  [ARBITRUM_TRADEABLE_ADDRESS.UNI]: $uni,
+  [ARBITRUM_TRADEABLE_ADDRESS.LINK]: $link,
 }
 

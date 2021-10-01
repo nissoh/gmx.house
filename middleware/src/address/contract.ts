@@ -1,7 +1,15 @@
 
 
+export enum ARBITRUM_TRADEABLE_ADDRESS {
+  WETH = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+  WBTC = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
+  LINK = "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+  UNI = "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0",
+}
 
-export enum ARBITRUM_CONTRACTS {
+// TOKEN_SYMBOL.ETH | TOKEN_SYMBOL.BTC | TOKEN_SYMBOL.UNI | TOKEN_SYMBOL.LINK
+
+export enum ARBITRUM_ADDRESS {
   Vault = "0x489ee077994B6658eAfA855C308275EAd8097C4A",
   Router = "0xaBBc5F99639c9B6bCb58544ddf04EFA6802F4064",
   Reader = "0xbD8F00AabeC361ce52486431433FB196c53C5101",
@@ -33,35 +41,14 @@ export enum ARBITRUM_CONTRACTS {
   // Tokens
 
   ETH = "0x0000000000000000000000000000000000000000",
-  WETH = "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
-  WBTC = "0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f",
-  LINK = "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
-  UNI = "0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0",
+
 
   USDC = "0xff970a61a04b1ca14834a43f5de4533ebddb5cc8",
   USDT = "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
-
 }
 
-
-    
-    
-    
-    
-    
-    
-    
     
 
     
     
   
-
-
-
-
-
-
-
-
-

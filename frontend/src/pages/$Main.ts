@@ -14,8 +14,7 @@ import { $anchor } from '../elements/$common'
 import { $Account } from './account/$Account'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedPositionSummary, IPageChainlinkPricefeed, IAccountAggregationMap, IIdentifiableEntity } from 'gambit-middleware'
-import { accountSummaryJson, toAccountAggregationJson, toAggregatedPositionSummary } from '../logic/utils'
+import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedOpenPositionSummary, IPageChainlinkPricefeed, IAccountAggregationMap, IIdentifiableEntity, fromJson } from 'gambit-middleware'
 import { $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior } from "@aelea/core"
@@ -42,7 +41,7 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
-  [requestAggregatedSettleTrade, requestAggregatedSettleTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
+  [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   // [accountAggregationQuery, accountAggregationQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
@@ -59,9 +58,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
-  // const tournamentRoute = pagesRoute.create({ fragment: 'tournament', title: 'Gambit Tournament' })
-  const portfolioRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
-  const tradeRoute = pagesRoute.create({ fragment: 'trade', title: 'Trade' })
+  const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   const cardRoute = rootRoute.create({
     fragment: 'card',
@@ -79,7 +76,7 @@ export default ({ baseRoute = '' }: Website) => component((
     requestLeaderboardTopList,
     requestOpenAggregatedTrades,
     requestChainlinkPricefeed,
-    requestAggregatedSettleTrade,
+    requestAggregatedTrade,
     // requestAccountListAggregation,
   })
 
@@ -149,9 +146,9 @@ export default ({ baseRoute = '' }: Website) => component((
               $Leaderboard({
                 parentRoute: rootRoute,
                 parentStore: rootStore,
-                openAggregatedTrades: map((x: IPagableResponse<IAggregatedPositionSummary>) => ({ ...x, page: x.page.map(toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
+                openAggregatedTrades: map((x: IPagableResponse<IAggregatedOpenPositionSummary>) => ({ ...x, page: x.page.map(fromJson.toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
                 requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
-                  page: data.page.map(accountSummaryJson),
+                  page: data.page.map(fromJson.accountSummaryJson),
                   offset: data.offset,
                   pageSize: data.pageSize
                 }), clientApi.requestLeaderboardTopList),
@@ -166,24 +163,25 @@ export default ({ baseRoute = '' }: Website) => component((
             //     tournamentQuery: tournamentQueryTether()
             //   })
             // ),
-            router.contains(portfolioRoute)(
+            router.contains(accountRoute)(
               $Account({
-                parentRoute: portfolioRoute,
+                parentRoute: accountRoute,
                 parentStore: rootStore,
-                aggregatedTradeList: map((res: IAccountAggregationMap) => toAccountAggregationJson(res), clientApi.requestAccountAggregation),
-                settledPosition: clientApi.requestAggregatedSettleTrade,
+                aggregatedTradeList: map(fromJson.toAccountAggregationJson, clientApi.requestAccountAggregation),
+                settledPosition: clientApi.requestAggregatedTrade,
                 chainlinkPricefeed: clientApi.requestChainlinkPricefeed
               })({
-                requestAggregatedSettleTrade: requestAggregatedSettleTradeTether(),
+                requestAggregatedTrade: requestAggregatedTradeTether(),
                 requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
                 requestAccountAggregation: requestAccountAggregationTether(),
+                changeRoute: linkClickTether()
               })
             ),
           )
         ),
       ),
       
-      router.contains(cardRoute)(
+      router.match(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
           // $Card({
           //   parentRoute: cardRoute,

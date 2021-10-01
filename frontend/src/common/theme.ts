@@ -32,8 +32,8 @@ const dark: Theme = {
     middleground: '#502b86',
     foreground: '#8c96a7',
 
-    positive: '#91fbad',
-    negative: '#ff3e29',
+    positive: '#38E567',
+    negative: '#FA4333',
     indeterminate: '#dccb07',
   }
 }

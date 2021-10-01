@@ -34,7 +34,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
   
   const api = createChart(containerEl, {
     rightPriceScale: {
-      visible: false
+      visible: false,
     },
     handleScale: {
           
@@ -53,17 +53,24 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
       borderVisible: false,
     },
     leftPriceScale: {
-      visible: false
+      visible: false,
+      scaleMargins: {
+        bottom: 0,
+        top: 0,
+      }
     },
     layout: {
       textColor: pallete.message,
       backgroundColor: 'transparent',
-      fontFamily: 'Nunito'
+      fontFamily: 'Nunito',
+
     },
     timeScale: {
+      rightOffset: 0,
       secondsVisible: true,
       timeVisible: true,
-      lockVisibleTimeRangeOnResize: true
+      lockVisibleTimeRangeOnResize: true,
+      
     },
     crosshair: {
       horzLine: {

@@ -104,7 +104,9 @@ export function formatFixed(value: bigint, decimals = 18): number {
   return Number(parsedValue)
 }
 
-export function parseFixed (value: string, decimals = 18) {
+export function parseFixed(input: string | number, decimals = 18) {
+  let value = typeof input === 'number' ? String(input) : input
+
   const multiplier = getMultiplier(decimals)
   const multiplierLength = multiplier.length
 
@@ -247,7 +249,7 @@ export function timeTzOffset(ms: number): UTCTimestamp {
 }
 
 export function unixTimeTzOffset(ms: number): UTCTimestamp {
-  return ms - tzOffset as UTCTimestamp
+  return ms as UTCTimestamp
 }
 
 

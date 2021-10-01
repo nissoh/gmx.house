@@ -2,8 +2,7 @@ import { http } from "@aelea/ui-components"
 import { O } from "@aelea/utils"
 import { filter, fromPromise, map, mergeArray, multicast } from "@most/core"
 import { Stream } from "@most/types"
-import { ICommunicationMessage, IPositionLiquidated, ILeaderboardRequest } from "gambit-middleware"
-import { positionLiquidatedJson } from "./utils"
+import { ICommunicationMessage, IPositionLiquidated, ILeaderboardRequest, fromJson } from "gambit-middleware"
 
 
 export type ILoopMap<T> = {
@@ -66,7 +65,7 @@ export const liquidationsQuery = (params: ILeaderboardRequest) => fromPromise(
         'Content-Type': 'application/json'
       },
       parseJson: jsonList => {
-        return jsonList.map(positionLiquidatedJson)
+        return jsonList.map(fromJson.positionLiquidatedJson)
       },
       body: JSON.stringify(params)
     }

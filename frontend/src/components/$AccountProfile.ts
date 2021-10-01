@@ -55,7 +55,7 @@ export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity) => {
   }
 
   return $column(style({ alignItems: 'center' }))(
-    $text(style({ color: pallete.foreground, fontSize: '.65em' }))(address.slice(0, 6)),
+    $text(style({ fontSize: '.65em' }))(address.slice(0, 6)),
     $text(address.slice(address.length -4, address.length))
   )
 }

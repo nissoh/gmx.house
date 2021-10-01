@@ -10,13 +10,13 @@ import {
 } from "../generated/schema"
 
 
-const eventId = (ev: ethereum.Event): string => ev.transaction.hash.toHex() + "-" + ev.logIndex.toString()
+const eventId = (name: string, ev: ethereum.Event): string => name + '-' + ev.transaction.hash.toHex()
 
 
 export function handleIncreasePosition(event: contract.IncreasePosition): void {
   let timestamp = event.block.timestamp.toI32()
 
-  let entity = new IncreasePosition(eventId(event)) // we prevent 
+  let entity = new IncreasePosition(eventId('IncreasePosition', event)) // we prevent 
 
   entity.indexedAt = timestamp
 
@@ -83,7 +83,7 @@ export function handleDecreasePosition(event: contract.DecreasePosition): void {
   let timestamp = event.block.timestamp.toI32()
 
   let tradeKey = event.params.key.toHex()
-  let tradeId = eventId(event)
+  let tradeId = eventId('DecreasePosition', event)
   let entity = new DecreasePosition(tradeId)
 
   entity.indexedAt = timestamp
@@ -132,7 +132,7 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
   let timestamp = event.block.timestamp.toI32()
 
   let tradeKey = event.params.key.toHex()
-  let tradeId = eventId(event)
+  let tradeId = eventId('UpdatePosition', event)
   let entity = new UpdatePosition(tradeId)
 
   entity.indexedAt = timestamp
@@ -166,7 +166,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   let timestamp = event.block.timestamp.toI32()
 
   let tradeKey = event.params.key.toHex()
-  let tradeId = eventId(event)
+  let tradeId = eventId('ClosePosition', event)
   let entity = new ClosePosition(tradeId)
 
   entity.indexedAt = timestamp
@@ -189,7 +189,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
-    let settled = new AggregatedTradeClosed(eventId(event))
+    let settled = new AggregatedTradeClosed(eventId('AggregatedTradeClosed', event))
     settled.indexedAt = timestamp
 
     settled.account = aggTradeOpen.account
@@ -233,7 +233,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   let timestamp = event.block.timestamp.toI32()
 
   let tradeKey = event.params.key.toHex()
-  let tradeId = eventId(event)
+  let tradeId = eventId('LiquidatePosition', event)
   let entity = new LiquidatePosition(tradeId)
 
   entity.indexedAt = timestamp
@@ -258,7 +258,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
   if (aggTradeOpen) {
-    let settled = new AggregatedTradeLiquidated(eventId(event))
+    let settled = new AggregatedTradeLiquidated(eventId('AggregatedTradeLiquidated', event))
 
     settled.indexedAt = timestamp
 

@@ -9,4 +9,5 @@ export * from './transaction'
 export * from './constant'
 export * from './tether'
 export * from './comTypes'
+export * from './fromJson'
 

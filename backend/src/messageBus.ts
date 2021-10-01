@@ -1,5 +1,5 @@
-import { fromCallback, nullSink, O, Op } from '@aelea/utils'
-import { chain, filter, fromPromise, join, map, mergeArray, multicast, recoverWith, tap } from '@most/core'
+import { fromCallback, O, Op } from '@aelea/utils'
+import { awaitPromises, chain, empty, filter, map, mergeArray, recoverWith, tap } from '@most/core'
 import { Stream } from '@most/types'
 import { ICommunicationMessage } from 'gambit-middleware'
 import ws, { EventEmitter } from 'ws'
@@ -8,23 +8,25 @@ import ws, { EventEmitter } from 'ws'
 
 export type WsData = { data: ws.Data, ws: ws }
 
-function wsConnection<OUT>(wss: EventEmitter, out: Stream<OUT>): Stream<WsData> {
+function wsConnection(wss: EventEmitter, clientPipeList: Op<WsData, string>[]): Stream<string> {
   return {
     run(sink, scheduler) {
-
-      const connection = fromCallback<ws>(cb => wss.on('connection', data => cb(data)))
+      const connection = fromCallback<ws>(cb => {
+        return wss.on('connection', data => cb(data))
+      })
       const connectToMessages = chain(ws => {
-        const msg = fromCallback<WsData>(cb => ws.on('message', data => cb({ data, ws })))
+        const clientIn = fromCallback<WsData>(cb => ws.on('message', data => cb({ data, ws })))
+
+        const serverOut = mergeArray(clientPipeList.map(xx => xx(clientIn)))
         const outEffects = tap(outmsg => {
           ws.send(outmsg)
-        }, out).run(nullSink, scheduler)
-
+        }, serverOut)
+  
         ws.on('close', () => {
-          outEffects.dispose()
           connectDisposable.dispose()
         })
 
-        return msg
+        return outEffects
       }, connection)
 
       const connectDisposable = connectToMessages.run(sink, scheduler)
@@ -40,39 +42,34 @@ export type ILoopMap<T> = {
 }
 
 
-export const helloFrontend = <IN extends ILoopMap<IN>, OUT>(wss: ws.Server | ws, inMap: IN)  => {
+export const helloFrontend = <T extends ILoopMap<T>, OUT>(wss: ws.Server | ws, inMap: T)  => {
+  const entriesInMap: [string, Op<WsData, any>][] = Object.entries(inMap)
 
-  const entriesInMap: [string, Op<any, any>][] = Object.entries(inMap)
-  const outMapEntries = entriesInMap.map(async ([topic, op]) => {
-    await Promise.resolve()
-    const mapTopics: Stream<string> = O(
-      map((msg: WsData) => {
+  const composedPipes = entriesInMap.map(([topic, op]) => O(
+    map((msg: WsData) => {
+      if (msg.data instanceof Buffer) {
+        const data = JSON.parse(msg.data.toString())
+        return data
+      }
 
-        if (msg.data instanceof Buffer) {
-          return JSON.parse(msg.data.toString())
-        }
+      throw new Error('Enexpected client message')
+    }),
+    filter((data: ICommunicationMessage<string, any>) => {
+      const isMessageValid = typeof data === 'object' && 'body' in data && 'topic' in data
 
-        throw new Error('unexpected data type')
-      }),
-      filter((data: ICommunicationMessage<string, any>) => {
-        const isMessageValid = typeof data === 'object' && 'body' in data && 'topic' in data
+      return isMessageValid && data.topic === topic
+    }),
+    map(({ body }) => body),
+    op,
+    map(body => JSON.stringify({ body, topic })),
+    recoverWith(error => {
+      console.error(error)
+      return empty()
+    })
+  ), {} as ILoopMap<OUT>)
 
-        return isMessageValid && data.topic === topic
-      }),
-      map(({ body }) => body),
-      op,
-      map(body => JSON.stringify({ body, topic })),
-      recoverWith(error => {
-        console.error(error)
-        return mapTopics
-      })
-    )(multicastConnection)
 
-    return mapTopics
-  }, {} as ILoopMap<OUT>)
-
-  const outputStream = mergeArray(outMapEntries.map(O(fromPromise, join)))
-  const multicastConnection = multicast(wsConnection(wss, outputStream))
+  const multicastConnection = wsConnection(wss, composedPipes)
 
   return multicastConnection
 }

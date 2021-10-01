@@ -1,8 +1,10 @@
 import {
-  IPositionIncrease, IPositionLiquidated, IPositionClose, IAggregatedAccountSummary,
-  IPositionUpdate, IIdentifiableEntity, IAggregatedTradeOpen, IAccountAggregationMap, IPositionDecrease, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpenListMap, IAggregatedPositionSummary, IAggregatedTradeSummary, IAggregatedTradeSettledListMap
-} from "gambit-middleware"
-
+  IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedPositionSettledSummary,
+  IAggregatedOpenPositionSummary, IAggregatedTradeClosed,
+  IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap,
+  IAggregatedTradeSummary, IIdentifiableEntity, IPositionClose, IPositionDecrease,
+  IPositionIncrease, IPositionLiquidated, IPositionUpdate, IAggregatedTradeSettledAll
+} from "./types"
 
 
 
@@ -34,15 +36,16 @@ export function positionIncreaseJson(json: IPositionIncrease): IPositionIncrease
   const sizeDelta = BigInt(json?.sizeDelta)
   const collateralDelta = BigInt(json?.collateralDelta)
 
-  return { ...json, fee, price, sizeDelta, collateralDelta }
+  return { ...json, fee, price, sizeDelta, collateralDelta, }
 }
 
 export function positionDecreaseJson(json: IPositionDecrease): IPositionDecrease {
   const fee = BigInt(json?.fee)
   const price = BigInt(json?.price)
   const sizeDelta = BigInt(json?.sizeDelta)
+  const collateralDelta = BigInt(json?.collateralDelta)
 
-  return { ...json, fee, price, sizeDelta }
+  return { ...json, fee, price, sizeDelta, collateralDelta, }
 }
 
 
@@ -55,7 +58,7 @@ export function positionUpdateJson(json: IPositionUpdate): IPositionUpdate {
   const realisedPnl = BigInt(json?.realisedPnl)
   const reserveAmount = BigInt(json?.reserveAmount)
 
-  return { ...json, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount, }
+  return { ...json, collateral, averagePrice, size, entryFundingRate, realisedPnl, reserveAmount }
 }
 
 export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccountSummary {
@@ -63,40 +66,34 @@ export function accountSummaryJson(json: IAggregatedAccountSummary): IAggregated
   const fee = BigInt(json?.fee)
   const collateral = BigInt(json?.collateral)
   const size = BigInt(json?.size)
-  const averagePrice = BigInt(json?.averagePrice)
 
-  return { ...json, collateral, pnl, fee, size, averagePrice }
+  return { ...json, collateral, pnl, fee, size, }
 }
 
 
-// IAggregatedTradeOpen
 export function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: T): T {
-  const indexedAt = Math.floor(json.indexedAt * 1000)
-
-  const decreaseList = json.decreaseList?.map(positionDecreaseJson) || []
-  const increaseList = json.increaseList?.map(positionIncreaseJson) || []
-  const updateList = json.updateList?.map(positionUpdateJson) || []
+  const decreaseList = json.decreaseList?.map(positionDecreaseJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
+  const increaseList = json.increaseList?.map(positionIncreaseJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
+  const updateList = json.updateList?.map(positionUpdateJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
   const initialPosition = positionIncreaseJson(json.initialPosition)
 
-  return { ...json, indexedAt, decreaseList, increaseList, updateList, initialPosition }
+  // console.log(new Date(decreaseList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(decreaseList[decreaseList.length - 1].indexedAt * 1000).toLocaleString())
+  // console.log(new Date(increaseList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(increaseList[increaseList.length - 1].indexedAt * 1000).toLocaleString())
+  // console.log(new Date(updateList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(updateList[updateList.length - 1].indexedAt * 1000).toLocaleString())
+
+  return { ...json, decreaseList, increaseList, updateList, initialPosition }
 }
 
 export function toAggregatedTradeClosedJson(json: IAggregatedTradeClosed): IAggregatedTradeClosed {
-  const indexedAt = Math.floor(json.indexedAt * 1000)
-
   const settledPosition = positonCloseJson(json.settledPosition)
-  const initialPositionBlockTimestamp = Math.floor(json.initialPositionBlockTimestamp * 1000)
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, initialPositionBlockTimestamp, indexedAt }
+  return { ...toAggregatedTradeOpenJson(json), settledPosition }
 }
 
 export function toAggregatedTradeLiquidatedJson(json: IAggregatedTradeLiquidated): IAggregatedTradeLiquidated {
-  const indexedAt = Math.floor(json.indexedAt * 1000)
-
   const settledPosition = positionLiquidatedJson(json.settledPosition)
-  const initialPositionBlockTimestamp = Math.floor(json.initialPositionBlockTimestamp * 1000)
 
-  return { ...toAggregatedTradeOpenJson(json), settledPosition, initialPositionBlockTimestamp, indexedAt }
+  return { ...toAggregatedTradeOpenJson(json), settledPosition, }
 }
 
 export function toAggregatedTradeListJson<T extends IAggregatedTradeSettledListMap>(json: T): T {
@@ -110,7 +107,7 @@ export function toAggregatedTradeListJson<T extends IAggregatedTradeSettledListM
 export function toAccountAggregationJson(json: IAccountAggregationMap): IAccountAggregationMap {
   const totalRealisedPnl = BigInt(json?.totalRealisedPnl)
 
-  return { ...toAggregatedTradeListJson(json),  totalRealisedPnl  }
+  return { ...toAggregatedTradeListJson(json), totalRealisedPnl  }
 }
 
 export function toAggregatedTradeSummary<T extends IAggregatedTradeSummary>(json: T): T {
@@ -121,9 +118,37 @@ export function toAggregatedTradeSummary<T extends IAggregatedTradeSummary>(json
   return { ...json, size, collateral, fee  }
 }
 
-export function toAggregatedPositionSummary(json: IAggregatedPositionSummary): IAggregatedPositionSummary {
+export function toAggregatedPositionSummary<T extends IAggregatedOpenPositionSummary>(json: T): IAggregatedOpenPositionSummary {
   const averagePrice = BigInt(json.averagePrice)
 
   return { ...toAggregatedTradeSummary(json), averagePrice  }
 }
 
+export function toAggregatedPositionSettledSummary<T extends IAggregatedPositionSettledSummary<IAggregatedTradeSettledAll>>(json: T): T {
+  const averagePrice = BigInt(json.averagePrice)
+
+  // @ts-ignore
+  const trade = 'markPrice' in json.trade.settledPosition ? toAggregatedTradeClosedJson(json.trade) : toAggregatedTradeLiquidatedJson(json.trade)
+
+  return { ...toAggregatedTradeSummary(json), trade, averagePrice  }
+}
+
+
+
+
+export const fromJson = {
+  positonCloseJson,
+  positionLiquidatedJson,
+  positionIncreaseJson,
+  positionDecreaseJson,
+  positionUpdateJson,
+  accountSummaryJson,
+  toAggregatedTradeOpenJson,
+  toAggregatedTradeClosedJson,
+  toAggregatedTradeLiquidatedJson,
+  toAggregatedTradeListJson,
+  toAccountAggregationJson,
+  toAggregatedTradeSummary,
+  toAggregatedPositionSummary,
+  toAggregatedPositionSettledSummary,
+}

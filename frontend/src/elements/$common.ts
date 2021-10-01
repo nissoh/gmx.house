@@ -2,7 +2,8 @@ import { $Branch, $element, $Node, $text, style, stylePseudo } from "@aelea/dom"
 import { $ButtonIcon, $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty } from "@most/core"
-import { Token } from "gambit-middleware"
+import { formatReadableUSD, IAggregatedOpenPositionSummary, IAggregatedTradeOpen, IAggregatedTradeSummary, strictGet, Token, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP } from "gambit-middleware"
+import { $tokenIconMap } from "../common/$icons"
 import { $alertIcon, $caretDblDown, $trash } from "./$icons"
 
 export const $TrashBtn = $ButtonIcon($trash)
@@ -39,7 +40,7 @@ export const $labeledDivider = (label: string) => {
   )
 }
 
-export const $tokenLabel = (token: Token, $iconG: $Node, $label?: $Node) => {
+export const $tokenLabel = (token: Token | TradeableToken, $iconG: $Node, $label?: $Node) => {
   return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center' }))(
     $icon({ $content: $iconG, width: '34px', viewBox: '0 0 32 32' }),
     $column(layoutSheet.flex)(
@@ -50,3 +51,21 @@ export const $tokenLabel = (token: Token, $iconG: $Node, $label?: $Node) => {
   )
 }
 
+export const $tokenLabelFromSummary = (trade: IAggregatedTradeOpen, $label?: $Node) => {
+  const indextoken = trade.initialPosition.indexToken
+  const $iconG = $tokenIconMap[indextoken]
+  const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, indextoken)
+
+  return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center' }))(
+    $icon({ $content: $iconG, width: '34px', viewBox: '0 0 32 32' }),
+    $column(layoutSheet.flex)(
+      $text(style({ fontWeight: 'bold' }))(token.symbol),
+      $text(style({ fontSize: '75%', color: pallete.foreground }))(token.symbol)
+    ),
+    style({ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }, $label || empty())
+  )
+}
+
+export const $leverage = (pos: IAggregatedTradeSummary) =>
+  $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`)
+  

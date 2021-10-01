@@ -1,20 +1,21 @@
 import { BaseProvider } from "@ethersproject/providers"
-import { ARBITRUM_CONTRACTS, groupByMapMany } from "./address"
+import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedSettledTradeSummary, IAccountAggregationMap, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedPositionSummary, IAggregatedPositionSettledSummary } from "./types"
-import { fillIntervalGap, formatFixed, timeTzOffset, UTCTimestamp } from "./utils"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IPositionUpdate, IAbstractPosition } from "./types"
+import { fillIntervalGap, formatFixed, unixTimeTzOffset, UTCTimestamp } from "./utils"
+import { fromJson } from "./fromJson"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
-  const contract = Vault__factory.connect(ARBITRUM_CONTRACTS.Vault, jsonProvider)
+  const contract = Vault__factory.connect(ARBITRUM_ADDRESS.Vault, jsonProvider)
   const vaultEvent = listen(contract)
 
 
   return {
     contract,
-    address: ARBITRUM_CONTRACTS.Vault,
+    address: ARBITRUM_ADDRESS.Vault,
     increasePosition: vaultEvent('IncreasePosition'),
     decreasePosition: vaultEvent('DecreasePosition'),
     updatePosition: vaultEvent('UpdatePosition'),
@@ -55,30 +56,45 @@ export function priceDeltaPercentage(positionPrice: bigint, price: bigint, colla
   return delta * BASIS_POINTS_DIVISOR / collateral
 }
 
-export function priceDeltaPercentage2(delta: bigint, collateral: bigint) {
-  // const delta = priceDelta(positionPrice, price, collateral, size)
-  return delta * BASIS_POINTS_DIVISOR / collateral
-}
 
-export function calculatePositionDelta(size: bigint, collateral: bigint, isLong: boolean, marketPrice: bigint, positionPrice: bigint): IPositionDelta {
-  const priceDelta = marketPrice > positionPrice ? marketPrice - positionPrice : positionPrice - marketPrice
-  const delta = size * priceDelta / marketPrice
 
-  const hasProfit = isLong ? positionPrice > marketPrice : positionPrice < marketPrice
-  const minBps = 150n
+export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { size, collateral, averagePrice }: IAbstractPosition): IPositionDelta {
+  const priceDelta = averagePrice > marketPrice ? averagePrice - marketPrice : marketPrice - averagePrice
 
-  // if (hasProfit && delta * BASIS_POINTS_DIVISOR >=  size * minBps) {
-  //   delta = 0n
-  // }
+  const hasProfit = isLong ? marketPrice > averagePrice : marketPrice < averagePrice
 
+  const delta = hasProfit ? size * priceDelta / averagePrice : -(size * priceDelta / averagePrice)
   const deltaPercentage = delta * BASIS_POINTS_DIVISOR / collateral
 
-  return {
-    delta,
-    hasProfit,
-    deltaPercentage
-  }
+  return { delta, deltaPercentage }
 }
+// export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { size, collateral, averagePrice }: IAbstractPosition): IPositionDelta {
+//   const priceDelta = averagePrice > marketPrice ? averagePrice - marketPrice : marketPrice - averagePrice
+//   let delta = size * priceDelta / averagePrice
+//   const pendingDelta = delta
+
+//   const hasProfit = isLong ? marketPrice > averagePrice : marketPrice < averagePrice
+//   const minBps = 150n
+
+//   if (hasProfit && delta * BASIS_POINTS_DIVISOR <= size * minBps) {
+//     delta = 0n
+//   }
+
+//   const deltaPercentage = delta * BASIS_POINTS_DIVISOR / collateral
+//   const pendingDeltaPercentage = pendingDelta * BASIS_POINTS_DIVISOR / collateral
+
+//   return {
+//     delta,
+//     deltaPercentage,
+
+//     pendingDelta,
+//     pendingDeltaPercentage,
+
+//     hasProfit,
+//   }
+// }
+
+
 
 export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, averagePrice: bigint, isLong: boolean) {
 
@@ -91,66 +107,45 @@ export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, a
 }
 
 
-// for longs: nextAveragePrice = (nextPrice * nextSize)/ (nextSize + delta)
-// for shorts: nextAveragePrice = (nextPrice * nextSize) / (nextSize - delta)
-// export function getNextAveragePrice(address: string, size: bigint, marketPrice: bigint, positionPrice: bigint, isLong: boolean, sizeDelta: bigint, lastIncreasedTime: bigint) {
-//     const {hasProfit, delta} = calculatePositionDelta(size, )
-//     uint256 nextSize = _size.add(_sizeDelta);
-//     uint256 divisor;
-//     if (_isLong) {
-//         divisor = hasProfit ? nextSize.add(delta) : nextSize.sub(delta);
-//     } else {
-//         divisor = hasProfit ? nextSize.sub(delta) : nextSize.add(delta);
-//     }
-//     return _nextPrice.mul(nextSize).div(divisor);
-// }
 
-export function toAggregatedOpenTradeSummary(agg: IAggregatedTradeOpen): IAggregatedPositionSummary {
-  const cumulativeAccountData: IAggregatedPositionSummary = {
+
+export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(json: T): IAggregatedOpenPositionSummary<T> {
+  const agg = fromJson.toAggregatedTradeOpenJson<T>(json)
+
+  const increaseFees = agg.increaseList.reduce((seed, pos) => seed += pos.fee, 0n)
+  const decreaseFees = agg.decreaseList.reduce((seed, pos) => seed += pos.fee, 0n)
+
+
+  const lastUpdate = agg.updateList[agg.updateList.length - 1]
+
+  const collateral = lastUpdate.collateral
+  const size = lastUpdate.size
+  const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = { collateral, size,
     account: agg.account,
-    indexToken: agg.initialPosition.indexToken as ARBITRUM_CONTRACTS,
-    startTimestamp: agg.indexedAt,
-    size: 0n, collateral: 0n, fee: 0n,
-    averagePrice: 0n,
+    indexToken: agg.initialPosition.indexToken,
+    startTimestamp: agg.initialPosition.indexedAt,
+    fee: increaseFees + decreaseFees,
+    averagePrice: lastUpdate.averagePrice,
     isLong: agg.initialPosition.isLong,
-    leverage: 0
+    leverage: formatFixed(size) / formatFixed(collateral),
+
+    trade: agg
   }
 
-  agg.increaseList?.forEach((pos) => {
-    cumulativeAccountData.size += BigInt(pos.sizeDelta)
-    cumulativeAccountData.collateral += BigInt(pos.collateralDelta)
-    cumulativeAccountData.fee += BigInt(pos.fee)
-  })
-
-  const updateListLength = agg.updateList?.length
-  if (updateListLength) {
-    cumulativeAccountData.averagePrice = BigInt(agg.updateList[updateListLength - 1].averagePrice) ?? 0n
-  } else {
-    console.error(`missing updatelist, account: ${agg.account}`)
-  }
-  
-  agg?.decreaseList?.forEach((pos) => {
-    cumulativeAccountData.fee += BigInt(pos.fee)
-  })
-
-  cumulativeAccountData.leverage = formatFixed(cumulativeAccountData.size) / formatFixed(cumulativeAccountData.collateral)
 
   return cumulativeAccountData
 }
 
-export function toAggregatedTradeSettledSummary(agg: IAggregatedTradeClosed | IAggregatedTradeLiquidated): IAggregatedPositionSettledSummary {
-  const cumulativeAccountData: IAggregatedPositionSettledSummary = {
-    ...toAggregatedOpenTradeSummary(agg),
-    pnl: 0n,
-    settledTimestamp: agg.initialPositionBlockTimestamp,
-  }
-
+export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(agg: T): IAggregatedPositionSettledSummary<T> {
   const isLiquidated = 'markPrice' in agg.settledPosition
+  const parsedAgg = toAggregatedOpenTradeSummary<T>(agg)
 
-  cumulativeAccountData.pnl = isLiquidated
-    ? BigInt(-agg.settledPosition.collateral)
-    : BigInt(agg.settledPosition.realisedPnl) - cumulativeAccountData.fee
+  const pnl = isLiquidated ? -BigInt(agg.settledPosition.collateral) : BigInt(agg.settledPosition.realisedPnl)
   
+  const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
+    ...parsedAgg, pnl,
+    settledTimestamp: agg.indexedAt
+  }
 
   return cumulativeAccountData
 }
@@ -180,7 +175,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
       pnl: realisedPnl,
       size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n),
-      averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length),
+      averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length)
     }
 
     seed.push(summary)
@@ -192,17 +187,18 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledListMap)
 }
 
 
-export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggregatedTradeLiquidated>, interval: intervalInMsMap, ticks: number, endtime = Date.now()) {
+export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggregatedTradeLiquidated>, interval: intervalInMsMap, ticks: number, endtime = Date.now() / 1000 | 0) {
   let accumulated = 0
 
-  const initialDataStartTime = endtime - interval * ticks
+  const intervalInSecs = interval / 1000 | 0
+  const initialDataStartTime = endtime - intervalInSecs * ticks
   const closedPosList = list
   // .filter(t => t.settledPosition)
     .map(aggTrade => {
 
       const summary = toAggregatedTradeSettledSummary(aggTrade)
       const time = aggTrade.initialPositionBlockTimestamp
-      const value = formatFixed(summary.pnl, USD_DECIMALS)
+      const value = formatFixed(summary.pnl - summary.fee, USD_DECIMALS)
 
       return { value, time }
     })
@@ -224,7 +220,7 @@ export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggreg
   const filled = sortedParsed
     .reduce(
       fillIntervalGap(
-        interval,
+        intervalInSecs,
         (next) => {
           return { time: next.time, value: next.value }
         },
@@ -237,7 +233,7 @@ export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggreg
       ),
       [{ time: initialDataStartTime, value: 0 }] as { time: number; value: number} []
     )
-    .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
+    .map(t => ({ time: unixTimeTzOffset(t.time), value: t.value }))
           
 
   return filled
