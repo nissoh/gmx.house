@@ -13,7 +13,7 @@ import * as provider from 'metamask-provider'
 import { combineArray, combineObject } from "@aelea/utils"
 import { TransactionReceipt } from "@ethersproject/providers"
 import { account } from "metamask-provider"
-import { Behavior } from "@aelea/core"
+import { Behavior, O, Op } from "@aelea/core"
 
 type IMaybeClaimIdentity = Pick<IClaim, 'identity'> | null
 
@@ -47,7 +47,7 @@ export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size 
   return $jazzicon(address, size)
 }
 
-export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity) => {
+export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity, adressOp: Op<INode, INode> = O()) => {
   if (claim) {
     const identity = extractClaimIdentityName(address, claim)
 
@@ -56,7 +56,7 @@ export const $AccountLabel = (address: string, claim: IMaybeClaimIdentity) => {
 
   return $column(style({ alignItems: 'center' }))(
     $text(style({ fontSize: '.65em' }))(address.slice(0, 6)),
-    $text(address.slice(address.length -4, address.length))
+    $text(adressOp)(address.slice(address.length -4, address.length))
   )
 }
 

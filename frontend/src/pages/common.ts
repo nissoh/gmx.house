@@ -178,7 +178,7 @@ export const $Entry = (pos: IAggregatedOpenPositionSummary) => component(() => {
             })
           ),
         ),  
-        $text(style({ fontSize: '.65em', textAlign: 'center' }))(formatReadableUSD(pos.averagePrice))
+        $text(style({ fontSize: '.65em', textAlign: 'center', color: pallete.primary }))(formatReadableUSD(pos.averagePrice))
       )
     )
   ]

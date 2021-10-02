@@ -1,17 +1,16 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { unixTimeTzOffset, groupByMapMany, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, ARBITRUM_TRADEABLE_ADDRESS, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType, TradeDirection } from "gambit-middleware"
+import { unixTimeTzOffset, groupByMapMany, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter, skipRepeatsWith } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
-import { $alert, $anchor, $seperator, $tokenLabel, $tokenLabelFromSummary } from "../../elements/$common"
+import { $alert, $anchor, $seperator, $tokenLabelFromSummary } from "../../elements/$common"
 import { screenUtils, state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
 import { $Chart } from "../../components/chart/$Chart"
 import { Stream } from "@most/types"
-import { $tokenIconMap } from "../../common/$icons"
 import { $caretDown } from "../../elements/$icons"
 import { Behavior } from "@aelea/core"
 import { $Table2 } from "../../common/$Table2"
@@ -364,18 +363,11 @@ export const $Portfolio = (config: IAccount) => component((
                   // columnOp: O(style({  flexDirection: 'column' }), layoutSheet.spacingTiny),
 
                   $body: map((pos) => {
-                    return $column(style({ fontSize:'.65em' }))(
-                      $Link({
-                        anchorOp: style({ position: 'relative' }),
-                        $content: $column(
-                          $text(timeSince(pos.settledTimestamp)),
-                          $text(new Date(pos.settledTimestamp * 1000).toLocaleString()),  
-                        ),
-                        url: `/p/account/${pos.account}/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
-                        route: config.parentRoute.create({ fragment: '2121212' })
-                      })({
-                        click: changeRouteTether()
-                      }),
+                    return $column(style({ fontSize: '.65em' }))(
+                      $column(
+                        $text(timeSince(pos.settledTimestamp)),
+                        $text(new Date(pos.settledTimestamp * 1000).toLocaleString()),  
+                      ),
                     )
                   })
                 },
@@ -383,7 +375,16 @@ export const $Portfolio = (config: IAccount) => component((
                   $head: $text('Entry'),
                   columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
 
-                  $body: map((pos: IAggregatedOpenPositionSummary) => $Entry(pos)({}))
+                  $body: map((pos: IAggregatedOpenPositionSummary) =>
+                    $Link({
+                      anchorOp: style({ position: 'relative' }),
+                      $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
+                      url: `/p/account/${pos.account}/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
+                      route: config.parentRoute.create({ fragment: '2121212' })
+                    })({
+                      click: changeRouteTether()
+                    })
+                  )
                 },
                 // accountTableColumn,
                 {

@@ -90,7 +90,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           const $profileAnchor = $Link({
             $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
               $AccountPhoto(account, claim),
-              $AccountLabel(account, claim),
+              $AccountLabel(account, claim, style({ color: pallete.primary })),
             ),
             url: `/p/account/${account}`,
             route: config.parentRoute.create({ fragment: '2121212' })

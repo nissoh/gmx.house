@@ -356,7 +356,7 @@ export const $Trade = (config: ITrade) => component((
               }),
             })({
               crosshairMove: pnlCrosshairMoveTether(
-                // skipRepeatsWith((a, b) => a.point?.x === b.point?.x),
+                skipRepeatsWith((a, b) => a.point?.x === b.point?.x),
                 multicast
               )
             })
