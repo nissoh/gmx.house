@@ -1,7 +1,7 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
 import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
 import { unixTimeTzOffset, groupByMapMany, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType } from "gambit-middleware"
-import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
+import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter, skipRepeatsWith } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
@@ -485,7 +485,7 @@ export const $Portfolio = (config: IAccount) => component((
                   
                   // console.log(new Date(closePosMarkers[0].time as number * 1000))
 
-                  const markers = [...increasePosMarkers, ...closePosMarkers, ...liquidatedPosMarkers].sort((a, b) => b.time as number - (a.time as number))
+                  const markers = [...increasePosMarkers, ...closePosMarkers, ...liquidatedPosMarkers].sort((a, b) => a.time as number - (b.time as number))
                   series.setMarkers(markers)
                 }, 50)
 

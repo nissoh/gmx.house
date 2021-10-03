@@ -1,3 +1,5 @@
+import { O } from "@aelea/utils"
+import { toAggregatedOpenTradeSummary, toAggregatedTradeSettledSummary } from "./gambit"
 import {
   IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedPositionSettledSummary,
   IAggregatedOpenPositionSummary, IAggregatedTradeClosed,
@@ -77,10 +79,6 @@ export function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: 
   const updateList = json.updateList?.map(positionUpdateJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
   const initialPosition = positionIncreaseJson(json.initialPosition)
 
-  // console.log(new Date(decreaseList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(decreaseList[decreaseList.length - 1].indexedAt * 1000).toLocaleString())
-  // console.log(new Date(increaseList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(increaseList[increaseList.length - 1].indexedAt * 1000).toLocaleString())
-  // console.log(new Date(updateList[0].indexedAt * 1000).toLocaleString(), '-',  new Date(updateList[updateList.length - 1].indexedAt * 1000).toLocaleString())
-
   return { ...json, decreaseList, increaseList, updateList, initialPosition }
 }
 
@@ -128,10 +126,20 @@ export function toAggregatedPositionSettledSummary<T extends IAggregatedPosition
   const averagePrice = BigInt(json.averagePrice)
 
   // @ts-ignore
-  const trade = 'markPrice' in json.trade.settledPosition ? toAggregatedTradeClosedJson(json.trade) : toAggregatedTradeLiquidatedJson(json.trade)
+  const trade =  'markPrice' in json.trade.settledPosition ? toAggregatedTradeClosedJson(json.trade) : toAggregatedTradeLiquidatedJson(json.trade)
 
   return { ...toAggregatedTradeSummary(json), trade, averagePrice  }
 }
+
+export function toAggregatedSettledTrade<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(json: T): T {
+  const trade = 'markPrice' in json.settledPosition // @ts-ignore
+    ? toAggregatedTradeLiquidatedJson(json) // @ts-ignore
+    : toAggregatedTradeClosedJson(json)
+
+  // @ts-ignore
+  return trade
+}
+
 
 
 
@@ -151,4 +159,7 @@ export const fromJson = {
   toAggregatedTradeSummary,
   toAggregatedPositionSummary,
   toAggregatedPositionSettledSummary,
+  toAggregatedSettledTrade,
+  toAggregatedOpenTradeSummary: O(toAggregatedTradeOpenJson, toAggregatedOpenTradeSummary),
+  toAggregatedTradeSettledSummary: O(toAggregatedSettledTrade, toAggregatedTradeSettledSummary),
 }

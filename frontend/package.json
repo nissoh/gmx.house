@@ -37,7 +37,7 @@
         "hash.js": "1.1.7",
         "homepage": "^1.0.0",
         "jazzicon": "^1.5.0",
-        "lightweight-charts": "3.6.1",
+        "lightweight-charts-baseline": "0.0.3",
         "metamask-provider": "workspace:*",
         "typescript": "^4.4.3"
     },

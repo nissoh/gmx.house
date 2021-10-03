@@ -36,10 +36,7 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
   [changeRoute, changeRouteTether]: Behavior<string, string>,
 ) => {
 
-  const accountRoute = config.parentRoute.create({
-    fragment: ETH_ADDRESS_REGEXP,
-    title: 'Portfolio'
-  })
+  const accountRoute = config.parentRoute.create({ fragment: ETH_ADDRESS_REGEXP  })
 
   const tradeRoute = accountRoute
     .create({

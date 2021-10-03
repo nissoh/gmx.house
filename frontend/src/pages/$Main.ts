@@ -14,10 +14,11 @@ import { $anchor } from '../elements/$common'
 import { $Account } from './account/$Account'
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedOpenPositionSummary, IPageChainlinkPricefeed, IAccountAggregationMap, IIdentifiableEntity, fromJson } from 'gambit-middleware'
+import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedOpenPositionSummary, IPageChainlinkPricefeed, IAccountAggregationMap, IIdentifiableEntity, fromJson, TradeType, TX_HASH_REGEX, ETH_ADDRESS_REGEXP } from 'gambit-middleware'
 import { $logo } from '../common/$icons'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior } from "@aelea/core"
+import { $Card } from "./$Card"
 
 
 
@@ -60,10 +61,16 @@ export default ({ baseRoute = '' }: Website) => component((
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
 
-  const cardRoute = rootRoute.create({
-    fragment: 'card',
-    title: 'Card'
-  })
+  const cardRoute = rootRoute
+    .create({ fragment: 'card' })
+    .create({
+      fragment: ETH_ADDRESS_REGEXP,
+      title: 'Portfolio'
+    })
+    .create({
+      fragment: new RegExp(`^(${TradeType.OPEN}|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
+    })
+    .create({ fragment: TX_HASH_REGEX, title: 'ee' })
 
 
 
@@ -98,9 +105,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 $node(),
                 $node(),
 
-                $row(style({ justifyContent: 'center' }))(
-                  $tradeGMX
-                )
+        
               ),
 
               $row(style({ flex: 1 }))()
@@ -181,15 +186,15 @@ export default ({ baseRoute = '' }: Website) => component((
         ),
       ),
       
-      router.match(cardRoute)(
+      router.contains(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
-          // $Card({
-          //   parentRoute: cardRoute,
-          //   claimList,
-          //   aggregatedTradeList: map(res => toAggregatedTradeListJson(res), clientApi.aggregatedTradeSettled)
-          // })({
-          //   aggregatedTradeListQuery: requestAccountAggregationTether()
-          // })
+          $Card({
+            settledPosition: clientApi.requestAggregatedTrade,
+            chainlinkPricefeed: clientApi.requestChainlinkPricefeed
+          })({
+            requestAggregatedTrade: requestAggregatedTradeTether(),
+            requestChainlinkPricefeed: requestChainlinkPricefeedTether()
+          })
         )
       )
 

@@ -3,9 +3,9 @@ import { awaitPromises, map } from '@most/core'
 import {
   intervalInMsMap, ILeaderboardRequest, AccountHistoricalDataApi,
   IAccountAggregationMap, toAggregatedAccountSummary, pageableQuery,
-  IPageable, toAggregatedOpenTradeSummary, formatFixed, IPageChainlinkPricefeed,
+  IPageable, formatFixed, IPageChainlinkPricefeed,
   IAggregatedTradeSettledListMap, ITimerange, IAccountQueryParamApi,
-  IChainlinkPrice, IAggregatedTradeOpenListMap, IAggregatedTradeClosed, IIdentifiableEntity, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeOpen, IAggregatedTradeLiquidated, IAggregatedTradeAll
+  IChainlinkPrice, IAggregatedTradeOpenListMap, IAggregatedTradeClosed, IIdentifiableEntity, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeOpen, IAggregatedTradeLiquidated, IAggregatedTradeAll, fromJson
 } from 'gambit-middleware'
 import { cacheMap } from '../utils'
 import { O } from '@aelea/utils'
@@ -279,7 +279,7 @@ export const requestAggregatedSettledTradeList = O(
 
     const allAccounts = await vaultClient(aggregatedSettledTradesMapQuery, { from, to, offset: 0, pageSize: 1000 })
     
-    return toAggregatedAccountSummary(allAccounts)
+    return toAggregatedAccountSummary([...allAccounts.aggregatedTradeCloseds, ...allAccounts.aggregatedTradeLiquidateds])
   }),
   awaitPromises
 )
@@ -310,7 +310,7 @@ export const requestLeaderboardTopList = O(
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
     const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), cacheLife, async () => {
       const list = await fethPage(0)
-      const summary = toAggregatedAccountSummary(list)
+      const summary = toAggregatedAccountSummary([...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds].map(fromJson.toAggregatedSettledTrade))
 
       return summary
     })
@@ -339,11 +339,10 @@ export const requestOpenAggregatedTrades = O(
   map(async (queryParams: IPageable) => {
 
     const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
-      console.log('fetching open positions')
       const list = await vaultClient(openAggregateTradesQuery, {})
       const sortedList = list.aggregatedTradeOpens
         // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')
-        .map(toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
+        .map(fromJson.toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
       return sortedList
     })
 
@@ -356,8 +355,6 @@ export const requestOpenAggregatedTrades = O(
 
 export const requestChainlinkPricefeed = O(
   map(async (queryParams: IPageChainlinkPricefeed) => {
-    console.log(queryParams)
-
     const priceFeedQuery = await chainlinkClient(chainlinkPricefeedQuery, queryParams)
 
     return priceFeedQuery.rounds

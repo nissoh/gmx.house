@@ -6,7 +6,7 @@ import { fromCallback, O, Op } from '@aelea/utils'
 import { chain, debounce, empty, filter, map, mergeArray, multicast, now, sample, snapshot, switchLatest, take } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
-import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, Nominal, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange, UTCTimestamp } from 'lightweight-charts'
+import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, Nominal, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange, UTCTimestamp } from 'lightweight-charts-baseline'
 
 export interface IMarker extends SeriesMarker<Time> {
 

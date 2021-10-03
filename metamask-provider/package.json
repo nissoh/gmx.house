@@ -32,7 +32,7 @@
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/node": "^16.9.4",
+        "@types/node": "^16.10.2",
         "gambit-middleware": "workspace:*"
     }
 }
