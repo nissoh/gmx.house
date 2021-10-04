@@ -89,8 +89,7 @@ export interface IPagableResponse<T> extends IPageable {
 }
 
 export interface IPageChainlinkPricefeed extends Partial<IPageable>, Partial<ISortable>, ITimerange {
-  feedAddress: string,
-  settledTradeId: string,
+  feedAddress: string
 }
 
 export interface ILeaderboardRequest extends IPageable {

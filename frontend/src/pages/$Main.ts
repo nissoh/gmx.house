@@ -64,13 +64,9 @@ export default ({ baseRoute = '' }: Website) => component((
   const cardRoute = rootRoute
     .create({ fragment: 'card' })
     .create({
-      fragment: ETH_ADDRESS_REGEXP,
-      title: 'Portfolio'
-    })
-    .create({
       fragment: new RegExp(`^(${TradeType.OPEN}|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
     })
-    .create({ fragment: TX_HASH_REGEX, title: 'ee' })
+    .create({ fragment: TX_HASH_REGEX, title: 'Trade Details' })
 
 
 
@@ -189,7 +185,7 @@ export default ({ baseRoute = '' }: Website) => component((
       router.contains(cardRoute)(
         $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
           $Card({
-            settledPosition: clientApi.requestAggregatedTrade,
+            aggregatedTrade: clientApi.requestAggregatedTrade,
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({
             requestAggregatedTrade: requestAggregatedTradeTether(),

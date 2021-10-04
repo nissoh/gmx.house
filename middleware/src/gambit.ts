@@ -3,7 +3,7 @@ import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IPositionUpdate, IAbstractPosition, IAggregatedTradeSettledAll } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IPositionUpdate, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll } from "./types"
 import { fillIntervalGap, formatFixed, unixTimeTzOffset, UTCTimestamp } from "./utils"
 import { fromJson } from "./fromJson"
 
@@ -68,32 +68,25 @@ export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { s
 
   return { delta, deltaPercentage }
 }
-// export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { size, collateral, averagePrice }: IAbstractPosition): IPositionDelta {
-//   const priceDelta = averagePrice > marketPrice ? averagePrice - marketPrice : marketPrice - averagePrice
-//   let delta = size * priceDelta / averagePrice
-//   const pendingDelta = delta
 
-//   const hasProfit = isLong ? marketPrice > averagePrice : marketPrice < averagePrice
-//   const minBps = 150n
+export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll): IPositionDelta {
+  const settlement = trade.settledPosition
+  const isLiquidated = 'markPrice' in settlement
+  const delta = isLiquidated ? -settlement.collateral : trade.settledPosition.realisedPnl
 
-//   if (hasProfit && delta * BASIS_POINTS_DIVISOR <= size * minBps) {
-//     delta = 0n
-//   }
 
-//   const deltaPercentage = delta * BASIS_POINTS_DIVISOR / collateral
-//   const pendingDeltaPercentage = pendingDelta * BASIS_POINTS_DIVISOR / collateral
+  const collateral = isLiquidated ? settlement.collateral : trade.updateList[trade.updateList.length - 1].collateral
 
-//   return {
-//     delta,
-//     deltaPercentage,
+  return {
+    delta,
+    deltaPercentage: delta * BASIS_POINTS_DIVISOR / collateral
+  }
+}
 
-//     pendingDelta,
-//     pendingDeltaPercentage,
 
-//     hasProfit,
-//   }
-// }
-
+export function isTradeSettled(trade: IAggregatedTradeAll): trade is IAggregatedTradeSettledAll  {
+  return 'settledPosition' in trade
+}
 
 
 export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, averagePrice: bigint, isLong: boolean) {

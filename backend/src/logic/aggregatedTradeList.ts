@@ -310,7 +310,8 @@ export const requestLeaderboardTopList = O(
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
     const cacheQuery = leaderboardCacheMap(queryParams.timeInterval.toString(), cacheLife, async () => {
       const list = await fethPage(0)
-      const summary = toAggregatedAccountSummary([...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds].map(fromJson.toAggregatedSettledTrade))
+      const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds].map(fromJson.toAggregatedSettledTrade)
+      const summary = toAggregatedAccountSummary(formattedList)
 
       return summary
     })

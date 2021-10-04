@@ -7,7 +7,6 @@ import path from 'path'
 import ws from 'ws'
 import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestAggregatedClosedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades, requestAggregatedTrade } from './api'
 import { accountApi } from './logic/account'
-import { openGraphScreenshot } from './logic/linkOGShot'
 import { helloFrontend } from './messageBus'
 
 
@@ -118,7 +117,7 @@ const run = async () => {
   app.use(express.json())
   app.use(express.static(publicDir))
   // app.use((req, res, next) => RequestContext.create(ORM.em, next))
-  app.use('/api', openGraphScreenshot)
+  // app.use('/api', openGraphScreenshot)
   // app.use('/api', claimApi)
   app.use('/api', accountApi)
   app.use((req, res, next) => {
@@ -126,26 +125,30 @@ const run = async () => {
 
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
-      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/|0x[a-fA-F0-9]{40}$)/g)
+      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(closed|liquidated|open)\/(0x[A-Fa-f0-9]{64})$/i)
       res.setHeader('content-type', 'text/html; charset=utf-8')
 
-      const fullUrl = 'https://' + req.get('host')
+      const selfUrl = 'https://' + req.get('host')
 
-      if (profilePageMatches?.length === 2) {
-        const matchedAdress: string = profilePageMatches[1]
+      if (profilePageMatches?.length === 5) {
+        const matchedAdress: string = profilePageMatches[2]
+        const tradeType: string = profilePageMatches[3]
+        const tradeId: string = profilePageMatches[4]
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
-          .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
-          .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
-          .replace(/\$OG_IMAGE/g, `${fullUrl}/api/og-account?account=${matchedAdress}`)
+          .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
+          .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
+          .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?account=${matchedAdress}&tradeType=${tradeType}&tradeId=${tradeId}`)
+          .replace(/\$$OG_DESCRIPTION/g, `Top GMX.io traders`)
         
         res.send(ogHtmlFile)
+
       } else {
         const ogHtmlFile = htmlFile
-          .replace(/\$OG_TITLE/g, 'GMX Commuinity')
-          .replace(/\$OG_URL/g, fullUrl + req.originalUrl)
-          .replace(/\$OG_TWITTER_DOMAIN/g, fullUrl)
-          .replace(/\$OG_IMAGE/g, ``)
+          .replace(/\$OG_TITLE/g, 'GMX.house')
+          .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
+          .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
+          .replace(/\$$OG_DESCRIPTION/g, `Top GMX.io traders`)
 
         res.send(ogHtmlFile)
       }

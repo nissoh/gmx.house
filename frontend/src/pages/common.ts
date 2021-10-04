@@ -3,7 +3,7 @@ import { $text, component, style, styleBehavior, styleInline } from "@aelea/dom"
 import { $column, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, multicast, snapshot } from "@most/core"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, parseFixed, USD_DECIMALS } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeAll, IAggregatedTradeSummary, parseFixed, USD_DECIMALS } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $icon, $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
@@ -11,9 +11,8 @@ import { $leverage } from "../elements/$common"
 import { $bear, $bull, $skull } from "../elements/$icons"
 
 
-export const filterByIndexToken = (pos: IAggregatedOpenPositionSummary) => filter((data: WSBTCPriceEvent) => {
-  // @ts-ignore
-  const token = PRICE_EVENT_TICKER_MAP[pos.indexToken]
+export const filterByIndexToken = (pos: ARBITRUM_TRADEABLE_ADDRESS) => filter((data: WSBTCPriceEvent) => {
+  const token = PRICE_EVENT_TICKER_MAP[pos]
   
   return token === data.s
 })
@@ -88,13 +87,13 @@ export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => component(()
 export const $RiskLiquidator = (pos: IAggregatedOpenPositionSummary) => component(() => {
   const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)
 
-  const positionMarkPrice = filterByIndexToken(pos)(priceChange)
+  const positionMarkPrice = filterByIndexToken(pos.indexToken)(priceChange)
 
   const pnlPosition = multicast(map(price => {
     const markPrice = parseFixed(price.p, 30)
 
     return calculatePositionDelta(markPrice, pos.isLong, pos)
-  }, filterByIndexToken(pos)(priceChange)))
+  }, filterByIndexToken(pos.indexToken)(priceChange)))
 
   const liqPercentage = snapshot((meta, price) => {
     const markPrice = Number(price.p)
@@ -137,7 +136,7 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
     const markPrice = parseFixed(price.p, 30)
 
     return calculatePositionDelta(markPrice, pos.isLong, pos, )
-  }, filterByIndexToken(pos)(priceChange)))
+  }, filterByIndexToken(pos.indexToken)(priceChange)))
 
   return [
     $row(

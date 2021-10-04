@@ -1,11 +1,13 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $row, layoutSheet } from "@aelea/ui-components"
-import { IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson } from "gambit-middleware"
+import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson, parseFixed, isTradeSettled, calculateSettledPositionDelta } from "gambit-middleware"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, multicast, now } from "@most/core"
+import { map, switchLatest, multicast, now, never } from "@most/core"
 import { screenUtils, state } from "@aelea/ui-components"
 import { Stream } from "@most/types"
 import { $TradeCardPreview } from "./$TradeCardPreview"
+import { Behavior, combineArray } from "@aelea/core"
+import { filterByIndexToken, priceChange } from "../common"
 
 
 export interface ITrade {
@@ -16,7 +18,9 @@ export interface ITrade {
 
 
 
-export const $Trade = (config: ITrade) => component(() => {
+export const $Trade = (config: ITrade) => component((
+  [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
+) => {
 
 
   const urlFragments = document.location.pathname.split('/')
@@ -51,7 +55,9 @@ export const $Trade = (config: ITrade) => component(() => {
           chainlinkPricefeed: config.chainlinkPricefeed,
           aggregatedTrade: config.aggregatedTrade,
           containerOp: style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
-        })({}),
+        })({
+          requestChainlinkPricefeed: requestChainlinkPricefeedTether()
+        }),
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
@@ -69,16 +75,7 @@ export const $Trade = (config: ITrade) => component(() => {
     ),
 
     {
-      requestChainlinkPricefeed: map((pos): IPageChainlinkPricefeed => {
-        const feedAddress = CHAINLINK_USD_FEED_ADRESS[pos.initialPosition.indexToken]
-        return {
-          feedAddress,
-          from: pos.initialPosition.indexedAt,
-          to: 'settledPosition' in pos ? pos.settledPosition.indexedAt : Math.floor(Date.now() / 1000),
-          settledTradeId: 'accountAddress',
-          orderBy: 'unixTimestamp'
-        }
-      }, settledPosition),
+      requestChainlinkPricefeed: requestChainlinkPricefeed,
       requestAggregatedTrade: now({
         id: tradeId,
         tradeType,

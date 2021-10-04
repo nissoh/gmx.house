@@ -1,11 +1,12 @@
 import { combineArray, Behavior, Op, O } from "@aelea/core"
-import { $text, style, motion, MOTION_NO_WOBBLE, component, INode } from "@aelea/dom"
+import { $text, style, motion, MOTION_NO_WOBBLE, component, INode, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith } from "@most/core"
+import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith, merge, empty } from "@most/core"
 import { Stream } from "@most/types"
-import { IAggregatedOpenPositionSummary, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson } from "gambit-middleware"
+import { IAggregatedOpenPositionSummary, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, calculateSettledPositionDelta, IAggregatedTradeSettledAll, IAggregatedSettledTradeSummary, isTradeSettled } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
+import { WSBTCPriceEvent } from "../../binance-api"
 import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
 import { $leverage, $seperator } from "../../elements/$common"
@@ -23,21 +24,27 @@ interface IPricefeedTick {
 export interface ITradeCardPreview {
   chainlinkPricefeed: Stream<IChainlinkPrice[]>,
   aggregatedTrade: Stream<IAggregatedTradeAll>,
+  latestPositionDeltaChange?: Stream<IPositionDelta>
+  
   containerOp?: Op<INode, INode>,
   chartConfig?: DeepPartial<ChartOptions>,
+
+  animatePnl?: boolean
 }
 
 export const $TradeCardPreview = ({
   chainlinkPricefeed,
   aggregatedTrade,
   containerOp = O(),
-  chartConfig = {}
+  chartConfig = {},
+  latestPositionDeltaChange,
+  animatePnl = true
 }: ITradeCardPreview) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
 ) => {
 
   const settledPosition = multicast(aggregatedTrade)
-  const tradeSummary = multicast(map(fromJson.toAggregatedOpenTradeSummary, settledPosition))
+  const tradeSummary = multicast(map(fromJson.toAggregatedTradeAllSummary, settledPosition))
 
   
   const parsedPricefeed = map(feed => {
@@ -116,26 +123,36 @@ export const $TradeCardPreview = ({
   const pnlCrossHairChange = filter(hasSeriesFn, pnlCrosshairMove)
   const crosshairWithInitial = startWith(false, pnlCrosshairMoveMode)
   
-  const chartPnLCounter = multicast(switchLatest(combineArray((mode, summary, historicPnl) =>
-    mode
-      ? map((cross) => {
+  const chartPnLCounter = multicast(switchLatest(combineArray((mode, summary, historicPnl): Stream<IPositionDelta> => {
+    if (mode) {
+      return map((cross) => {
         return historicPnl.find(tick => cross.time === tick.time)!
       }, pnlCrossHairChange)
-      : 'settledPosition' in summary.trade
-        ? map(() => {
-          const ww = historicPnl[historicPnl.length - 1].price
+    } else {
+      const trade = summary.trade
+      const isSettled = isTradeSettled(trade)
 
-          // @ts-ignore
-          const avg = summary.trade.settledPosition.averagePrice
-          const posDelta = calculatePositionDelta(ww, summary.isLong, summary)
+      const initialDeltaPos = isSettled
+        ? now(calculateSettledPositionDelta(trade))
+        : now(calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.initialPosition.isLong, summary))
 
-
-          return { ...posDelta }
-        }, now(null))
-        : map((price) => calculatePositionDelta(parseFixed(price.p, 30), summary.isLong, summary), filterByIndexToken(summary)(priceChange))
-  , crosshairWithInitial, tradeSummary, historicPnL))
-  )
+      return merge(
+        isSettled ? latestPositionDeltaChange ?? empty() : latestPositionDeltaChange ?? map(p => calculatePositionDelta(parseFixed(p.p, 30), summary.isLong, summary), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)),
+        initialDeltaPos
+      )
+    }
+  }, crosshairWithInitial, tradeSummary, historicPnL)))
     
+
+  const tickerStyle = style({
+    lineHeight: 1,
+    fontWeight: "bold",
+    zIndex: 50,
+    position: 'relative'
+  })
+
+  const chartRealisedPnl = map(ss => formatFixed(ss.delta, 30), chartPnLCounter)
+  const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
   return [
     $column(containerOp)(
@@ -192,41 +209,34 @@ export const $TradeCardPreview = ({
 
         $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none' }))(
           $row(style({ alignItems: 'baseline' }))(
-            $NumberTicker({
-              textStyle: {
-                fontSize: '2.65em',
-
-                // pointerEvents: 'none',
-                lineHeight: 1,
-                fontWeight: "bold",
-                zIndex: 50,
-                position: 'relative'
-              
-              // fontWeight: 'normal',
-              },
-              value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, map(ss => formatFixed(ss.delta, 30), chartPnLCounter)))),
-              incrementColor: pallete.positive,
-              decrementColor: pallete.negative
-            }),
+            animatePnl
+              ? tickerStyle(
+                $NumberTicker({
+                  textStyle: {
+                    fontSize: '2.65em',
+                  },
+                  value$: map(Math.round, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartRealisedPnl)),
+                  incrementColor: pallete.positive,
+                  decrementColor: pallete.negative
+                })
+              )
+              : $text(tickerStyle, style({ fontSize: '2.65em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, String), chartRealisedPnl)),
             $text('$'),
           ),
           $row(style({ alignItems: 'baseline' }))(
-            $NumberTicker({
-              textStyle: {
-                // pointerEvents: 'none',
-                fontSize: '1.25em',
-                lineHeight: 1,
-                fontWeight: "bold",
-                zIndex: 50,
-                position: 'relative'
-              
-              // fontWeight: 'normal',
-              },
-              value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)))),
-              incrementColor: pallete.positive,
-              decrementColor: pallete.negative
-            }),
-            $text(style({ fontSize: '.65em' }))('%'),
+            animatePnl
+              ? tickerStyle(
+                $NumberTicker({
+                  textStyle: {
+                    fontSize: '1.65em',
+                  },
+                  value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartPnlPercentage))),
+                  incrementColor: pallete.positive,
+                  decrementColor: pallete.negative
+                })
+              )
+              : $text(tickerStyle, style({ fontSize: '1.65em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
+            $text(tickerStyle, style({ fontSize: '.65em', color: pallete.foreground }))('%'),
           ),
         )
       ),
@@ -367,7 +377,19 @@ export const $TradeCardPreview = ({
           )
         })
       , historicPnL, tradeSummary)),
-    )
+    ),
+
+    {
+      requestChainlinkPricefeed: map((pos): IPageChainlinkPricefeed => {
+        const feedAddress = CHAINLINK_USD_FEED_ADRESS[pos.initialPosition.indexToken]
+        return {
+          feedAddress,
+          from: pos.initialPosition.indexedAt,
+          to: 'settledPosition' in pos ? pos.settledPosition.indexedAt : Math.floor(Date.now() / 1000),
+          orderBy: 'unixTimestamp'
+        }
+      }, settledPosition),
+    }
   ]
 })
 

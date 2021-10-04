@@ -38,7 +38,7 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
 
   const accountRoute = config.parentRoute.create({ fragment: ETH_ADDRESS_REGEXP  })
 
-  const tradeRoute = accountRoute
+  const tradeRoute = config.parentRoute
     .create({
       fragment: new RegExp(`^(${TradeType.OPEN}|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
     })

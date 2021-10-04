@@ -156,6 +156,7 @@ export function handleUpdatePosition(event: contract.UpdatePosition): void {
 
     aggTradeOpen.updateList = updates
     aggTradeOpen.save()
+
   } else {
     log.error('unable to attach entity to account aggregation: aggregatedId #{}', [entity.id])
   }
@@ -181,7 +182,6 @@ export function handleClosePosition(event: contract.ClosePosition): void {
   entity.realisedPnl = event.params.realisedPnl
   entity.averagePrice = event.params.averagePrice
   entity.entryFundingRate = event.params.entryFundingRate
-
 
   entity.save()
 
@@ -225,6 +225,7 @@ export function handleClosePosition(event: contract.ClosePosition): void {
     }
 
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
+
   }
 
 }
@@ -252,8 +253,8 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
   entity.realisedPnl = event.params.realisedPnl
   entity.markPrice = event.params.markPrice
 
-
   entity.save()
+
 
   let aggTradeOpen = AggregatedTradeOpen.load(tradeKey)
 
@@ -273,8 +274,8 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
     settled.increaseList = aggTradeOpen.increaseList
     settled.updateList = aggTradeOpen.updateList
 
-
     settled.save()
+
 
     let accountAgg = AccountAggregation.load(aggTradeOpen.account)
 
@@ -296,6 +297,7 @@ export function handleLiquidatePosition(event: contract.LiquidatePosition): void
     }
 
     store.remove('AggregatedTradeOpen', aggTradeOpen.id)
+
   }
 
 }
