@@ -1,13 +1,12 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $row, layoutSheet } from "@aelea/ui-components"
-import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson, parseFixed, isTradeSettled, calculateSettledPositionDelta } from "gambit-middleware"
+import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson } from "gambit-middleware"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, multicast, now, never } from "@most/core"
+import { map, switchLatest, multicast, now } from "@most/core"
 import { screenUtils, state } from "@aelea/ui-components"
 import { Stream } from "@most/types"
 import { $TradeCardPreview } from "./$TradeCardPreview"
-import { Behavior, combineArray } from "@aelea/core"
-import { filterByIndexToken, priceChange } from "../common"
+import { Behavior } from "@aelea/core"
 
 
 export interface ITrade {

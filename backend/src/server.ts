@@ -130,15 +130,14 @@ const run = async () => {
 
       const selfUrl = 'https://' + req.get('host')
 
-      if (profilePageMatches?.length === 5) {
-        const matchedAdress: string = profilePageMatches[2]
-        const tradeType: string = profilePageMatches[3]
-        const tradeId: string = profilePageMatches[4]
+      if (profilePageMatches?.length === 4) {
+        const tradeType: string = profilePageMatches[2]
+        const tradeId: string = profilePageMatches[3]
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
           .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
           .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
-          .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?account=${matchedAdress}&tradeType=${tradeType}&tradeId=${tradeId}`)
+          .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?tradeType=${tradeType}&tradeId=${tradeId}`)
           .replace(/\$$OG_DESCRIPTION/g, `Top GMX.io traders`)
         
         res.send(ogHtmlFile)

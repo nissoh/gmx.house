@@ -1,4 +1,4 @@
-import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, stylePseudo, $node } from "@aelea/dom"
+import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, $node } from "@aelea/dom"
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
@@ -203,7 +203,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                     return $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
-                      url: `/p/account/${pos.account}/${TradeType.OPEN}/${pos.trade.id}`,
+                      url: `/p/account/${TradeType.OPEN}/${pos.trade.id}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: routeChangeTether()

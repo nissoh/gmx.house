@@ -379,7 +379,7 @@ export const $Portfolio = (config: IAccount) => component((
                     $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
-                      url: `/p/account/${pos.account}/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
+                      url: `/p/account/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: changeRouteTether()

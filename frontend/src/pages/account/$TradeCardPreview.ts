@@ -221,7 +221,7 @@ export const $TradeCardPreview = ({
                 })
               )
               : $text(tickerStyle, style({ fontSize: '2.65em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, String), chartRealisedPnl)),
-            $text('$'),
+            $text(style({ color: pallete.foreground }))('$'),
           ),
           $row(style({ alignItems: 'baseline' }))(
             animatePnl
