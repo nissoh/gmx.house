@@ -68,7 +68,7 @@ openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
     })
   }
 
-  const selfRef = `http://localhost:5555/card/${tradeType}/${tradeId}`
+  const selfRef = `${process.env.APP}/card/${tradeType}/${tradeId}`
   // const file = await screenPage(`http://localhost:3000/card/0x4CC6d33B7605809wc1E5DBb2198758a0010A67E00`)
   const file = await screenPage(selfRef)
   
