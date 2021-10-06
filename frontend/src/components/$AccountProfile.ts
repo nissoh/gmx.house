@@ -1,8 +1,8 @@
-import { component, $node, style, $text, attr, styleBehavior, INode, $element, stylePseudo, nodeEvent, $Node } from "@aelea/dom"
+import { component, $node, style, $text, attr, styleBehavior, INode, $element, nodeEvent, $Node } from "@aelea/dom"
 import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
-import { shortenAddress, getAccountExplorerUrl, CHAIN, bnToHex, BSC_WALLET, IClaim, shortPostAdress } from "gambit-middleware"
+import { awaitPromises, constant, empty, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { shortenAddress, getAccountExplorerUrl, CHAIN, bnToHex, BSC_WALLET, IClaim } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
@@ -12,8 +12,10 @@ import { $ButtonPrimary } from "./form/$Button"
 import * as provider from 'metamask-provider'
 import { combineArray, combineObject } from "@aelea/utils"
 import { TransactionReceipt } from "@ethersproject/providers"
-import { account } from "metamask-provider"
 import { Behavior, O, Op } from "@aelea/core"
+import { $Link } from "./$Link"
+import { account } from "metamask-provider"
+import { Route } from "@aelea/router"
 
 type IMaybeClaimIdentity = Pick<IClaim, 'identity'> | null
 
@@ -31,7 +33,7 @@ export interface IProfile {
 
 const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
 
-export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = 42) => {
+export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = '42px') => {
   const identity = claim?.identity.split(/^@/)
   const isTwitter = identity?.length === 2
 
@@ -39,7 +41,7 @@ export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size 
     const username = identity![1]
 
     return $photoContainer(
-      style({ width: size + 'px', height: size + 'px' }),
+      style({ width: size, height: size }),
       attr({ src: `https://unavatar.vercel.app/twitter/${username}` })
     )()
   }
@@ -88,6 +90,41 @@ export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
     )
   )
 }
+
+
+
+export interface IAccountPreview {
+  address: string
+  size?: string
+  parentRoute?: Route
+}
+
+export const $AccountPreview = ({
+  address, size = '42px', parentRoute
+}: IAccountPreview) => component((
+  [profileClick, profileClickTether]: Behavior<string, string>
+) => {
+
+  const $preview = $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+    $AccountPhoto(address, null, size),
+    $AccountLabel(address, null, parentRoute ? style({ color: pallete.primary }) : O())
+  )
+  return [
+
+    $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+      parentRoute
+        ? $Link({ route: parentRoute.create({ fragment: '2121212' }),
+          $content: $preview,
+          url: `/p/account/${address}`,
+        })({ click: profileClickTether() })
+        : $preview,
+      parentRoute ? $ProfileLinks(address, null) : empty()
+    )
+    ,
+
+    { profileClick }
+  ]
+})
 
 
 const $ClaimForm = (address: string) => component((

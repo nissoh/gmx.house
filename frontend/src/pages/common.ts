@@ -45,7 +45,7 @@ export const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTra
 
 
 export const winLossTableColumn = {
-  $head: $text('Win / Loss'),
+  $head: $text('Win/Loss'),
   columnOp: style({ flex: 1.25, placeContent: 'center' }),
   $body: map((pos: IAggregatedAccountSummary) => {
     return $row(

@@ -7,18 +7,22 @@ import { screenUtils, state } from "@aelea/ui-components"
 import { Stream } from "@most/types"
 import { $TradeCardPreview } from "./$TradeCardPreview"
 import { Behavior } from "@aelea/core"
+import { Route } from "@aelea/router"
 
 
 export interface ITrade {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   aggregatedTrade: Stream<IAggregatedTradeAll>
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
+  parentRoute?: Route
 }
 
 
 
 export const $Trade = (config: ITrade) => component((
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
+  [changeRoute, changeRouteTether]: Behavior<string, string>,
+
 ) => {
 
 
@@ -54,8 +58,12 @@ export const $Trade = (config: ITrade) => component((
           chainlinkPricefeed: config.chainlinkPricefeed,
           aggregatedTrade: config.aggregatedTrade,
           containerOp: style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
+          accountPreview: {
+            parentRoute: config.parentRoute
+          }
         })({
-          requestChainlinkPricefeed: requestChainlinkPricefeedTether()
+          requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
+          accountPreviewClick: changeRouteTether()
         }),
 
         switchLatest(
@@ -78,7 +86,8 @@ export const $Trade = (config: ITrade) => component((
       requestAggregatedTrade: now({
         id: tradeId,
         tradeType,
-      }) as Stream<IRequestAggregatedTradeQueryparam>
+      }) as Stream<IRequestAggregatedTradeQueryparam>,
+      changeRoute
     }
   ]
 })

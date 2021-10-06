@@ -1,6 +1,7 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
 import { newDefaultScheduler } from '@most/scheduler'
 import express from 'express'
+import cors from 'cors'
 import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
@@ -114,11 +115,9 @@ const run = async () => {
 
 
 
+  app.use(cors({}))
   app.use(express.json())
   app.use(express.static(publicDir))
-  // app.use((req, res, next) => RequestContext.create(ORM.em, next))
-  // app.use('/api', openGraphScreenshot)
-  // app.use('/api', claimApi)
   app.use('/api', accountApi)
   app.use((req, res, next) => {
 

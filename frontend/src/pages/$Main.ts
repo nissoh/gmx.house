@@ -86,7 +86,7 @@ export default ({ baseRoute = '' }: Website) => component((
   return [
 
     mergeArray([
-      $node(designSheet.main, style({ fontFamily: `'Nunito'`,  fontWeight: 300, backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
+      $node(designSheet.main, style({ backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
         router.match(rootRoute)(
           $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
@@ -183,8 +183,9 @@ export default ({ baseRoute = '' }: Website) => component((
       ),
       
       router.contains(cardRoute)(
-        $node(designSheet.main, style({ fontFamily: `'Nunito'`, overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
+        $node(designSheet.main, style({ overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
           $Card({
+            
             aggregatedTrade: clientApi.requestAggregatedTrade,
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({

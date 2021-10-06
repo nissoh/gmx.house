@@ -1,13 +1,13 @@
 import { combineArray, Behavior, Op, O } from "@aelea/core"
 import { $text, style, motion, MOTION_NO_WOBBLE, component, INode, styleBehavior } from "@aelea/dom"
+import { Route } from "@aelea/router"
 import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith, merge, empty } from "@most/core"
 import { Stream } from "@most/types"
-import { IAggregatedOpenPositionSummary, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, calculateSettledPositionDelta, IAggregatedTradeSettledAll, IAggregatedSettledTradeSummary, isTradeSettled } from "gambit-middleware"
+import { IAggregatedOpenPositionSummary, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, calculateSettledPositionDelta, isTradeSettled } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
-import { WSBTCPriceEvent } from "../../binance-api"
-import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
+import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
 import { $leverage, $seperator } from "../../elements/$common"
 import { $bull, $bear } from "../../elements/$icons"
@@ -30,6 +30,9 @@ export interface ITradeCardPreview {
   chartConfig?: DeepPartial<ChartOptions>,
 
   animatePnl?: boolean
+
+
+  accountPreview?: Partial<IAccountPreview>
 }
 
 export const $TradeCardPreview = ({
@@ -38,9 +41,11 @@ export const $TradeCardPreview = ({
   containerOp = O(),
   chartConfig = {},
   latestPositionDeltaChange,
-  animatePnl = true
+  animatePnl = true,
+  accountPreview
 }: ITradeCardPreview) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
+  [accountPreviewClick, accountPreviewClickTether]: Behavior<string, string>,
 ) => {
 
   const settledPosition = multicast(aggregatedTrade)
@@ -194,33 +199,29 @@ export const $TradeCardPreview = ({
 
               $row(style({ flex: 1 }))(),
 
-              $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
-                $AccountPhoto(summary.account, null, 44),
-                $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
-                  $AccountLabel(summary.account, null),
-                  $ProfileLinks(summary.account, null),
-                )
-              ),
+              $AccountPreview({ ...accountPreview, address: summary.account, })({
+                profileClick: accountPreviewClickTether()
+              }),
 
 
             )
           }, tradeSummary)
         ),
 
-        $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none' }))(
+        $column(layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none' }))(
           $row(style({ alignItems: 'baseline' }))(
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
                   textStyle: {
-                    fontSize: '2.65em',
+                    fontSize: '2.45em',
                   },
                   value$: map(Math.round, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartRealisedPnl)),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '2.65em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, String), chartRealisedPnl)),
+              : $text(tickerStyle, style({ fontSize: '2.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, x => x.toLocaleString()), chartRealisedPnl)),
             $text(style({ color: pallete.foreground }))('$'),
           ),
           $row(style({ alignItems: 'baseline' }))(
@@ -228,15 +229,15 @@ export const $TradeCardPreview = ({
               ? tickerStyle(
                 $NumberTicker({
                   textStyle: {
-                    fontSize: '1.65em',
+                    fontSize: '1.45em',
                   },
                   value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartPnlPercentage))),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '1.65em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
-            $text(tickerStyle, style({ fontSize: '.65em', color: pallete.foreground }))('%'),
+              : $text(tickerStyle, style({ fontSize: '1.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
+            $text(tickerStyle, style({ color: pallete.foreground }))('%'),
           ),
         )
       ),
@@ -389,6 +390,8 @@ export const $TradeCardPreview = ({
           orderBy: 'unixTimestamp'
         }
       }, settledPosition),
+
+      accountPreviewClick
     }
   ]
 })

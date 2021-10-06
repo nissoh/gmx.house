@@ -61,12 +61,14 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
       ),
       router.match(tradeRoute)(
         $Trade({
+          parentRoute: accountRoute,
           parentStore: config.parentStore,
           aggregatedTrade: config.settledPosition,
           chainlinkPricefeed: config.chainlinkPricefeed
         })({
           requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
           requestAggregatedTrade: requestAggregatedTradeTether(),
+          changeRoute: changeRouteTether(),
         })
       )
     ),

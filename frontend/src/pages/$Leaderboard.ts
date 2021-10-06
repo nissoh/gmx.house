@@ -2,13 +2,13 @@ import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, $node } fr
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, now, snapshot, startWith, switchLatest } from '@most/core'
-import { IClaim, intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedOpenPositionSummary, IPageable, IAggregatedSettledTradeSummary, TradeType, TradeDirection } from 'gambit-middleware'
+import { constant, map, multicast, snapshot, startWith } from '@most/core'
+import { intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedOpenPositionSummary, IPageable, IAggregatedSettledTradeSummary, TradeType } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
 import { BaseProvider } from '@ethersproject/providers'
-import { $AccountLabel, $AccountPhoto, $ProfileLinks } from '../components/$AccountProfile'
+import { $AccountPreview } from '../components/$AccountProfile'
 import { Behavior } from "@aelea/core"
 import { $Link } from "../components/$Link"
 import { screenUtils } from "@aelea/ui-components"
@@ -83,28 +83,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     $head: $text('Account'),
     columnOp: style({ minWidth: '138px' }),
     $body: map(({ account }: IAggregatedTradeSummary) => {
-      return switchLatest(
-        map((claimList: IClaim[]) => {
-          const claim = claimList?.find(c => c.address === account) || null
-
-          const $profileAnchor = $Link({
-            $content: $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-              $AccountPhoto(account, claim),
-              $AccountLabel(account, claim, style({ color: pallete.primary })),
-            ),
-            url: `/p/account/${account}`,
-            route: config.parentRoute.create({ fragment: '2121212' })
-          })({
-            click: routeChangeTether()
-          })
-
-
-          return $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
-            $profileAnchor,
-            $ProfileLinks(account, claim),
-          )
-        }, now(null) as any)
-      )
+      return $AccountPreview({ address: account, parentRoute: config.parentRoute })({
+        profileClick: routeChangeTether()
+      })
     })
   }
 
@@ -116,64 +97,61 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   return [
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
       $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+        $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
           $row(layoutSheet.spacing)(
             $header(layoutSheet.flex)(`Top Settled`),
           // $header(layoutSheet.flex)(`Settled`),
           // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
           ),
-          $row(layoutSheet.flex)(),
 
-          $text(style({ color: pallete.foreground }))('Time Frame:'),
-          $anchor(
-            styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
-            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
-          )(
-            $text('24 Hours')
-          ),
-          $anchor(
-            styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
-            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
-          )(
-            $text('7 Days')
-          ),
-          $anchor(
-            styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
-            topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
-          )(
-            $text('1 Month')
+          $row(layoutSheet.spacing)(
+            $text(style({ color: pallete.foreground }))('Time Frame:'),
+            $anchor(
+              styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+            )(
+              $text('24Hour')
+            ),
+            $anchor(
+              styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+            )(
+              $text('1Day')
+            ),
+            $anchor(
+              styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+            )(
+              $text('1Month')
+            )
           )
         ),
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
-          $column(layoutSheet.spacing)(
-            $Table2<IAggregatedAccountSummary>({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
+          $Table2<IAggregatedAccountSummary>({
+            bodyContainerOp: layoutSheet.spacing,
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            filterChange: topPnlTimeframeChange,
+            dataSource: map((res) => {
+              return {
+                data: res.page,
+                pageSize: res.pageSize,
+                offset: res.offset,
+              }
+            }, config.requestLeaderboardTopList),
+            // bodyRowOp: O(layoutSheet.spacing),
+            columns: [
+              accountTableColumn,
+              winLossTableColumn,
+              tableRiskColumnCellBody,
+              {
+                $head: $text('PnL $'),
+                columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
               },
-              filterChange: topPnlTimeframeChange,
-              dataSource: map((res) => {
-                return {
-                  data: res.page,
-                  pageSize: res.pageSize,
-                  offset: res.offset,
-                }
-              }, config.requestLeaderboardTopList),
-              // bodyRowOp: O(layoutSheet.spacing),
-              columns: [
-                accountTableColumn,
-                winLossTableColumn,
-                tableRiskColumnCellBody,
-                {
-                  $head: $text('PnL $'),
-                  columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
-                  $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
-                },
-              ],
-            })({
-              scrollIndex: tableTopPnlRequestTether(),
-            })
-          ),
+            ],
+          })({ scrollIndex: tableTopPnlRequestTether(), })
         ),
       ),
       $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
@@ -185,47 +163,40 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           ),
         ),
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
-          $column(layoutSheet.spacing)(
-            $Table2<IAggregatedOpenPositionSummary>({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
+          $Table2<IAggregatedOpenPositionSummary>({
+            bodyContainerOp: layoutSheet.spacing,
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            dataSource: openPositions,
+            // headerCellOp: style({ fontSize: '.65em' }),
+            // bodyRowOp: O(layoutSheet.spacing),
+            columns: [
+              {
+                $head: $text('Entry'),
+                columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                $body: map((pos: IAggregatedOpenPositionSummary) =>
+                  $Link({
+                    anchorOp: style({ position: 'relative' }),
+                    $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
+                    url: `/p/account/${TradeType.OPEN}/${pos.trade.id}`,
+                    route: config.parentRoute.create({ fragment: '2121212' })
+                  })({ click: routeChangeTether() })
+                )
               },
-              dataSource: openPositions,
-              // headerCellOp: style({ fontSize: '.65em' }),
-              // bodyRowOp: O(layoutSheet.spacing),
-              columns: [
-                {
-                  $head: $text('Entry'),
-                  columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-
-                  $body: map((pos: IAggregatedOpenPositionSummary) => {
-                    return $Link({
-                      anchorOp: style({ position: 'relative' }),
-                      $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
-                      url: `/p/account/${TradeType.OPEN}/${pos.trade.id}`,
-                      route: config.parentRoute.create({ fragment: '2121212' })
-                    })({
-                      click: routeChangeTether()
-                    })
-                  })
-                },
-                accountTableColumn,
-                {
-                  $head: $text('Risk'),
-                  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                  $body: map((pos: IAggregatedOpenPositionSummary) => $RiskLiquidator(pos)({}))
-                },
-                {
-                  $head: $text('PnL $'),
-                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                  $body: map((pos) => $LivePnl(pos)({}))
-                },
-              ],
-            })({
-              scrollIndex: openPositionsRequestTether()
-            })
-          ),
+              accountTableColumn,
+              {
+                $head: $text('Risk'),
+                columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                $body: map((pos: IAggregatedOpenPositionSummary) => $RiskLiquidator(pos)({}))
+              },
+              {
+                $head: $text('PnL $'),
+                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                $body: map((pos) => $LivePnl(pos)({}))
+              },
+            ],
+          })({ scrollIndex: openPositionsRequestTether() })
         ),
       )
     ),

@@ -1,12 +1,12 @@
 import { Behavior } from "@aelea/core"
-import { $wrapNativeElement, component, INode, style, styleBehavior } from "@aelea/dom"
+import { $wrapNativeElement, component, INode, style } from "@aelea/dom"
 import { observer } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromCallback, O, Op } from '@aelea/utils'
-import { chain, debounce, empty, filter, map, mergeArray, multicast, now, sample, snapshot, switchLatest, take } from '@most/core'
+import { chain, empty, filter, map, mergeArray, multicast, now, switchLatest, take } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
-import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, Nominal, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange, UTCTimestamp } from 'lightweight-charts-baseline'
+import { ChartOptions, createChart, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange } from 'lightweight-charts-baseline'
 
 export interface IMarker extends SeriesMarker<Time> {
 
@@ -62,8 +62,8 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
     layout: {
       textColor: pallete.message,
       backgroundColor: 'transparent',
-      fontFamily: 'Nunito',
-
+      fontFamily: 'RelativeMono',
+      fontSize: 12
     },
     timeScale: {
       rightOffset: 0,
