@@ -305,13 +305,6 @@ export const $Portfolio = (config: IAccount) => component((
                       )
                     },
                     {
-                      $head: $text('Account'),
-                      columnOp: style({ minWidth: '138px' }),
-                      $body: map(({ account }) => {
-                        return $AccountPreview({ address: account })({})
-                      })
-                    },
-                    {
                       $head: $text('Risk'),
                       columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
                       $body: map((pos) => $RiskLiquidator(pos)({}))

@@ -116,7 +116,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
               topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
             )(
-              $text('1Day')
+              $text('7Day')
             ),
             $anchor(
               styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),

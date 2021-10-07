@@ -91,7 +91,7 @@ export default ({ baseRoute = '' }: Website) => component((
           $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
             $row(style({ alignItems: 'center', width: '100%' }))(
-              $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.4em', textAlign: 'center', color: pallete.foreground }))(
+              $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center', color: pallete.foreground }))(
                 $text(style({  }))(`Novel Perpetual Protocol`),
                 $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`GMX Community`),
                 $text(style({  }))(`Low slippage, low fees and Instant Finality`),
