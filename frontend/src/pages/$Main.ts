@@ -190,7 +190,7 @@ export default ({ baseRoute = '' }: Website) => component((
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({
             requestAggregatedTrade: requestAggregatedTradeTether(),
-            requestChainlinkPricefeed: requestChainlinkPricefeedTether()
+            // requestChainlinkPricefeed: requestChainlinkPricefeedTether()
           })
         )
       )

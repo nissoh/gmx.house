@@ -1,9 +1,9 @@
 import { $text, component, style } from "@aelea/dom"
-import { $column, $icon, $row, layoutSheet } from '@aelea/ui-components'
+import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
 
-import {  calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
+import {  calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
 import { Stream } from '@most/types'
-import { map, now } from '@most/core'
+import { awaitPromises, fromPromise, map, now } from '@most/core'
 import { pallete } from '@aelea/ui-components-theme'
 import { $logo } from '../common/$icons'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
@@ -17,7 +17,7 @@ export interface ICard {
 
 
 
-export const $Card = ({ chainlinkPricefeed, aggregatedTrade }: ICard) => component((
+export const $Card = ({ aggregatedTrade }: ICard) => component((
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
 
 ) => {
@@ -26,6 +26,23 @@ export const $Card = ({ chainlinkPricefeed, aggregatedTrade }: ICard) => compone
   const tradeTypeUrl = urlFragments[urlFragments.length - 2].split('-')
 
   const tradeType = tradeTypeUrl[0] as TradeType
+
+
+  const ww = awaitPromises(
+    map(params => {
+      return http.fetchJson('/api/feed', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        // parseJson: jsonList => {
+        //   return jsonList.map(fromJson.positionLiquidatedJson)
+        // },
+        body: JSON.stringify(params)
+      })
+
+    }, requestChainlinkPricefeed)
+  )
 
 
   return [
@@ -37,7 +54,7 @@ export const $Card = ({ chainlinkPricefeed, aggregatedTrade }: ICard) => compone
       ),
 
       $TradeCardPreview({
-        chainlinkPricefeed,
+        chainlinkPricefeed: ww,
         aggregatedTrade,
         latestPositionDeltaChange: map(trade => calculateSettledPositionDelta(trade), aggregatedTrade),
         containerOp: style({ position: 'absolute', inset: `0px 0px 35px`, }),
@@ -54,7 +71,7 @@ export const $Card = ({ chainlinkPricefeed, aggregatedTrade }: ICard) => compone
     ),
 
     {
-      requestChainlinkPricefeed,
+      // requestChainlinkPricefeed,
       requestAggregatedTrade: now({ id: tradeId, tradeType, }) as Stream<IRequestAggregatedTradeQueryparam>
     }
   ]

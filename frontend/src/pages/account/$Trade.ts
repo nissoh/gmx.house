@@ -6,8 +6,9 @@ import { map, switchLatest, multicast, now } from "@most/core"
 import { screenUtils, state } from "@aelea/ui-components"
 import { Stream } from "@most/types"
 import { $TradeCardPreview } from "./$TradeCardPreview"
-import { Behavior } from "@aelea/core"
+import { Behavior, O } from "@aelea/core"
 import { Route } from "@aelea/router"
+import { timeSince } from "../common"
 
 
 export interface ITrade {
@@ -42,9 +43,9 @@ export const $Trade = (config: ITrade) => component((
 
     
   
-  const $label = (label: string, value: string) =>$column(
+  const $label = (label: string, value: string) => $column(
     $text(style({ color: pallete.foreground }))(label),
-    $text(style({ fontSize: '1.25em' }))(value)
+    $text(style({  }))(value)
   )
 
   // const $labelNumber = (label: string, value: bigint) => $label(label, value)
@@ -54,6 +55,19 @@ export const $Trade = (config: ITrade) => component((
     $container(
 
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
+
+        switchLatest(
+          map((summary: IAggregatedOpenPositionSummary) => {
+            return $column(layoutSheet.spacing)(
+              O(style({ flexDirection: 'row', fontSize: '.85em' }), layoutSheet.spacing)(
+                $label('Entry Date', timeSince(summary.startTimestamp))
+              ),
+
+              // $labelUSD('Collateral', summary.collateral),
+            )
+          }, tradeSummary)
+        ),
+
         $TradeCardPreview({
           chainlinkPricefeed: config.chainlinkPricefeed,
           aggregatedTrade: config.aggregatedTrade,

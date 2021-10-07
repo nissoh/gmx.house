@@ -7,8 +7,9 @@ import http from 'http'
 import path from 'path'
 import ws from 'ws'
 import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestAggregatedClosedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades, requestAggregatedTrade } from './api'
-import { accountApi } from './logic/account'
+import { api } from './logic/api'
 import { helloFrontend } from './messageBus'
+import { scheduler } from './logic/scheduler'
 
 
 // @ts-ignore
@@ -95,7 +96,6 @@ const run = async () => {
 
 
 
-  const scheduler = newDefaultScheduler()
 
   apiComponent
     .run({
@@ -118,7 +118,7 @@ const run = async () => {
   app.use(cors({}))
   app.use(express.json())
   app.use(express.static(publicDir))
-  app.use('/api', accountApi)
+  app.use('/api', api)
   app.use((req, res, next) => {
 
 
