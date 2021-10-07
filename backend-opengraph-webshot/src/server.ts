@@ -6,13 +6,6 @@ import Router from 'express-promise-router'
 const port = process.env.PORT
 
 
-const executablePath =
-  process.platform === "win32"
-    ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-    : process.platform === "linux"
-      ? "/usr/bin/google-chrome"
-      : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-
 async function runPuppeteer() {
   
   const browser = await puppeteer.launch({
