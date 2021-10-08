@@ -33,7 +33,6 @@ export const $Trade = (config: ITrade) => component((
   const tradeTypeUrl = urlFragments[urlFragments.length - 2].split('-')
   const tradeType = tradeTypeUrl[0] as TradeType
 
-
   const settledPosition = multicast(config.aggregatedTrade)
   const tradeSummary = multicast(map(fromJson.toAggregatedOpenTradeSummary, settledPosition))
 
@@ -58,10 +57,14 @@ export const $Trade = (config: ITrade) => component((
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
-            return $column(layoutSheet.spacing)(
-              O(style({ flexDirection: 'row', fontSize: '.85em' }), layoutSheet.spacing)(
-                $label('Entry Date', timeSince(summary.startTimestamp))
+            return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center' }))(
+              O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
+                $label('Opened', timeSince(summary.startTimestamp)),
               ),
+
+              O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
+                $labelUSD('Collateral', summary.collateral),
+              )
 
               // $labelUSD('Collateral', summary.collateral),
             )
@@ -82,10 +85,9 @@ export const $Trade = (config: ITrade) => component((
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
-            return $column(layoutSheet.spacing)(
-              $label('Entry Date', new Date(summary.startTimestamp * 1000).toUTCString()),
+            return $row(layoutSheet.spacing, style({ placeContent: 'space-evenly' }))(
+              $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
 
-              $labelUSD('Collateral', summary.collateral),
               $labelUSD('Size', summary.size),
               $labelUSD('Average Price', summary.averagePrice),
             )

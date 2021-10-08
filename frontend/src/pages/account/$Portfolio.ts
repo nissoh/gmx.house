@@ -1,11 +1,11 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
-import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
+import { $Button, $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
 import { unixTimeTzOffset, groupByMapMany, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType, IAggregatedTradeOpen, toAggregatedOpenTradeSummary, fromJson } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter, skipRepeatsWith, empty } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
-import { $AccountPreview } from "../../components/$AccountProfile"
+import { $AccountPreview, $ProfileClaimPreview } from "../../components/$AccountProfile"
 import { $anchor, $seperator, $tokenLabelFromSummary } from "../../elements/$common"
 import { screenUtils, state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
@@ -17,6 +17,7 @@ import { $Table2 } from "../../common/$Table2"
 import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, timeSince } from "../common"
 import { $Link } from "../../components/$Link"
 import { Route } from "@aelea/router"
+import { $IntermediateDisplay } from "../../components/$ConnectAccount"
 
 
 
@@ -70,8 +71,6 @@ export const $Portfolio = (config: IAccount) => component((
   
   const historicKline = multicast(switchLatest(combineArray((token, interval) => {
     const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval, limit: INTERVAL_TICKS }))
-    // const klineWSData = klineWS(symbol.toLowerCase())
-
     return klineData
   }, selectedToken, chartInterval)))
 
@@ -81,7 +80,6 @@ export const $Portfolio = (config: IAccount) => component((
       return historicalPnLMetric([...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds], interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
-
 
 
   
@@ -134,19 +132,19 @@ export const $Portfolio = (config: IAccount) => component((
             styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
           )(
-            $text('15 Min')
+            $text('15Min')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
           )(
-            $text('1 Hour')
+            $text('1Hour')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
           )(
-            $text('4 Hour')
+            $text('4Hour')
           ),
           $seperator,
           $Popover({
@@ -201,8 +199,8 @@ export const $Portfolio = (config: IAccount) => component((
         
 
         $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-          $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-            $AccountPreview({ address: accountAddress, size: '60px' })({}),
+          $column(layoutSheet.spacingBig)(
+            $ProfileClaimPreview({ address: accountAddress,  })({}),
           ),
 
           $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '380px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
@@ -328,10 +326,8 @@ export const $Portfolio = (config: IAccount) => component((
               const tokens = groupByMapMany([...pnlData.aggregatedTradeCloseds, ...pnlData.aggregatedTradeLiquidateds], pos => pos.initialPosition.indexToken)
 
               const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-
                 const fstTrade = positions[0]
                 const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, fstTrade.initialPosition.indexToken)
-
                 const selectedTokenBehavior = O(
                   style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
                   selectedTokenChangeTether(
@@ -345,7 +341,6 @@ export const $Portfolio = (config: IAccount) => component((
                   // $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
                 )
               })
-
             
 
               return $row(

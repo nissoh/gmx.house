@@ -230,4 +230,14 @@ export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggreg
   return filled
 }
 
+function easeInExpo(x: number) {
+  return x === 0 ? 0 : Math.pow(2, 10 * x - 10)
+}
+
+export function liquidationWeight(isLong: boolean, liquidationPriceUSD: number, markPriceUSD: number) {
+  const weight = isLong ? liquidationPriceUSD / markPriceUSD : markPriceUSD / liquidationPriceUSD
+  const value = easeInExpo(weight)
+  return value > 1 ? 1 : value
+}
+
 

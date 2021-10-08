@@ -1,7 +1,8 @@
-import { $Branch, $element, $Node, $text, style, stylePseudo } from "@aelea/dom"
-import { $ButtonIcon, $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
+import { $Branch, $element, $Node, $text, style, styleInline, stylePseudo } from "@aelea/dom"
+import { $ButtonIcon, $column, $icon, $row, layoutSheet, $seperator as $uiSeperator } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { empty } from "@most/core"
+import { empty, map } from "@most/core"
+import { Stream } from "@most/types"
 import { formatReadableUSD, IAggregatedOpenPositionSummary, IAggregatedTradeOpen, IAggregatedTradeSummary, strictGet, Token, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP } from "gambit-middleware"
 import { $tokenIconMap } from "../common/$icons"
 import { $alertIcon, $caretDblDown, $trash } from "./$icons"
@@ -69,3 +70,10 @@ export const $tokenLabelFromSummary = (trade: IAggregatedTradeOpen, $label?: $No
 export const $leverage = (pos: IAggregatedTradeSummary) =>
   $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`)
   
+
+export function $liquidationSeparator(liqWeight: Stream<number>) {
+  return styleInline(map((weight) => ({ width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${`${weight * 100}%`}, ${pallete.foreground} 0)` }), liqWeight))(
+    $uiSeperator
+  )
+}
+

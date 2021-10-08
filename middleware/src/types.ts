@@ -38,21 +38,20 @@ export const CHAINLINK_USD_FEED_ADRESS = {
 export interface IIdentifiableEntity {
   id: string
 }
-export interface IBaseEntityIndexed extends IIdentifiableEntity {
+export interface IEntityIndexed extends IIdentifiableEntity {
   indexedAt: number
 }
 
-export type IPositionLiquidated = IBaseEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'LiquidatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionIncrease = IBaseEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'IncreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionDecrease = IBaseEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'DecreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionUpdate = IBaseEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionClose = IBaseEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionLiquidated = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'LiquidatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionIncrease = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'IncreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionDecrease = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'DecreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionUpdate = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionClose = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 
 
 
 
-export interface IClaim extends IIdentifiableEntity {
-  address: string
+export interface IClaim {
   latestClaimBlockNumber: number
   identity: string
 }
@@ -113,7 +112,7 @@ export interface IRequestAggregatedTradeQueryparam extends IIdentifiableEntity {
   tradeType: TradeType,
 }
 
-export interface IAggregatedTradeOpen extends IBaseEntityIndexed {
+export interface IAggregatedTradeOpen extends IEntityIndexed {
   account: string
 
   initialPosition: IPositionIncrease
@@ -128,7 +127,7 @@ export interface IPositionDelta {
   deltaPercentage: bigint
 }
 
-export interface IAggregatedTradeSettled<T extends IBaseEntityIndexed> extends IAggregatedTradeOpen {
+export interface IAggregatedTradeSettled<T extends IEntityIndexed> extends IAggregatedTradeOpen {
   settledPosition: T
   initialPositionBlockTimestamp: number
 }
@@ -149,7 +148,7 @@ export interface IAggregatedTradeOpenListMap {
   aggregatedTradeOpens: IAggregatedTradeOpen[]
 }
 
-export interface IAccountAggregationMap extends IBaseEntityIndexed, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap {
+export interface IAccountAggregationMap extends IEntityIndexed, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap {
   totalRealisedPnl: bigint
 }
 
@@ -191,8 +190,6 @@ export interface IAggregatedAccountSummary extends IAggregatedSettledTradeSummar
   profitablePositionsCount: number
   claim: IClaim | null,
   collateral: bigint
-
-  // tradeSummaries: IAggregatedSettledTradeSummary[]
 }
 
 export interface IChainlinkPrice {

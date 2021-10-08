@@ -1,9 +1,9 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
 
-import {  calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
+import {  IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
 import { Stream } from '@most/types'
-import { awaitPromises, fromPromise, map, now } from '@most/core'
+import { awaitPromises, empty, map, now } from '@most/core'
 import { pallete } from '@aelea/ui-components-theme'
 import { $logo } from '../common/$icons'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
@@ -56,7 +56,7 @@ export const $Card = ({ aggregatedTrade }: ICard) => component((
       $TradeCardPreview({
         chainlinkPricefeed: ww,
         aggregatedTrade,
-        latestPositionDeltaChange: map(trade => calculateSettledPositionDelta(trade), aggregatedTrade),
+        latestPositionDeltaChange: empty(),
         containerOp: style({ position: 'absolute', inset: `0px 0px 35px`, }),
         chartConfig: {
           timeScale: {

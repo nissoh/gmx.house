@@ -2,14 +2,10 @@ import { $text, component, IBranch, style } from "@aelea/dom"
 import { $row, layoutSheet } from '@aelea/ui-components'
 import { $Link } from '../components/$Link'
 import { Route } from '@aelea/router'
-import { combineArray, O, Op } from '@aelea/utils'
-import { now, switchLatest } from '@most/core'
-import { $IntermediateDisplay } from './$ConnectAccount'
-import { $AccountProfile } from './$AccountProfile'
-import { Stream } from '@most/types'
+import { O, Op } from '@aelea/utils'
+import { now } from '@most/core'
 import { $Picker } from './$ThemePicker'
 import { dark, light } from '../common/theme'
-import { IClaim } from 'gambit-middleware'
 import { $tradeGMX } from '../common/$tradeButton'
 import { Behavior } from "@aelea/core"
 

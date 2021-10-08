@@ -1,15 +1,13 @@
 import { attrBehavior } from "@aelea/dom"
 import { O } from '@aelea/utils'
 import { $element, $text, component, style } from "@aelea/dom"
-import { $Button, $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
+import { $column, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { TransactionReceipt } from "@ethersproject/providers"
-import { filter, multicast, take } from "@most/core"
+import { filter, take } from "@most/core"
 import { map, skipRepeats, startWith, switchLatest } from "@most/core"
-import { $spinner } from "../common/$spinner"
-import { $check } from "../elements/$icons"
-import { network, transactionDetails } from "metamask-provider"
-import { EXPLORER_URL, shortenTxAddress } from "gambit-middleware"
+import { EXPLORER_URL, network, transactionDetails } from "wallet-link"
+import { shortenTxAddress } from "gambit-middleware"
 
 
 

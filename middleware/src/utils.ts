@@ -1,5 +1,4 @@
 import { intervalInMsMap, USD_DECIMALS } from "./constant"
-import { CHAIN } from "./provider"
 import { IPagableResponse, IPageable } from "./types"
 
 export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/i
@@ -8,17 +7,6 @@ export const VALID_FRACTIONAL_NUMBER_REGEXP = /^-?(0|[1-9]\d*)(\.\d+)?$/
 
 const EMPTY_MESSAGE = '-'
 
-export const EXPLORER_URL = {
-  [CHAIN.ETH]: "https://etherscan.io/",
-  [CHAIN.ETH_KOVAN]: "https://kovan.etherscan.io/",
-  [CHAIN.ETH_ROPSTEN]: "https://ropsten.etherscan.io/",
-
-  [CHAIN.BSC]: "https://bscscan.com/",
-  [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
-
-  [CHAIN.ARBITRUM]: "https://arbiscan.io/",
-  [CHAIN.ARBITRUM_RINKBY]: "https://rinkeby-explorer.arbitrum.io/",
-} as const
 
 
 // Constant to pull zeros from for multipliers
@@ -185,15 +173,6 @@ export const padDecimals = (amount: string, minDecimals: number) => {
     amountStr = amountStr + ".0000"
   }
   return amountStr
-}
-
-
-
-export function getAccountExplorerUrl(chainId: CHAIN, account: string) {
-  if (!account) {
-    return EXPLORER_URL[chainId]
-  }
-  return EXPLORER_URL[chainId] + "address/" + account
 }
 
 
