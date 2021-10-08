@@ -1,12 +1,12 @@
 import { $text, component, style, styleBehavior, StyleCSS, $node, motion, nodeEvent, MOTION_NO_WOBBLE, INode, IBranch } from "@aelea/dom"
-import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
-import { unixTimeTzOffset, groupByMapMany, IClaim, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType } from "gambit-middleware"
+import { $Button, $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet } from "@aelea/ui-components"
+import { unixTimeTzOffset, groupByMapMany, intervalInMsMap, AccountHistoricalDataApi, formatReadableUSD, historicalPnLMetric, IAccountAggregationMap, toAggregatedTradeSettledSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeableToken, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, TradeType, IAggregatedTradeOpen, toAggregatedOpenTradeSummary, fromJson } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter, skipRepeatsWith } from "@most/core"
+import { map, switchLatest, fromPromise, multicast, mergeArray, snapshot, at, constant, startWith, now, filter, skipRepeatsWith, empty } from "@most/core"
 import { fetchHistoricKline } from "../../binance-api"
-import { $AccountLabel, $AccountPhoto, $ProfileLinks } from "../../components/$AccountProfile"
-import { $alert, $anchor, $seperator, $tokenLabelFromSummary } from "../../elements/$common"
+import { $AccountPreview, $ProfileClaimPreview } from "../../components/$AccountProfile"
+import { $anchor, $seperator, $tokenLabelFromSummary } from "../../elements/$common"
 import { screenUtils, state } from "@aelea/ui-components"
 import { combineArray, combineObject, O } from "@aelea/utils"
 import { $Chart } from "../../components/chart/$Chart"
@@ -14,9 +14,10 @@ import { Stream } from "@most/types"
 import { $caretDown } from "../../elements/$icons"
 import { Behavior } from "@aelea/core"
 import { $Table2 } from "../../common/$Table2"
-import { $Entry, $ProfitLoss, $RiskLiquidator, timeSince } from "../common"
+import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, timeSince } from "../common"
 import { $Link } from "../../components/$Link"
 import { Route } from "@aelea/router"
+import { $IntermediateDisplay } from "../../components/$ConnectAccount"
 
 
 
@@ -70,8 +71,6 @@ export const $Portfolio = (config: IAccount) => component((
   
   const historicKline = multicast(switchLatest(combineArray((token, interval) => {
     const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval, limit: INTERVAL_TICKS }))
-    // const klineWSData = klineWS(symbol.toLowerCase())
-
     return klineData
   }, selectedToken, chartInterval)))
 
@@ -81,7 +80,6 @@ export const $Portfolio = (config: IAccount) => component((
       return historicalPnLMetric([...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds], interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
-
 
 
   
@@ -125,15 +123,7 @@ export const $Portfolio = (config: IAccount) => component((
   return [
     $container(
 
-      
-
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
-
-        $row(style({ placeContent: 'center' }))(
-          $alert(
-            $text('Profile page is still WIP')
-          )
-        ),
 
         $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
           $text(style({ color: pallete.foreground }))('Chart Interval:'),
@@ -142,19 +132,19 @@ export const $Portfolio = (config: IAccount) => component((
             styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
           )(
-            $text('15 Min')
+            $text('15Min')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
           )(
-            $text('1 Hour')
+            $text('1Hour')
           ),
           $anchor(
             styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
           )(
-            $text('4 Hour')
+            $text('4Hour')
           ),
           $seperator,
           $Popover({
@@ -209,30 +199,8 @@ export const $Portfolio = (config: IAccount) => component((
         
 
         $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-          $row(layoutSheet.spacingBig, style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-            switchLatest(
-              map((claimList: IClaim[]) => {
-                const claim = claimList?.find(c => c.address === accountAddress) || null
-
-                return $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                  $AccountPhoto(accountAddress, claim, 72),
-                  $column(layoutSheet.spacingTiny)(
-                    $AccountLabel(accountAddress, claim),
-                    $ProfileLinks(accountAddress, claim),
-                  )
-                )
-                // $anchor(attr({ href: getAccountUrl(CHAIN.BSC, accountAddress) }))(
-                //   $icon({ $content: $external, width: '12px', viewBox: '0 0 24 24' })
-                // ),
-                // $text(style({ color: pallete.horizon }))('|'),
-                // $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(event('click')))(
-                //   $text('Claim')
-                // ), 
-
-
-                // return $AccountProfile({ address: accountAddress, claim, tempFix: true })({})
-              }, now(null) as any)
-            ),
+          $column(layoutSheet.spacingBig)(
+            $ProfileClaimPreview({ address: accountAddress,  })({}),
           ),
 
           $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', maxWidth: '380px', overflow: 'hidden', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }))(
@@ -308,7 +276,49 @@ export const $Portfolio = (config: IAccount) => component((
         $node(),
 
 
-        // $labeledDivider('Realised PnL'),
+        switchLatest(
+          map(res => {
+
+            return res.aggregatedTradeOpens.length
+              ? $card(layoutSheet.spacingBig)(
+                $Table2<IAggregatedOpenPositionSummary>({
+                  bodyContainerOp: layoutSheet.spacing,
+                  scrollConfig: {
+                    containerOps: O(layoutSheet.spacingBig)
+                  },
+                  dataSource: now(res.aggregatedTradeOpens.map(O(fromJson.toAggregatedOpenTradeSummary))),
+                  // headerCellOp: style({ fontSize: '.65em' }),
+                  // bodyRowOp: O(layoutSheet.spacing),
+                  columns: [
+                    {
+                      $head: $text('Entry'),
+                      columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                      $body: map((pos) =>
+                        $Link({
+                          anchorOp: style({ position: 'relative' }),
+                          $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
+                          url: `/p/account/${TradeType.OPEN}/${pos.trade.id}`,
+                          route: config.parentRoute.create({ fragment: '2121212' })
+                        })({ click: changeRouteTether() })
+                      )
+                    },
+                    {
+                      $head: $text('Risk'),
+                      columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                      $body: map((pos) => $RiskLiquidator(pos)({}))
+                    },
+                    {
+                      $head: $text('PnL $'),
+                      columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                      $body: map((pos) => $LivePnl(pos)({}))
+                    },
+                  ],
+                })({  })
+              )
+              : empty()
+
+          }, config.accountAggregation)
+        ),
 
         $column(
           switchLatest(
@@ -316,10 +326,8 @@ export const $Portfolio = (config: IAccount) => component((
               const tokens = groupByMapMany([...pnlData.aggregatedTradeCloseds, ...pnlData.aggregatedTradeLiquidateds], pos => pos.initialPosition.indexToken)
 
               const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-
                 const fstTrade = positions[0]
                 const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, fstTrade.initialPosition.indexToken)
-
                 const selectedTokenBehavior = O(
                   style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
                   selectedTokenChangeTether(
@@ -333,7 +341,6 @@ export const $Portfolio = (config: IAccount) => component((
                   // $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
                 )
               })
-
             
 
               return $row(
@@ -355,18 +362,18 @@ export const $Portfolio = (config: IAccount) => component((
                   .sort((a, b) => b.indexedAt - a.indexedAt)
                   .map(toAggregatedTradeSettledSummary)
                 return settledList
-            
+
               }, config.accountAggregation),
               columns: [
                 {
                   $head: $text('Settled'),
-                  // columnOp: O(style({  flexDirection: 'column' }), layoutSheet.spacingTiny),
+                  columnOp: O(style({  flex: 1 })),
 
                   $body: map((pos) => {
                     return $column(style({ fontSize: '.65em' }))(
                       $column(
                         $text(timeSince(pos.settledTimestamp)),
-                        $text(new Date(pos.settledTimestamp * 1000).toLocaleString()),  
+                        $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),  
                       ),
                     )
                   })
@@ -379,7 +386,7 @@ export const $Portfolio = (config: IAccount) => component((
                     $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
-                      url: `/p/account/${pos.account}/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
+                      url: `/p/account/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: changeRouteTether()
@@ -389,12 +396,12 @@ export const $Portfolio = (config: IAccount) => component((
                 // accountTableColumn,
                 {
                   $head: $text('Risk'),
-                  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                  columnOp: O(layoutSheet.spacingTiny, style({ flex: .5, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
                   $body: map((pos: IAggregatedOpenPositionSummary) => $RiskLiquidator(pos)({}))
                 },
                 {
                   $head: $text('PnL $'),
-                  columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '160px' }),
                   $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
                 }
               ],
@@ -415,6 +422,7 @@ export const $Portfolio = (config: IAccount) => component((
             return $Chart({
               initializeSeries: map(api => {
 
+                const startDate = (Date.now() - chartInterval * INTERVAL_TICKS) / 1000
 
                 const series = api.addCandlestickSeries({
                   upColor: pallete.foreground,
@@ -447,9 +455,11 @@ export const $Portfolio = (config: IAccount) => component((
                 timescale.fitContent()
 
 
+                const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.initialPosition.indexedAt > startDate)
+                const liquidatedTradeList = accountHistoryPnL.aggregatedTradeLiquidateds.filter(pos => pos.initialPosition.indexedAt > startDate)
 
                 setTimeout(() => {
-                  const increasePosMarkers = [...accountHistoryPnL.aggregatedTradeCloseds, ...accountHistoryPnL.aggregatedTradeLiquidateds]
+                  const increasePosMarkers = [...closedTradeList, ...liquidatedTradeList]
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken)
                     .map((pos): SeriesMarker<Time> => {
                       return {
@@ -459,7 +469,7 @@ export const $Portfolio = (config: IAccount) => component((
                         time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
                       }
                     })
-                  const closePosMarkers = accountHistoryPnL.aggregatedTradeCloseds
+                  const closePosMarkers = closedTradeList
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !('markPrice' in pos.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
 
@@ -471,7 +481,7 @@ export const $Portfolio = (config: IAccount) => component((
                         time: unixTimeTzOffset(pos.indexedAt),
                       }
                     })
-                  const liquidatedPosMarkers = accountHistoryPnL.aggregatedTradeLiquidateds
+                  const liquidatedPosMarkers = liquidatedTradeList
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && 'markPrice' in pos.settledPosition)
                     .map((pos): SeriesMarker<Time> => {
                       return {

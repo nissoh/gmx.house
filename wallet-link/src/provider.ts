@@ -1,36 +1,21 @@
 import { O, Op, fromCallback } from "@aelea/utils"
-import { BaseProvider, EventType } from "@ethersproject/providers"
+import { BaseProvider, EventType, ExternalProvider } from "@ethersproject/providers"
 import { awaitPromises, at, map, chain, recoverWith, continueWith, switchLatest, take, filter } from "@most/core"
 import { disposeWith } from "@most/disposable"
 import { Stream } from "@most/types"
 
-export enum CHAIN {
-  ETH = 1,
-  ETH_ROPSTEN = 3,
-  ETH_KOVAN = 42,
-
-  BSC = 56,
-  BSC_TESTNET = 97,
-
-  ARBITRUM = 42161,
-  ARBITRUM_RINKBY = 421611,
-}
 
 
+export const keepTryingExternalProvider = <T extends ExternalProvider>(provider: Stream<T | null>): Stream<T> => {
+  const validProvider = filter(provider => provider !== null, provider)
 
-
-export const awaitProvider = <T extends BaseProvider>(provider: Stream<T | null>): Stream<T> => {
-  const validProvider = filter(provider => {
-    return provider !== null
-  }, provider) as Stream<T>
   const recoverProviderFailure = recoverWith(err => {
     console.error(err)
-    return chain(() => awaitProvider(provider), at(3000, null))
+    return chain(() => keepTryingExternalProvider(provider), at(3000, null))
   }, validProvider)
 
   return recoverProviderFailure
 }
-
 
 
 export const providerAction = <T>(provider: Stream<BaseProvider>) => (interval: number, actionOp: Op<BaseProvider, Promise<T>>) => {

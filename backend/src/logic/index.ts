@@ -1,2 +1,2 @@
 export * from './aggregatedTradeList'
-export * from './account'
+export * from './api'

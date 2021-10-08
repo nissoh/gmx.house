@@ -1,13 +1,15 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
 import { newDefaultScheduler } from '@most/scheduler'
 import express from 'express'
+import cors from 'cors'
 import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
 import ws from 'ws'
 import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestAggregatedClosedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades, requestAggregatedTrade } from './api'
-import { accountApi } from './logic/account'
+import { api } from './logic/api'
 import { helloFrontend } from './messageBus'
+import { scheduler } from './logic/scheduler'
 
 
 // @ts-ignore
@@ -94,7 +96,6 @@ const run = async () => {
 
 
 
-  const scheduler = newDefaultScheduler()
 
   apiComponent
     .run({
@@ -114,31 +115,28 @@ const run = async () => {
 
 
 
+  app.use(cors({}))
   app.use(express.json())
   app.use(express.static(publicDir))
-  // app.use((req, res, next) => RequestContext.create(ORM.em, next))
-  // app.use('/api', openGraphScreenshot)
-  // app.use('/api', claimApi)
-  app.use('/api', accountApi)
+  app.use('/api', api)
   app.use((req, res, next) => {
 
 
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
-      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(closed|liquidated|open)\/(0x[A-Fa-f0-9]{64})$/i)
+      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(closed|liquidated|open-(\d)+)\/(0x[A-Fa-f0-9]{64})$/i)
       res.setHeader('content-type', 'text/html; charset=utf-8')
 
       const selfUrl = 'https://' + req.get('host')
 
-      if (profilePageMatches?.length === 5) {
-        const matchedAdress: string = profilePageMatches[2]
-        const tradeType: string = profilePageMatches[3]
-        const tradeId: string = profilePageMatches[4]
+      if (profilePageMatches?.length === 4) {
+        const tradeType: string = profilePageMatches[2]
+        const tradeId: string = profilePageMatches[3]
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'GMX Profile')
           .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
           .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
-          .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?account=${matchedAdress}&tradeType=${tradeType}&tradeId=${tradeId}`)
+          .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?tradeType=${tradeType}&tradeId=${tradeId}`)
           .replace(/\$$OG_DESCRIPTION/g, `Top GMX.io traders`)
         
         res.send(ogHtmlFile)

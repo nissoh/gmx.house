@@ -1,37 +1,41 @@
-import { component, $node, style, $text, attr, styleBehavior, INode, $element, stylePseudo, nodeEvent, $Node } from "@aelea/dom"
-import { $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
+import { component, $node, style, $text, attr, styleBehavior, INode, $element, nodeEvent, $Node } from "@aelea/dom"
+import { $Button, $column, $icon, $Popover, $row, $TextField, layoutSheet } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, never, now, snapshot, switchLatest } from "@most/core"
-import { shortenAddress, getAccountExplorerUrl, CHAIN, bnToHex, BSC_WALLET, IClaim, shortPostAdress } from "gambit-middleware"
+import { awaitPromises, constant, empty, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { shortenAddress, bnToHex, BSC_WALLET, IClaim } from "gambit-middleware"
 import { $jazzicon } from "../common/gAvatar"
 import { $alert, $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
 import { $Transaction } from "./$TransactionDetails"
 import { $ButtonPrimary } from "./form/$Button"
-import * as provider from 'metamask-provider'
 import { combineArray, combineObject } from "@aelea/utils"
 import { TransactionReceipt } from "@ethersproject/providers"
-import { account } from "metamask-provider"
 import { Behavior, O, Op } from "@aelea/core"
+import { $Link } from "./$Link"
+import { account, CHAIN, getAccountExplorerUrl, provider } from "wallet-link"
+import { Route } from "@aelea/router"
+
 
 type IMaybeClaimIdentity = Pick<IClaim, 'identity'> | null
 
-export interface IProfile {
+
+export interface IAccountPreview {
   address: string
-  claim: IMaybeClaimIdentity
+  size?: string
+  parentRoute?: Route
+  claim?: string
 
-  $profileAnchor: $Node
+}
 
+export interface IProfile extends IAccountPreview {
   tempFix?: boolean
 }
 
 
-
-
 const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
 
-export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = 42) => {
+export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size = '42px') => {
   const identity = claim?.identity.split(/^@/)
   const isTwitter = identity?.length === 2
 
@@ -39,7 +43,7 @@ export const $AccountPhoto = (address: string, claim: IMaybeClaimIdentity, size 
     const username = identity![1]
 
     return $photoContainer(
-      style({ width: size + 'px', height: size + 'px' }),
+      style({ width: size, height: size }),
       attr({ src: `https://unavatar.vercel.app/twitter/${username}` })
     )()
   }
@@ -90,6 +94,102 @@ export const $ProfileLinks = (address: string, claim: IMaybeClaimIdentity) => {
 }
 
 
+
+export const $AccountPreview = ({
+  address, size = '42px', parentRoute
+}: IAccountPreview) => component((
+  [profileClick, profileClickTether]: Behavior<string, string>
+) => {
+
+  const $preview = $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+    $AccountPhoto(address, null, size),
+    $AccountLabel(address, null, parentRoute ? style({ color: pallete.primary }) : O())
+  )
+  return [
+
+    $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+      parentRoute
+        ? $Link({ route: parentRoute.create({ fragment: '2121212' }),
+          $content: $preview,
+          url: `/p/account/${address}`,
+        })({ click: profileClickTether() })
+        : $preview,
+      parentRoute ? $ProfileLinks(address, null) : empty()
+    ),
+
+    { profileClick }
+  ]
+})
+
+export const $ProfileClaimPreview = ({ claim, address }: IProfile) => component((
+  [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
+  [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
+  [display, displayTether]: Behavior<any, string>,
+  [claimedAccount, claimedAccountTether]: Behavior<IClaim, IClaim>
+
+) => {
+
+
+  const profileDisplay = mergeArray([
+    now(claim),
+    claimedAccount,
+    map(identity => ({ identity, address }), display),
+    constant(claim, dismissPopover)
+  ])
+
+
+  return [
+    $Popover({
+      dismiss: claimedAccount,
+      $$popContent: map(() => {
+        return $ClaimForm(address)({
+          display: displayTether(),
+          claimSucceed: claimedAccountTether()
+        })
+      }, clickPopoverClaim),
+    })(
+      $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
+        switchLatest(
+          map(claimChange => {
+            return $AccountPreview({
+              address,
+              size: '60px',
+              // claim: claimChange
+            })({})
+          }, profileDisplay)
+        ),
+
+        // $IntermediateDisplay({
+        //   $display: $Button({
+        //     $content: $text('Claim')
+        //   })({})
+        // })({}),
+
+
+        switchLatest(
+          combineArray((claim, account) => {
+            return !account || account && account.toLocaleLowerCase() == address.toLowerCase()
+              ? mergeArray([
+                $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click')))(
+                  // $text(claim && claim.address === account ? 'Rename' : 'Claim')
+                ),
+                $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
+              ])
+              : empty()
+          }, profileDisplay, account)
+        ),
+        
+      )
+    )({
+      overlayClick: dismissPopoverTether()
+    }),
+
+    {
+    }
+  ]
+})
+
+
 const $ClaimForm = (address: string) => component((
   [display, displayTether]: Behavior<string, string>,
   [claimTx, claimTxTether]: Behavior<PointerEvent, string>,
@@ -99,8 +199,8 @@ const $ClaimForm = (address: string) => component((
 
   const claimBehavior = claimTxTether(
     snapshot(async (state) => {
-      const metamask = state.metamaskProvider.metamask
-      const acct = await state.metamaskProvider.signer.getAddress()
+      const metamask = state.provider.metamask
+      const acct = await state.provider.signer.getAddress()
 
       const txHash: string = await metamask.request({
         method: 'eth_sendTransaction',
@@ -115,7 +215,7 @@ const $ClaimForm = (address: string) => component((
       })
       
       return txHash as string
-    }, combineObject({ display, metamaskProvider: provider.metamaskProvider })),
+    }, combineObject({ display, provider })),
     awaitPromises
   )
 
@@ -185,65 +285,6 @@ const $ClaimForm = (address: string) => component((
       claimTx,
       display,
       claimSucceed
-    }
-  ]
-})
-
-export const $AccountProfile = ({ claim, address, $profileAnchor }: IProfile) => component((
-  [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
-  [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
-  [display, displayTether]: Behavior<any, string>,
-  [claimedAccount, claimedAccountTether]: Behavior<IClaim, IClaim>
-
-) => {
-
-
-  const profileDisplay = mergeArray([
-    now(claim),
-    claimedAccount,
-    map(identity => ({ ...claim, identity, address }), display),
-    constant(claim, dismissPopover)
-  ])
-
-
-  return [
-    $Popover({
-      dismiss: claimedAccount,
-      $$popContent: map(() => {
-        return $ClaimForm(address)({
-          display: displayTether(),
-          claimSucceed: claimedAccountTether()
-        })
-      }, clickPopoverClaim),
-    })(
-      $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-        switchLatest(map(claimChange => {
-          return mergeArray([
-            $ProfileLinks(address, claimChange),
-            $profileAnchor,
-          ])
-        }, profileDisplay)),
-
-
-        switchLatest(
-          combineArray((claim, account) => {
-            return !account || account && account === address
-              ? mergeArray([
-                $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click')))(
-                  $text(claim && claim.address === account ? 'Rename' : 'Claim')
-                ),
-                $text(style({ color: colorAlpha(pallete.foreground, .25) }))('|'),
-              ])
-              : empty()
-          }, profileDisplay, account)
-        ),
-        
-      )
-    )({
-      overlayClick: dismissPopoverTether()
-    }),
-
-    {
     }
   ]
 })

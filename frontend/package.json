@@ -38,8 +38,7 @@
         "homepage": "^1.0.0",
         "jazzicon": "^1.5.0",
         "lightweight-charts-baseline": "0.0.3",
-        "metamask-provider": "workspace:*",
-        "typescript": "^4.4.3"
+        "wallet-link": "workspace:*"
     },
     "devDependencies": {
         "copy-webpack-plugin": "9.0.1",

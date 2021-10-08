@@ -2,8 +2,8 @@ import { Behavior } from "@aelea/core"
 import { $text, component, style, $Node, attr } from "@aelea/dom"
 import { $column, layoutSheet } from "@aelea/ui-components"
 import { combine, map, merge, switchLatest } from "@most/core"
-import { CHAIN } from "gambit-middleware"
-import { account, requestAccounts, network, getProvider } from "metamask-provider"
+import { shortenAddress } from "gambit-middleware"
+import { account, requestAccounts, CHAIN, network, provider } from "wallet-link"
 import { $alert, $anchor } from "../elements/$common"
 import { $ButtonPrimary } from "./form/$Button"
 
@@ -37,23 +37,26 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
 
 
   return [
-    switchLatest(
-      map((provider) => {
-        if (provider === null)
-          return $installMetamaskWarning
+    $column(
+      switchLatest(
+        map(prov => {
+          if (prov === null)
+            return $installMetamaskWarning
 
-        return switchLatest(
-          combine((chain, account) => {
-            if (account === undefined)
-              return $connectButton
-            if (chain !== CHAIN.ARBITRUM)
-              return $alert(
-                $text('Switch to Arbitrum Network')
-              )
-            return config.$display
-          }, network, account)
-        )
-      }, getProvider())
+          return switchLatest(
+            combine((chain, account) => {
+              if (account === undefined)
+                return $connectButton
+              if (chain !== CHAIN.ARBITRUM)
+                return $alert(
+                  $text('Switch to Arbitrum Network')
+                )
+              return config.$display
+            }, network, account)
+          )
+        }, provider)
+      ),
+      $text(map(shortenAddress, connectedWalletSucceed))
     ),
 
     {

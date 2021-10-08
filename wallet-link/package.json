@@ -1,6 +1,6 @@
 {
-    "name": "metamask-provider",
-    "version": "0.1.0",
+    "name": "wallet-link",
+    "version": "0.0.1",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
@@ -33,6 +33,8 @@
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
         "@types/node": "^16.10.2",
+        "@walletconnect/client": "^1.6.6",
+        "@walletconnect/qrcode-modal": "^1.6.6",
         "gambit-middleware": "workspace:*"
     }
 }

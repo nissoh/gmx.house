@@ -3,10 +3,25 @@
 <head>
     <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=0.85">
-    <style> * { box-sizing: border-box; } body { margin: 0; overflow: hidden; } </style>
+    <style> 
+    /* WebkitFontSmoothing: 'antialiased', fontSmooth: 'antialiased', */
+        * { box-sizing: border-box; } body { margin: 0; overflow: hidden; }
+
+        body, button {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-family: 'RelativeMono';
+        }
+
+        @font-face {
+            font-family: 'RelativeMono';
+            font-style: normal;
+            font-weight: 300;
+            src: url("/assets/relative-mono-10-pitch-pro.woff2") format('woff2');
+        }
+     </style>
     <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;700&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
 
     <!-- Facebook Meta Tags -->
     <meta property="og:url" content="$OG_URL">

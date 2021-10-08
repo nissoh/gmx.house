@@ -20,7 +20,7 @@
       "path": "../backend"
     },
     {
-      "path": "../metamask-provider"
+      "path": "../wallet-link"
     }
   ]
 }

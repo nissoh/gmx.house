@@ -40,7 +40,7 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
 
   const tradeRoute = config.parentRoute
     .create({
-      fragment: new RegExp(`^(${TradeType.OPEN}|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
+      fragment: new RegExp(`^(${TradeType.OPEN}-(\\d)+|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
     })
     .create({
       fragment: TX_HASH_REGEX,
@@ -61,12 +61,14 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
       ),
       router.match(tradeRoute)(
         $Trade({
+          parentRoute: accountRoute,
           parentStore: config.parentStore,
           aggregatedTrade: config.settledPosition,
           chainlinkPricefeed: config.chainlinkPricefeed
         })({
           requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
           requestAggregatedTrade: requestAggregatedTradeTether(),
+          changeRoute: changeRouteTether(),
         })
       )
     ),
