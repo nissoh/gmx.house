@@ -124,7 +124,7 @@ const run = async () => {
 
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
-      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(closed|liquidated|open-(\d)+)\/(0x[A-Fa-f0-9]{64})$/i)
+      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(closed|liquidated|open-\d+)\/(0x[A-Fa-f0-9]{64})$/i)
       res.setHeader('content-type', 'text/html; charset=utf-8')
 
       const selfUrl = 'https://' + req.get('host')
