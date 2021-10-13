@@ -5,8 +5,8 @@
     "rootDir": "src",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": [
-      "node"
+    "lib": [
+      "DOM"
     ],
     "declarationDir": ".dist/types"
   },

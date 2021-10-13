@@ -1,6 +1,6 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $row, layoutSheet } from "@aelea/ui-components"
-import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson } from "gambit-middleware"
+import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson, IClaim } from "gambit-middleware"
 import { pallete } from "@aelea/ui-components-theme"
 import { map, switchLatest, multicast, now } from "@most/core"
 import { screenUtils, state } from "@aelea/ui-components"
@@ -15,6 +15,8 @@ export interface ITrade {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   aggregatedTrade: Stream<IAggregatedTradeAll>
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
+  claimMap: Stream<Map<string, IClaim>>
+
   parentRoute?: Route
 }
 
@@ -77,7 +79,8 @@ export const $Trade = (config: ITrade) => component((
           containerOp: style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
           accountPreview: {
             parentRoute: config.parentRoute
-          }
+          },
+          claimMap: config.claimMap
         })({
           requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
           accountPreviewClick: changeRouteTether()

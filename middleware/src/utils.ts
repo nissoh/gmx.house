@@ -25,7 +25,7 @@ export function shortPostAdress(address: string) {
   return address.slice(address.length -4, address.length)
 }
 
-export function readableNumber(ammount: string | number) {
+export function readableNumber(ammount: number) {
   const parts = ammount.toString().split('.')
   const [whole = '', decimal = ''] = parts
 
@@ -38,11 +38,11 @@ export function readableNumber(ammount: string | number) {
     return whole + '.' + shortDecimal
   }
 
-  return whole
+  return Number(whole).toLocaleString()
 }
 
 export function formatReadableUSD(ammount: bigint) {
-  const str = formatFixed(ammount, USD_DECIMALS).toLocaleString()
+  const str = formatFixed(ammount, USD_DECIMALS)
   return readableNumber(str)
 }
 

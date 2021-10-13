@@ -4,7 +4,7 @@ import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-comp
 import { pallete } from "@aelea/ui-components-theme"
 import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith, merge, empty, snapshot } from "@most/core"
 import { Stream } from "@most/types"
-import { strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, isTradeSettled, liquidationWeight, calculateSettledPositionDelta } from "gambit-middleware"
+import { strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, isTradeSettled, liquidationWeight, calculateSettledPositionDelta, IClaim } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
@@ -28,7 +28,7 @@ export interface ITradeCardPreview {
 
   animatePnl?: boolean
 
-
+  claimMap: Stream<Map<string, IClaim>>
   accountPreview?: Partial<IAccountPreview>
 }
 
@@ -39,7 +39,8 @@ export const $TradeCardPreview = ({
   chartConfig = {},
   latestPositionDeltaChange,
   animatePnl = true,
-  accountPreview
+  accountPreview,
+  claimMap
 }: ITradeCardPreview) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
   [accountPreviewClick, accountPreviewClickTether]: Behavior<string, string>,
@@ -205,7 +206,7 @@ export const $TradeCardPreview = ({
 
               ...isOpen ? [
                 $seperator,
-                $text(style({ color: pallete.indeterminate }))(`LIVE`)
+                $text(style({ color: pallete.indeterminate }))(`OPEN`)
               ] : [],
 
               // $tokenLabelFromSummary(summary.trade),
@@ -214,16 +215,18 @@ export const $TradeCardPreview = ({
 
               $row(style({ flex: 1 }))(),
 
-              $AccountPreview({ ...accountPreview, address: summary.account, })({
-                profileClick: accountPreviewClickTether()
-              }),
+              switchLatest(map(map => {
+                return $AccountPreview({ ...accountPreview, address: summary.account, claim: map.get(summary.account.toLocaleLowerCase()) })({
+                  profileClick: accountPreviewClickTether()
+                })
+              }, claimMap)),
 
 
             )
           }, tradeSummary)
         ),
 
-        $column(layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none' }))(
+        $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none' }))(
           $row(style({ alignItems: 'baseline' }))(
             animatePnl
               ? tickerStyle(
@@ -245,14 +248,14 @@ export const $TradeCardPreview = ({
               ? tickerStyle(
                 $NumberTicker({
                   textStyle: {
-                    fontSize: '1.45em',
+                    fontSize: '1.25em',
                   },
                   value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartPnlPercentage))),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '1.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
+              : $text(tickerStyle, style({ fontSize: '1.25em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
             $text(tickerStyle, style({ color: pallete.foreground }))('%'),
           ),
         )
@@ -307,7 +310,6 @@ export const $TradeCardPreview = ({
                 title: '',
                 lineStyle: LineStyle.SparseDotted,
               })
-
             }
 
 

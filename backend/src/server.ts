@@ -1,15 +1,15 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
-import { newDefaultScheduler } from '@most/scheduler'
-import express from 'express'
 import cors from 'cors'
+import express from 'express'
 import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
 import ws from 'ws'
-import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTradeList, requestAggregatedClosedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades, requestAggregatedTrade } from './api'
+import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedClosedTrade, requestAggregatedSettledTradeList, requestAggregatedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { api } from './logic/api'
-import { helloFrontend } from './messageBus'
 import { scheduler } from './logic/scheduler'
+import { helloFrontend } from './messageBus'
+import config from './mikro-orm.config'
 
 
 // @ts-ignore
@@ -91,11 +91,10 @@ const apiComponent = helloFrontend(wss, {
 
 
 const run = async () => {
-  // ORM = await MikroORM.init(config)
-  // EM = ORM.em
+  ORM = await MikroORM.init(config)
+  EM = ORM.em
 
-
-
+  
 
   apiComponent
     .run({
@@ -133,11 +132,10 @@ const run = async () => {
         const tradeType: string = profilePageMatches[2]
         const tradeId: string = profilePageMatches[3]
         const ogHtmlFile = htmlFile
-          .replace(/\$OG_TITLE/g, 'GMX Profile')
+          .replace(/\$OG_TITLE/g, 'GMX.house - Trade')
           .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
           .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
           .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?tradeType=${tradeType}&tradeId=${tradeId}`)
-          .replace(/\$$OG_DESCRIPTION/g, `Top GMX.io traders`)
         
         res.send(ogHtmlFile)
 

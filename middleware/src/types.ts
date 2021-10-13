@@ -48,12 +48,15 @@ export type IPositionDecrease = IEntityIndexed & Omit<ExtractAndParseEventType<V
 export type IPositionUpdate = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 export type IPositionClose = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 
-
-
+export enum IClaimSource {
+  TWITTER = 'TWITTER',
+  UNKNOWN = 'UNKNOWN',
+}
 
 export interface IClaim {
-  latestClaimBlockNumber: number
-  identity: string
+  name: string
+  account: string
+  sourceType: IClaimSource
 }
 
 export interface Account {

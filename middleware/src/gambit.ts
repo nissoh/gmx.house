@@ -3,9 +3,8 @@ import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IPositionUpdate, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll } from "./types"
-import { fillIntervalGap, formatFixed, unixTimeTzOffset, UTCTimestamp } from "./utils"
-import { fromJson } from "./fromJson"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource } from "./types"
+import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -238,6 +237,35 @@ export function liquidationWeight(isLong: boolean, liquidationPriceUSD: number, 
   const weight = isLong ? liquidationPriceUSD / markPriceUSD : markPriceUSD / liquidationPriceUSD
   const value = easeInExpo(weight)
   return value > 1 ? 1 : value
+}
+
+
+export function validateIdentityName(name: string) {
+  if (typeof name === 'string' && name.startsWith('@') && !(/^@?(\w){1,15}$/.test(name))) {
+    throw new Error('Invalid twitter handle')
+  }
+
+  if (typeof name !== 'string' || name.length > 15 || String(name).length < 4) {
+    throw new Error('Invalid name')
+  }
+
+}
+
+export function parseClaim(account: string, name: string): IClaim {
+  if (!isAddress(account)) {
+    throw new Error('Invalid address')
+  }
+
+  validateIdentityName(name)
+
+  const isTwitter = name.startsWith('@')
+  const sourceType = isTwitter ? IClaimSource.TWITTER : IClaimSource.UNKNOWN
+
+  return {
+    name: isTwitter ? name.slice(1) : name,
+    account,
+    sourceType
+  }
 }
 
 

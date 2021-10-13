@@ -2,8 +2,8 @@ import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, $node } fr
 import { O, } from '@aelea/utils'
 import { $card, $column, $row, layoutSheet, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, snapshot, startWith } from '@most/core'
-import { intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedOpenPositionSummary, IPageable, IAggregatedSettledTradeSummary, TradeType } from 'gambit-middleware'
+import { constant, map, multicast, snapshot, startWith, switchLatest } from '@most/core'
+import { intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedOpenPositionSummary, IPageable, IAggregatedSettledTradeSummary, TradeType, IClaim } from 'gambit-middleware'
 import { Route } from '@aelea/router'
 import { $anchor } from '../elements/$common'
 import { Stream } from '@most/types'
@@ -21,6 +21,7 @@ import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, tableRiskColumnCellBody
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
+  claimMap: Stream<Map<string, IClaim>>
 
   requestLeaderboardTopList: Stream<IPagableResponse<IAggregatedAccountSummary>>
   openAggregatedTrades: Stream<IPagableResponse<IAggregatedOpenPositionSummary>>
@@ -83,9 +84,12 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     $head: $text('Account'),
     columnOp: style({ minWidth: '138px' }),
     $body: map(({ account }: IAggregatedTradeSummary) => {
-      return $AccountPreview({ address: account, parentRoute: config.parentRoute })({
-        profileClick: routeChangeTether()
-      })
+
+      return switchLatest(map(map => {
+        return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
+          profileClick: routeChangeTether()
+        })
+      }, config.claimMap))
     })
   }
 
@@ -174,7 +178,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             columns: [
               {
                 $head: $text('Entry'),
-                columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
                 $body: map((pos: IAggregatedOpenPositionSummary) =>
                   $Link({
                     anchorOp: style({ position: 'relative' }),

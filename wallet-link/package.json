@@ -18,23 +18,12 @@
     },
     "dependencies": {
         "@aelea/utils": "1.1.0",
-        "@ethersproject/abi": "5.4.1",
-        "@ethersproject/abstract-signer": "5.4.1",
-        "@ethersproject/bignumber": "^5.4.2",
-        "@ethersproject/bytes": "5.4.0",
-        "@ethersproject/contracts": "^5.4.1",
         "@ethersproject/providers": "5.4.5",
-        "@metamask/detect-provider": "^1.2.0",
-        "@mikro-orm/core": "^4.5.9",
-        "@mikro-orm/mongodb": "^4.5.9",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/node": "^16.10.2",
-        "@walletconnect/client": "^1.6.6",
-        "@walletconnect/qrcode-modal": "^1.6.6",
-        "gambit-middleware": "workspace:*"
+        "eip1193-provider": "1.0.1"
     }
 }

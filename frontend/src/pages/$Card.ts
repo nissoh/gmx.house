@@ -1,7 +1,7 @@
 import { $text, component, style } from "@aelea/dom"
 import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
 
-import {  IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
+import {  IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
 import { Stream } from '@most/types'
 import { awaitPromises, empty, map, now } from '@most/core'
 import { pallete } from '@aelea/ui-components-theme'
@@ -13,11 +13,13 @@ import { Behavior } from "@aelea/core"
 export interface ICard {
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
   aggregatedTrade: Stream<IAggregatedTradeSettledAll>
+
+  claimMap: Stream<Map<string, IClaim>>
 }
 
 
 
-export const $Card = ({ aggregatedTrade }: ICard) => component((
+export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
 
 ) => {
@@ -64,6 +66,7 @@ export const $Card = ({ aggregatedTrade }: ICard) => component((
           }
         },
         animatePnl: false,
+        claimMap
       })({
         requestChainlinkPricefeed: requestChainlinkPricefeedTether()
       })

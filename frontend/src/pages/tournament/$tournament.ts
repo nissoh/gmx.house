@@ -13,7 +13,7 @@
 // export interface ILeaderboard<T extends BaseProvider> {
 //   parentRoute: Route
 //   provider?: Stream<T>
-//   claimList: Stream<IClaim[]>
+//   claimMap: Stream<Map<string, IClaim>>
 
 //   tournamentQuery: Stream<Account[]>
 
