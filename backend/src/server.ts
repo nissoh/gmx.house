@@ -132,7 +132,7 @@ const run = async () => {
         const tradeType: string = profilePageMatches[2]
         const tradeId: string = profilePageMatches[3]
         const ogHtmlFile = htmlFile
-          .replace(/\$OG_TITLE/g, 'GMX.house - Trade')
+          .replace(/\$OG_TITLE/g, 'Trade Details')
           .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
           .replace(/\$OG_TWITTER_DOMAIN/g, selfUrl)
           .replace(/\$OG_IMAGE/g, `${process.env.OPENGRAPH_SERVICE}/og-trade-preview?tradeType=${tradeType}&tradeId=${tradeId}`)

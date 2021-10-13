@@ -161,11 +161,11 @@ export const $TradeCardPreview = ({
   const chartRealisedPnl = map(ss => formatFixed(ss.delta, 30), chartPnLCounter)
   const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
-  const liqPercentage = snapshot(price => {
-    // const markPrice = Number(price.delta)
-    // const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
-    return liquidationWeight(true, 50, 40)
-  }, tradeSummary, pnlCrosshairMove)
+  // const liqPercentage = snapshot(price => {
+  //   // const markPrice = Number(price.delta)
+  //   // const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
+  //   return liquidationWeight(true, 50, 40)
+  // }, tradeSummary, pnlCrosshairMove)
 
   return [
     $column(containerOp)(
@@ -177,9 +177,9 @@ export const $TradeCardPreview = ({
             const trade = summary.trade
             const isOpen = !(`settledPosition` in trade)
 
-            return $row(layoutSheet.spacing, style({ alignItems: 'center', padding: '25px 35px', zIndex: 100 }))(
+            return $row(layoutSheet.spacingBig, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: '25px 35px', zIndex: 100 }))(
               $row(style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-                $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                   $row(
                     style({ borderRadius: '2px', padding: '4px', backgroundColor: pallete.message, })(
                       $icon({
@@ -226,37 +226,33 @@ export const $TradeCardPreview = ({
           }, tradeSummary)
         ),
 
-        $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none' }))(
-          $row(style({ alignItems: 'baseline' }))(
+        $row(layoutSheet.spacing, style({ alignItems: 'baseline', placeContent: 'center', pointerEvents: 'none' }))(
+          $row(style({ fontSize: '2.25em', alignItems: 'baseline', paddingTop: '20px' }))(
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
-                  textStyle: {
-                    fontSize: '2.45em',
-                  },
                   value$: map(Math.round, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartRealisedPnl)),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '2.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, x => x.toLocaleString()), chartRealisedPnl)),
-            $text(style({ color: pallete.foreground }))('$'),
+              : $text(tickerStyle, styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, x => `${x > 0 ? '+' : ''}` + x.toLocaleString()), chartRealisedPnl)),
+            $text(style({ fontSize: '.75em', color: pallete.foreground }))('$'),
           ),
           // $liquidationSeparator(liqPercentage),
-          $row(style({ alignItems: 'baseline' }))(
+          $row(style({ fontSize: '1.75em', alignItems: 'baseline' }))(
+            $text(style({ color: pallete.foreground }))('('),
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
-                  textStyle: {
-                    fontSize: '1.25em',
-                  },
                   value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartPnlPercentage))),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '1.25em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
+              : $text(tickerStyle, styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, n => `${n > 0 ? '+' : ''}` + n), chartPnlPercentage)),
             $text(tickerStyle, style({ color: pallete.foreground }))('%'),
+            $text(style({ color: pallete.foreground }))(')'),
           ),
         )
       ),

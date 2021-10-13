@@ -1,4 +1,4 @@
-import { $text, component, style } from "@aelea/dom"
+import { $element, $text, attr, component, style, styleInline } from "@aelea/dom"
 import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
 
 import {  IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
@@ -48,18 +48,18 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
 
 
   return [
-    $column(layoutSheet.spacingBig, style({ fontSize: '150%' }))(
+    $column(layoutSheet.spacingBig, style({ height: '100vh', fontSize: '1.25em', fontFamily: 'RelativePro', backgroundColor: 'rgb(14, 15, 32)' }))(
 
-      $row(layoutSheet.spacingSmall, style({ alignItems: 'center', position: 'absolute', left: '10px', bottom: '10px' }))(
-        $icon({ $content: $logo, fill: pallete.foreground, width: '46px', height: '38px', viewBox: '0 0 32 32' }),
-        $text(style({ color: pallete.foreground, fontSize: '.55em', }))('GMX.house')
+      $row(layoutSheet.spacing, style({ alignItems: 'center', position: 'absolute', left: '15px', bottom: '15px' }))(
+        $element('img')(attr({ src: '/assets/gmx-logo.png' }), style({ width: '42px' }))(),
+        $text(style({ color: pallete.message, fontSize: '.75em', fontWeight: 'bold' }))('GMX.io')
       ),
 
       $TradeCardPreview({
         chainlinkPricefeed: ww,
         aggregatedTrade,
         latestPositionDeltaChange: empty(),
-        containerOp: style({ position: 'absolute', inset: `0px 0px 35px`, }),
+        containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
         chartConfig: {
           timeScale: {
             visible: false
@@ -69,7 +69,24 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
         claimMap
       })({
         requestChainlinkPricefeed: requestChainlinkPricefeedTether()
-      })
+      }),
+
+      $row(
+        style({
+          backgroundImage: 'url(/assets/field-overlay.png)',
+          position: 'absolute',
+          zIndex: 2222,
+          inset: 0,
+          backgroundPositionY: '40px',
+          backgroundRepeat: 'no-repeat',
+          // filter: 'opacity(.7)',
+          mixBlendMode: 'soft-light',  
+        })
+      )($row(style({
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'radial-gradient(at center top, rgba(255, 255, 255, 0) -5%, rgba(14, 15, 32, 0.72) 67%)'
+      }))())
 
     ),
 
