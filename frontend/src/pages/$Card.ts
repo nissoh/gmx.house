@@ -60,6 +60,9 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
         aggregatedTrade,
         latestPositionDeltaChange: empty(),
         containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
+        accountPreview: {
+          avatarSize: '45px'
+        },
         chartConfig: {
           timeScale: {
             visible: false

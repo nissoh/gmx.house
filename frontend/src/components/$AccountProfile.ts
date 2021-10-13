@@ -59,7 +59,7 @@ export const $AccountLabel = (address: string, claim?: IClaim, adressOp: Op<INod
 
   return $column(
     $text(style({ fontSize: '.65em' }))(address.slice(0, 6)),
-    $text(adressOp)(address.slice(address.length -4, address.length))
+    $text(adressOp, style({ fontSize: '1em' }))(address.slice(address.length -4, address.length))
   )
 }
 

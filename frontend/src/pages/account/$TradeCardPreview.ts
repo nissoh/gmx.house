@@ -227,7 +227,7 @@ export const $TradeCardPreview = ({
         ),
 
         $row(layoutSheet.spacing, style({ alignItems: 'baseline', placeContent: 'center', pointerEvents: 'none' }))(
-          $row(style({ fontSize: '2.25em', alignItems: 'baseline', paddingTop: '20px' }))(
+          $row(style({ fontSize: '2.25em', alignItems: 'baseline', paddingTop: '26px' }))(
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
