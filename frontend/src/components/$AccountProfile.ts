@@ -167,7 +167,8 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
                     $ProfileLinks(address, claimChange),
                     switchLatest(
                       map((claimerAddress) => {
-                        return !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
+                        const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
+                        return showActions
                           ? $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
                             $text(claimChange ? 'Rename' : 'Claim')
                           )
@@ -200,13 +201,13 @@ enum ClaimStatus {
 
 const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => component((
   [display, displayTether]: Behavior<string, string>,
-  [claimTx, claimTxTether]: Behavior<PointerEvent, ClaimStatus>,
+  [claimTx, claimTxTether]: Behavior<PointerEvent, any>,
   [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<IEthereumProvider, IEthereumProvider>,
   [claimSucceed, claimSucceedTether]: Behavior<Promise<IClaim>, IClaim>,
 ) => {
 
 
-  const provider: Stream<Web3Provider | null> = switchLatest(map(wal => wal ? wal.provider : now(null), walletLink))
+  const provider: Stream<Web3Provider | null> = map(wal => wal ? wal.provider : null, walletLink)
 
 
   return [
@@ -283,8 +284,9 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => 
                           ),
                           map(query => {
                             const postQuery = query
-                              .catch(() => ClaimStatus.FAILED)
                               .then(res => ClaimStatus.SUCCESS)
+                              .catch(() => ClaimStatus.FAILED)
+                              
 
                             return merge(
                               fromPromise(postQuery),
@@ -294,17 +296,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => 
                           switchLatest
                         )
                       })
-                      
 
-                      // return wallet && address.toLowerCase() === wallet?.toLowerCase()
-                      //   ? $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                      //     // $column(style({ color: pallete.foreground, fontSize: '.65em' }))(
-                      //     //   $text(`You can always change`),
-                      //     //   $text(`or remove later`)
-                      //     // ),
-                          
-                      //   )
-                      //   : $alert($text(`Connect a wallet matching this address`))
                     }, walletLink)
                   ),
                   walletLink

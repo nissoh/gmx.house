@@ -77,8 +77,6 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
           return switchLatest(
             combineArray((chain, account) => {
 
-              const hasMetamask = metamask !== null
-
               if (chain !== CHAIN.ARBITRUM) {
                 return $ButtonPrimary({
                   $content: $text('Switch to Arbitrum Network'),
@@ -100,32 +98,10 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
                     constant(walletLink.wallet)
                   )
                 })
-                // return hasMetamask
-                //   ? $ButtonPrimary({
-                //     $content: $text('Switch to Arbitrum Network'),
-                //     buttonOp: O(
-                //       style({
-                //         background: `transparent`, borderColor: pallete.negative,
-                //         backgroundImage: `linear-gradient(0deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`,
-                //         backgroundClip: 'text',
-                //       }),
-                //       styleInline(now({
-                //         WebkitBackgroundClip: 'text',
-                //         WebkitTextFillColor: 'transparent'
-                //       })),
-                //     )
-                //   })({
-                //     click: switchNetworkTether(
-                //       tap(() => {
-                //         attemptToSwitchNetwork(metamask, CHAIN.ARBITRUM)
-                //       })
-                //     )
-                //   })
-                //   : $alert($text('Please switch to Arbitrum network'))
               }
                 
               return config.$display
-            }, walletLink.network, tap(x => console.log(x), walletLink.account))
+            }, walletLink.network, walletLink.account)
           )
         }, config.walletLink, fromPromise(metamaskQuery)))
       ),
@@ -138,22 +114,6 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
     }
   ]
 })
-
-// export const $AccountButton = (config: IIntermediateDisplay) => component((
-//   [requestWallet, sampleRequestWallet]: Behavior<any, any>
-// ) => {
-
-
-//   const $installMetamaskWarning = $text('installMetamask')
-
-
-//   return [
-//     $IntermediateDisplay({
-//       $display: $userConnectionStatus('d')
-//     })({}),
-//     {  }
-//   ]
-// })
 
 
 

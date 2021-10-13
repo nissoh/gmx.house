@@ -264,7 +264,7 @@ export const requestAccountAggregation = O(
 
     const to = Date.now() / 1000 | 0
     const from = (to - (queryParams.timeInterval / 1000 | 0))
-    const account = queryParams.account
+    const account = queryParams.account.toLocaleLowerCase()
     
     const data = await vaultClient(accountAggregationQuery, { from, to, account, offset: 0, pageSize: 1000 })
     return data.accountAggregation
