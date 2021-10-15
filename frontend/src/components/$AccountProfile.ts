@@ -1,22 +1,21 @@
-import { component, $node, style, $text, attr, INode, $element, nodeEvent } from "@aelea/dom"
-import { $column, $icon, $Popover, $row, $seperator, $TextField, http, layoutSheet } from "@aelea/ui-components"
+import { Behavior, combineObject, O, Op } from "@aelea/core"
+import { $element, $node, $text, attr, component, INode, nodeEvent, style } from "@aelea/dom"
+import { Route } from "@aelea/router"
+import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
+import { Web3Provider } from "@ethersproject/providers"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { Stream } from "@most/types"
+import { IEthereumProvider } from "eip1193-provider"
 import { IClaim, IClaimSource, parseClaim, validateIdentityName } from "gambit-middleware"
+import * as wallet from "wallet-link"
+import { getAccountExplorerUrl, IWalletLink } from "wallet-link"
 import { $jazzicon } from "../common/gAvatar"
-import { $alert, $anchor } from "../elements/$common"
+import { $anchor } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
-import { $ButtonPrimary } from "./form/$Button"
-import { combineObject } from "@aelea/utils"
-import { Behavior, O, Op } from "@aelea/core"
 import { $Link } from "./$Link"
-import * as wallet from "wallet-link"
-import { Route } from "@aelea/router"
-import { Stream } from "@most/types"
-import { getAccountExplorerUrl, IWalletLink } from "wallet-link"
-import { Web3Provider } from "@ethersproject/providers"
-import { IEthereumProvider } from "eip1193-provider"
+import { $ButtonPrimary } from "./form/$Button"
 
 
 export interface IAccountPreview {
@@ -320,3 +319,4 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => 
     }
   ]
 })
+

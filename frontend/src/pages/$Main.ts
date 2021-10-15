@@ -1,27 +1,26 @@
+import { Behavior } from "@aelea/core"
 import { $element, $node, $text, attr, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
-import { $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
-import { empty, fromPromise, map, merge, mergeArray, multicast, now, tap } from '@most/core'
-import { $github } from '../elements/$icons'
-import { designSheet } from '@aelea/ui-components'
+import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-
-import { $cubes } from '../elements/$cube'
+import { empty, fromPromise, map, merge, mergeArray, multicast, now } from '@most/core'
+import { IEthereumProvider } from "eip1193-provider"
+import { AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse, IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
+import { initWalletLink } from "wallet-link"
+import { $logo } from '../common/$icons'
+import { metamaskQuery, walletConnect } from "../common/wallets"
 import { $MainMenu } from '../components/$MainMenu'
-import { $Leaderboard } from './$Leaderboard'
 import { $anchor } from '../elements/$common'
-import { $Account } from './account/$Account'
+import { $cubes } from '../elements/$cube'
+import { $github } from '../elements/$icons'
+import { claimListQuery } from "../logic/claim"
 // import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedOpenPositionSummary, IPageChainlinkPricefeed, IIdentifiableEntity, fromJson, TradeType, TX_HASH_REGEX, groupByMap } from 'gambit-middleware'
-import { $logo } from '../common/$icons'
-import { Behavior } from "@aelea/core"
 import { $Card } from "./$Card"
-import { claimListQuery } from "../logic/claim"
-import { initWalletLink } from "wallet-link"
-import { IEthereumProvider } from "eip1193-provider"
-import { metamaskQuery, walletConnect } from "../common/wallets"
+import { $Leaderboard } from './$Leaderboard'
+import { $Account } from './account/$Account'
+
 
 
 

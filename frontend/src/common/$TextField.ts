@@ -1,8 +1,7 @@
-import { Behavior } from "@aelea/core"
+import { Behavior, O } from "@aelea/core"
 import { $element, $text, component, style, stylePseudo } from "@aelea/dom"
 import { $Field, Field, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { O } from "@aelea/utils"
 import { empty } from "@most/core"
 
 

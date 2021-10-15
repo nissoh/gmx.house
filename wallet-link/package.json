@@ -17,7 +17,7 @@
         "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
     },
     "dependencies": {
-        "@aelea/utils": "1.1.0",
+        "@aelea/core": "1.1.0",
         "@ethersproject/providers": "5.4.5",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",

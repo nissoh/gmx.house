@@ -1,21 +1,20 @@
+import { Behavior, combineArray, O, Op } from "@aelea/core"
 import { $text, component, IBranch, nodeEvent, style } from "@aelea/dom"
-import { $Button, $column, $icon, $Popover, $row, $seperator, layoutSheet } from '@aelea/ui-components'
-import { $Link } from '../components/$Link'
 import { Route } from '@aelea/router'
-import { O, Op } from '@aelea/utils'
-import { awaitPromises, constant, empty, map, now, switchLatest, tap } from '@most/core'
-import { $Picker } from './$ThemePicker'
-import { dark, light } from '../common/theme'
-import { $tradeGMX } from '../common/$tradeButton'
-import { Behavior, combineArray } from "@aelea/core"
-import { $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from "./$AccountProfile"
-import { $moreDots } from "../elements/$icons"
+import { $Button, $column, $icon, $Popover, $row, $seperator, layoutSheet } from '@aelea/ui-components'
 import { pallete } from "@aelea/ui-components-theme"
-import { $IntermediateDisplay } from "./$ConnectAccount"
+import { constant, empty, map, switchLatest } from '@most/core'
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { IWalletLink } from "wallet-link"
 import { IClaim } from "gambit-middleware"
+import { IWalletLink } from "wallet-link"
+import { $tradeGMX } from '../common/$tradeButton'
+import { dark, light } from '../common/theme'
+import { $Link } from '../components/$Link'
+import { $moreDots } from "../elements/$icons"
+import { $AccountPreview } from "./$AccountProfile"
+import { $IntermediateDisplay } from "./$ConnectAccount"
+import { $Picker } from './$ThemePicker'
 
 
 
@@ -54,11 +53,11 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
               $display: $row(layoutSheet.spacing)(
                 switchLatest(
                   map(address => {
-                    return $AccountPreview({
+                    return address ? $AccountPreview({
                       address: address,
                       claim: cmap.get(String(address).toLocaleLowerCase()),
                       parentRoute,
-                    })({ profileClick: O(profileLinkClickTether(), routeChangeTether()) })
+                    })({ profileClick: O(profileLinkClickTether(), routeChangeTether()) }) : empty()
                   }, wl?.account || empty())
                 ),
                 

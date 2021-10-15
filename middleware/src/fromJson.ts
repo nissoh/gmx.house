@@ -1,12 +1,11 @@
-import { O } from "@aelea/utils"
+import { O } from "@aelea/core"
 import { IAggregatedTradeAll } from "."
 import { toAggregatedOpenTradeSummary, toAggregatedTradeSettledSummary } from "./gambit"
 import {
-  IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedPositionSettledSummary,
-  IAggregatedOpenPositionSummary, IAggregatedTradeClosed,
-  IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledListMap,
+  IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed,
+  IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledAll, IAggregatedTradeSettledListMap,
   IAggregatedTradeSummary, IIdentifiableEntity, IPositionClose, IPositionDecrease,
-  IPositionIncrease, IPositionLiquidated, IPositionUpdate, IAggregatedTradeSettledAll
+  IPositionIncrease, IPositionLiquidated, IPositionUpdate
 } from "./types"
 
 

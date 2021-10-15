@@ -1,8 +1,7 @@
-import { Behavior } from "@aelea/core"
+import { Behavior, fromCallback, O, Op } from "@aelea/core"
 import { $wrapNativeElement, component, INode, style } from "@aelea/dom"
 import { observer } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { fromCallback, O, Op } from '@aelea/utils'
 import { chain, empty, filter, map, mergeArray, multicast, now, switchLatest, take } from '@most/core'
 import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'

@@ -1,7 +1,7 @@
+import { Pipe } from '@aelea/core'
 import { disposeNone, disposeWith } from '@most/disposable'
 import { remove } from '@most/prelude'
-import { Stream, Disposable, Scheduler, Sink, Time } from '@most/types'
-import { Pipe } from '@aelea/utils'
+import { Disposable, Scheduler, Sink, Stream, Time } from '@most/types'
 
 
 class SourceSink<T> implements Sink<T> {

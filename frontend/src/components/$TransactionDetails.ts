@@ -1,5 +1,5 @@
 // import { attrBehavior } from "@aelea/dom"
-// import { O } from '@aelea/utils'
+// import { O } from '@aelea/core'
 // import { $element, $text, component, style } from "@aelea/dom"
 // import { $column, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 // import { pallete } from "@aelea/ui-components-theme"

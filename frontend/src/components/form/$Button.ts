@@ -9,7 +9,7 @@ export const $ButtonPrimary = (config: IButton) => {
   return $Button({
     ...config,
     buttonOp: O(
-      style({ color: 'white', fill: 'white', background: `linear-gradient(45deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`, borderRadius: '30px', padding: '12px 24px', fontWeight: 'bold', borderColor: pallete.background }),
+      style({ color: 'white', whiteSpace: 'nowrap', fill: 'white', background: `linear-gradient(45deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`, borderRadius: '30px', padding: '12px 24px', fontWeight: 'bold', borderColor: pallete.background }),
       config.buttonOp || O()
     )
   })

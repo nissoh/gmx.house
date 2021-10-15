@@ -1,12 +1,12 @@
+import { O } from "@aelea/core"
+import { state } from "@aelea/ui-components"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
 import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter } from "@most/core"
-import { state } from "@aelea/ui-components"
 import { Stream } from "@most/types"
-
-import { CHAIN } from "./const"
-import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
 import { IEthereumProvider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
-import { O } from "@aelea/utils"
+import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
+import { CHAIN } from "./const"
+
 
 
 export const getTxDetails = (provider: Stream<BaseProvider>) => (txHash: string): Stream<TransactionReceipt | null> => {

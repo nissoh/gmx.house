@@ -1,15 +1,15 @@
-import { combineArray, Behavior, Op, O } from "@aelea/core"
-import { $text, style, motion, MOTION_NO_WOBBLE, component, INode, styleBehavior } from "@aelea/dom"
+import { Behavior, combineArray, O, Op } from "@aelea/core"
+import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith, merge, empty, snapshot } from "@most/core"
+import { empty, filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, isTradeSettled, liquidationWeight, calculateSettledPositionDelta, IClaim } from "gambit-middleware"
+import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, unixTimeTzOffset } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
 import { $leverage, $seperator } from "../../elements/$common"
-import { $bull, $bear } from "../../elements/$icons"
+import { $bear, $bull } from "../../elements/$icons"
 import { filterByIndexToken, priceChange } from "../common"
 
 interface IPricefeedTick extends IPositionDelta {
@@ -307,6 +307,24 @@ export const $TradeCardPreview = ({
                 lineStyle: LineStyle.SparseDotted,
               })
             }
+
+            if (low.delta < 0) {
+              const liquidationPrice = getLiquidationPriceFromDelta(tradeSummary.collateral, tradeSummary.size, tradeSummary.averagePrice, tradeSummary.isLong)
+              const posDelta = calculatePositionDelta(liquidationPrice, tradeSummary.isLong, tradeSummary)
+              const formatedLiqPrice = formatFixed(posDelta.delta, 30)
+            
+
+              series.createPriceLine({
+                price: formatedLiqPrice,
+                color: pallete.negative,
+                lineWidth: 1,
+                axisLabelVisible: true,
+                title: `$${readableNumber(formatedLiqPrice)}`,
+                lineStyle: LineStyle.SparseDotted,
+              })
+            }
+
+
 
 
 

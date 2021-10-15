@@ -1,14 +1,13 @@
-import { $text, component, style } from "@aelea/dom"
-import { $column, $row, layoutSheet } from "@aelea/ui-components"
-import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson, IClaim } from "gambit-middleware"
-import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, multicast, now } from "@most/core"
-import { screenUtils, state } from "@aelea/ui-components"
-import { Stream } from "@most/types"
-import { $TradeCardPreview } from "./$TradeCardPreview"
 import { Behavior, O } from "@aelea/core"
+import { $text, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
+import { $column, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
+import { map, multicast, now, switchLatest } from "@most/core"
+import { Stream } from "@most/types"
+import { formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from "gambit-middleware"
 import { timeSince } from "../common"
+import { $TradeCardPreview } from "./$TradeCardPreview"
 
 
 export interface ITrade {
@@ -88,11 +87,16 @@ export const $Trade = (config: ITrade) => component((
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
-            return $row(layoutSheet.spacing, style({ placeContent: 'space-evenly' }))(
-              $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
+            return $column(layoutSheet.spacing,style({ alignItems: 'center' }))(
+              $row(layoutSheet.spacing, style({ placeContent: 'space-evenly', flex: 1, alignSelf: 'stretch' }))(
+                $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
 
-              $labelUSD('Size', summary.size),
-              $labelUSD('Average Price', summary.averagePrice),
+                $labelUSD('Size', summary.size),
+                $labelUSD('Average Price', summary.averagePrice),
+              ),
+
+              style({ alignSelf: 'stretch' }, $seperator),
+              $labelUSD('Paid fees', summary.fee),
             )
           }, tradeSummary)
         ),

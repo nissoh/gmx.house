@@ -1,13 +1,12 @@
-import { $element, $text, attr, component, style, styleInline } from "@aelea/dom"
-import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
-
-import {  IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
-import { Stream } from '@most/types'
-import { awaitPromises, empty, map, now } from '@most/core'
-import { pallete } from '@aelea/ui-components-theme'
-import { $logo } from '../common/$icons'
-import { $TradeCardPreview } from "./account/$TradeCardPreview"
 import { Behavior } from "@aelea/core"
+import { $element, $text, attr, component, style } from "@aelea/dom"
+import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
+import { pallete } from '@aelea/ui-components-theme'
+import { awaitPromises, empty, map, now } from '@most/core'
+import { Stream } from '@most/types'
+import { IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from 'gambit-middleware'
+import { $TradeCardPreview } from "./account/$TradeCardPreview"
+
 
 
 export interface ICard {

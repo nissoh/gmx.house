@@ -5,83 +5,69 @@ __metadata:
   version: 4
   cacheKey: 8
 
-"@aelea/core@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@aelea/core@npm:1.0.0"
-  dependencies:
-    "@most/core": 1.6.1
-    "@most/disposable": 1.3.0
-    "@most/prelude": 1.8.0
-    "@most/scheduler": 1.3.0
-    "@most/types": 1.1.0
-  checksum: 656a6ee75cbe3cfd29eed23e1b981545cc6c34a3d3014f5087d8df99157fd9d645e162c7ee2193a861ea5c90fa111579ec7601759aabb1b013bf19f706e1f595
-  languageName: node
-  linkType: hard
-
-"@aelea/dom@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@aelea/dom@npm:0.1.0"
-  dependencies:
-    "@aelea/core": 1.0.0
-    "@most/core": 1.6.1
-    "@most/disposable": 1.3.0
-    "@most/prelude": 1.8.0
-    "@most/scheduler": 1.3.0
-    "@most/types": 1.1.0
-    csstype: 3.0.8
-  checksum: e85750d50a7f60e06e39b0540a1d5c10162e59eadf05601693a2c215cea65ed3dda77943288b33306359be0bceade082b69cf0b77d055118169672a230a7a2a6
-  languageName: node
-  linkType: hard
-
-"@aelea/router@npm:0.18.0":
-  version: 0.18.0
-  resolution: "@aelea/router@npm:0.18.0"
-  dependencies:
-    "@aelea/core": 1.0.0
-    "@aelea/dom": 0.1.0
-    "@most/core": 1.6.1
-    "@most/disposable": 1.3.0
-    "@most/prelude": 1.8.0
-    "@most/scheduler": 1.3.0
-    "@most/types": 1.1.0
-  checksum: c3ff182dd50bdc123b6652b1da42b70c7039b6939f59e2bdf6d48b692454f621f497aa535779686c2a497099d291d9fcfe297294e65e17673021e1f8b71969b8
-  languageName: node
-  linkType: hard
-
-"@aelea/ui-components-theme@npm:0.9.0":
-  version: 0.9.0
-  resolution: "@aelea/ui-components-theme@npm:0.9.0"
-  checksum: 6fa727df2b60b25bc75354b19c18d3b4df606170a5853612f207d925f8211bc86eecd4147d45e17758eec1d2b0abdb3f1b159f0bb2d220400c2f643a8d7deea6
-  languageName: node
-  linkType: hard
-
-"@aelea/ui-components@npm:0.25.0":
-  version: 0.25.0
-  resolution: "@aelea/ui-components@npm:0.25.0"
-  dependencies:
-    "@aelea/core": 1.0.0
-    "@aelea/dom": 0.1.0
-    "@aelea/ui-components-theme": 0.9.0
-    "@most/core": 1.6.1
-    "@most/disposable": 1.3.0
-    "@most/prelude": 1.8.0
-    "@most/scheduler": 1.3.0
-    "@most/types": 1.1.0
-  checksum: 715ddf61d0f714d20baf5f6f0e2ed87746824362883457d91e0a9caa194bc91f6d6646344dbcef1e8d1a84f213afdcb854790aa204797b9cb49973efd9e11851
-  languageName: node
-  linkType: hard
-
-"@aelea/utils@npm:1.1.0":
+"@aelea/core@npm:1.1.0":
   version: 1.1.0
-  resolution: "@aelea/utils@npm:1.1.0"
+  resolution: "@aelea/core@npm:1.1.0"
   dependencies:
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
-    csstype: 3.0.8
-  checksum: 7f6e1db77dde4ffa74dba328eb0bd78352739eda993d4fc80293ea05d9feb269cdcb6eb1df3db1b261852225a140ac6df871c18880e16147ac7ec3db5968c9c0
+  checksum: ae71b37cb95324f41f3ee3174d561b2af63489c01fcdf5f59ac9e9043a8067e67ab364663aeb975dc43efbf60fce7c1e1d11cd3c432fefaf60b9d202c728bbe2
+  languageName: node
+  linkType: hard
+
+"@aelea/dom@npm:0.2.0":
+  version: 0.2.0
+  resolution: "@aelea/dom@npm:0.2.0"
+  dependencies:
+    "@aelea/core": 1.1.0
+    "@most/core": 1.6.1
+    "@most/disposable": 1.3.0
+    "@most/prelude": 1.8.0
+    "@most/scheduler": 1.3.0
+    "@most/types": 1.1.0
+    csstype: 3.0.9
+  checksum: a754f01ea18f377b538a499351e9b337f5621974c3af4e9e2223a37aa30c6f37c8176ac8a23e285cc8cae674260a73e3685d357c6a293b90ffe71c0191093a9a
+  languageName: node
+  linkType: hard
+
+"@aelea/router@npm:0.19.0":
+  version: 0.19.0
+  resolution: "@aelea/router@npm:0.19.0"
+  dependencies:
+    "@aelea/core": 1.1.0
+    "@aelea/dom": 0.2.0
+    "@most/core": 1.6.1
+    "@most/disposable": 1.3.0
+    "@most/prelude": 1.8.0
+    "@most/scheduler": 1.3.0
+    "@most/types": 1.1.0
+  checksum: f580b9208e08cd37164c06c862694cfc772dcadac87efc53fc9efa4b7fd68358721cbebfe49e0f6b720e4fb13057c4cdbb0d7c540fcb7ee279bf93f192dbfb15
+  languageName: node
+  linkType: hard
+
+"@aelea/ui-components-theme@npm:0.10.0":
+  version: 0.10.0
+  resolution: "@aelea/ui-components-theme@npm:0.10.0"
+  checksum: c16ea8366468494a05143ca6984c08415548acca33b3e50e18e18a6f0c2265a235d5115b704b0c52e05bc37290171ae66ca797d88e209e8b41d21f5d069156d6
+  languageName: node
+  linkType: hard
+
+"@aelea/ui-components@npm:0.26.0":
+  version: 0.26.0
+  resolution: "@aelea/ui-components@npm:0.26.0"
+  dependencies:
+    "@aelea/core": 1.1.0
+    "@aelea/dom": 0.2.0
+    "@aelea/ui-components-theme": 0.10.0
+    "@most/core": 1.6.1
+    "@most/disposable": 1.3.0
+    "@most/prelude": 1.8.0
+    "@most/scheduler": 1.3.0
+    "@most/types": 1.1.0
+  checksum: bc764df812c9953b332b180d20212c4334549216b0ce17aa967f2684ef270610aba71eef27074efb115ba32c03fd740bd74e19e5fec0c3d11a30dcd4750c8e6b
   languageName: node
   linkType: hard
 
@@ -327,9 +313,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/eslintrc@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@eslint/eslintrc@npm:1.0.2"
+"@eslint/eslintrc@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "@eslint/eslintrc@npm:1.0.3"
   dependencies:
     ajv: ^6.12.4
     debug: ^4.3.2
@@ -340,7 +326,7 @@ __metadata:
     js-yaml: ^3.13.1
     minimatch: ^3.0.4
     strip-json-comments: ^3.1.1
-  checksum: bc57f1cfb8809552072e8dedf219753972f804c4d3efffbb365946fc1e09218b5e032da91afffee23739f21ecb761e151d72d5058245b5064183735c7a20fffb
+  checksum: a39f74d764b1b8ba8b05e942ab8dc3684648468180ce453e0ce5669af3d95b9dc18577ff55cc3b58cfed5a5f1bf6182191a740da07572606268eeb2b6fd0402d
   languageName: node
   linkType: hard
 
@@ -1199,10 +1185,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:16.10.6":
-  version: 16.10.6
-  resolution: "@types/node@npm:16.10.6"
-  checksum: 74e53455cc4b0a6cdacb9d501589a8519430b936b62ed1973b9adf4759f8333c49ba3dcb09481311d8239baadadcd1c6f57b7fbaceb0932c5a7dd2d93df72ded
+"@types/node@npm:16.10.9":
+  version: 16.10.9
+  resolution: "@types/node@npm:16.10.9"
+  checksum: b47c3e3896ce243d3bc9e356578d4d607357d9ea0c1445a15cb564341580ac4db4f95677bf15fd354e46343edbd171ac19701740a53637234411da5b66c883a4
   languageName: node
   linkType: hard
 
@@ -2287,8 +2273,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "backend-opengraph-webshot@workspace:backend-opengraph-webshot"
   dependencies:
-    "@aelea/core": 1.0.0
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.1.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
     "@most/prelude": 1.8.0
@@ -2297,7 +2282,7 @@ __metadata:
     "@types/express": ^4.17.13
     "@types/express-serve-static-core": ^4.17.24
     "@types/express-session": ^1.17.4
-    "@types/node": 16.10.6
+    "@types/node": 16.10.9
     "@types/ws": ^8.2.0
     concurrently: ^6.3.0
     dotenv: ^10.0.0
@@ -3267,10 +3252,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:3.0.8":
-  version: 3.0.8
-  resolution: "csstype@npm:3.0.8"
-  checksum: 5939a003858a31a32cbc52a8f45496aa0c2bcb4629b21c5bc14a7ddcac1a3d4adfd655f56843dc14940f60563378e9444af2c9c373b3f212601b9eeb6740b8db
+"csstype@npm:3.0.9":
+  version: 3.0.9
+  resolution: "csstype@npm:3.0.9"
+  checksum: 199f9af7e673f9f188525c3102a329d637ff46c52f6385a4427ff5cb17adcb736189150170a7af7c5701d18d7704bdad130273f4aa7e44c6c4f9967e6115dc93
   languageName: node
   linkType: hard
 
@@ -3899,11 +3884,11 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:8.0.0":
-  version: 8.0.0
-  resolution: "eslint@npm:8.0.0"
+"eslint@npm:8.0.1":
+  version: 8.0.1
+  resolution: "eslint@npm:8.0.1"
   dependencies:
-    "@eslint/eslintrc": ^1.0.2
+    "@eslint/eslintrc": ^1.0.3
     "@humanwhocodes/config-array": ^0.6.0
     ajv: ^6.10.0
     chalk: ^4.0.0
@@ -3943,7 +3928,7 @@ __metadata:
     v8-compile-cache: ^2.0.3
   bin:
     eslint: bin/eslint.js
-  checksum: 68ba2838862782d9cbf6100218cbf0d69873b6d5d1de5860627b5424f067e2145d334810168142452fb93692666aa1cbeb4d0a94eea089a7d54d3ae32e99942c
+  checksum: 072dde3e188c1274fa92eaf72d233d77b9c6e87ed859dce071b49c243546959ff7aefdb4759abf09841b650ef9d9f013abaae720b0bd64e0e07700ccefaf1208
   languageName: node
   linkType: hard
 
@@ -4769,8 +4754,7 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gambit-backend@workspace:backend"
   dependencies:
-    "@aelea/core": 1.0.0
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.1.0
     "@ethersproject/abi": 5.4.1
     "@ethersproject/abstract-signer": 5.4.1
     "@ethersproject/bignumber": ^5.4.2
@@ -4791,7 +4775,7 @@ fsevents@~2.3.2:
     "@types/express-serve-static-core": ^4.17.24
     "@types/express-session": ^1.17.4
     "@types/isomorphic-fetch": ^0.0.35
-    "@types/node": 16.10.6
+    "@types/node": 16.10.9
     "@types/ws": ^8.2.0
     "@urql/core": ^2.3.3
     concurrently: ^6.3.0
@@ -4814,12 +4798,11 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gambit-frontend@workspace:frontend"
   dependencies:
-    "@aelea/core": 1.0.0
-    "@aelea/dom": 0.1.0
-    "@aelea/router": 0.18.0
-    "@aelea/ui-components": 0.25.0
-    "@aelea/ui-components-theme": 0.9.0
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.1.0
+    "@aelea/dom": 0.2.0
+    "@aelea/router": 0.19.0
+    "@aelea/ui-components": 0.26.0
+    "@aelea/ui-components-theme": 0.10.0
     "@ethersproject/abi": 5.4.1
     "@ethersproject/abstract-signer": 5.4.1
     "@ethersproject/bignumber": ^5.4.2
@@ -4861,7 +4844,7 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gambit-middleware@workspace:middleware"
   dependencies:
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.1.0
     "@ethersproject/abi": 5.4.1
     "@ethersproject/abstract-signer": 5.4.1
     "@ethersproject/bignumber": ^5.4.2
@@ -6668,7 +6651,7 @@ fsevents@~2.3.2:
     "@typescript-eslint/eslint-plugin": 5.0.0
     "@typescript-eslint/parser": 5.0.0
     concurrently: ^6.3.0
-    eslint: 8.0.0
+    eslint: 8.0.1
     typescript: ^4.4.4
   languageName: unknown
   linkType: soft
@@ -9221,7 +9204,7 @@ typescript@^4.4.4:
   version: 0.0.0-use.local
   resolution: "wallet-link@workspace:wallet-link"
   dependencies:
-    "@aelea/utils": 1.1.0
+    "@aelea/core": 1.1.0
     "@ethersproject/providers": 5.4.5
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0

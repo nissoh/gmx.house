@@ -16,7 +16,7 @@
         "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
     },
     "dependencies": {
-        "@aelea/utils": "1.1.0",
+        "@aelea/core": "1.1.0",
         "@ethersproject/abi": "5.4.1",
         "@ethersproject/abstract-signer": "5.4.1",
         "@ethersproject/bignumber": "^5.4.2",

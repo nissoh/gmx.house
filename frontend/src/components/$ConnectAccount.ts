@@ -1,11 +1,11 @@
 import { Behavior, combineArray, O } from "@aelea/core"
-import { $text, component, style, $Node, attr, styleInline, $element } from "@aelea/dom"
+import { $element, $Node, $text, attr, component, style, styleInline } from "@aelea/dom"
 import { $column, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, empty, fromPromise, map, now, switchLatest, tap } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, map, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { CHAIN, IWalletLink  } from "wallet-link"
+import { CHAIN, IWalletLink } from "wallet-link"
 import { $icon, $walletConnectLogo } from "../common/$icons"
 import { attemptToSwitchNetwork, metamaskQuery, walletConnect } from "../common/wallets"
 import { $ButtonPrimary } from "./form/$Button"
@@ -23,11 +23,6 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
   [walletChange, walletChangeTether]: Behavior<PointerEvent, IEthereumProvider | null>,
 ) => {
 
-  // const $connectBtn = (buttonText: string) => $ButtonPrimary({ $content: $text(buttonText), buttonOp: style({}) })({
-  //   click: connectedWalletSucceedTether(
-  //     tap(() => await walletState.wallet.enable()),
-  //   )
-  // })
 
   return [
     $column(
