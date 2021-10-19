@@ -261,7 +261,7 @@ export function parseTwitterClaim(account: string, name: string): IClaim {
   validateIdentityName(name)
 
   return {
-    name: name.slice(1),
+    name,
     account,
     data: '',
     sourceType: IClaimSource.TWITTER

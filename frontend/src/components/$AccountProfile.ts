@@ -50,7 +50,7 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
         attr({ src: `https://unavatar.vercel.app/twitter/${claim.name}` })
       )()
     } else {
-      const data: IEnsClaim = JSON.parse(claim.data)
+      const data: IEnsClaim = claim.data ? JSON.parse(claim.data) : {}
       const imageUrl = data.imageUrl
 
       return imageUrl

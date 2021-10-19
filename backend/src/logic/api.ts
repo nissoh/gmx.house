@@ -6,7 +6,7 @@ import { verifyMessage } from "@ethersproject/wallet"
 import { getIdentityFromENS, IClaimSource, isAddress, parseTwitterClaim } from 'gambit-middleware'
 import { EM } from '../server'
 import { Claim } from './dto'
-import { provider, providerMainnet } from '../rpc'
+import { providerMainnet } from '../rpc'
 
 export const api = Router()
 
@@ -43,6 +43,7 @@ api.post('/claim-account-twitter', async (req, res) => {
   if (existingClaim) {
     existingClaim.name = parsedClaim.name
     existingClaim.sourceType = parsedClaim.sourceType
+    existingClaim.data = JSON.stringify(null)
   }
 
   const claim = existingClaim ? existingClaim : new Claim(parsedClaim.account, parsedClaim.name, '', parsedClaim.sourceType)
@@ -80,6 +81,7 @@ api.post('/claim-account-ens', async (req, res) => {
       if (existingClaim) {
         existingClaim.name = ensData.ensName
         existingClaim.sourceType = IClaimSource.ENS
+        existingClaim.data = JSON.stringify(ensData)
       }
 
       const claim = existingClaim ? existingClaim : new Claim(account, ensData.ensName, JSON.stringify(ensData), IClaimSource.ENS)

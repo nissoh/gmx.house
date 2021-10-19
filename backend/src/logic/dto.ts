@@ -1,18 +1,29 @@
-import { Entity, PrimaryKey, Property, Unique } from '@mikro-orm/core'
+import { Entity, PrimaryKey, Property, SerializedPrimaryKey, Unique } from '@mikro-orm/core'
+import { ObjectId } from '@mikro-orm/mongodb'
 import { IClaim, IClaimSource } from 'gambit-middleware'
 
+
+export abstract class BaseEntity {
+
+  @PrimaryKey() _id!: ObjectId
+  @SerializedPrimaryKey() id!: string
+
+  @Property() createdAt = new Date()
+  @Property({ onUpdate: () => new Date() }) updatedAt = new Date()
+
+}
+
 @Entity()
-export class Claim implements IClaim {
+export class Claim extends BaseEntity implements IClaim {
   
   @Property() name: string
   @Property() data: string
-  @Property() sourceType: IClaimSource
   @Property() @Unique() account: string
-
-  @PrimaryKey()
-    id!: number
+  
+  @Property() sourceType: IClaimSource
 
   constructor(account: string, name: string, data: string, sourceType: IClaimSource) {
+    super()
     this.account = account
     this.name = name
     this.data = data
