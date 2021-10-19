@@ -1,13 +1,13 @@
 import { Behavior, combineArray, O } from "@aelea/core"
 import { $element, $Node, $text, attr, component, style, styleInline } from "@aelea/dom"
-import { $column, $row, layoutSheet, state } from "@aelea/ui-components"
+import { $column, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, empty, fromPromise, map, multicast, now, switchLatest, tap } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, map, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { CHAIN, IWalletLink } from "wallet-link"
 import { $icon, $walletConnectLogo } from "../common/$icons"
-import { attemptToSwitchNetwork, metamaskQuery, walletConnect } from "../common/wallets"
+import { attemptToSwitchNetwork, metamaskQuery } from "../common/wallets"
 import { $ButtonPrimary } from "./form/$Button"
 
 

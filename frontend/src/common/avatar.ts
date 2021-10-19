@@ -16,9 +16,9 @@ export function $jazzicon(address: string, size = '24px') {
       svg.setAttribute('width', size)
       svg.setAttribute('height', size)
 
-      el.style.borderRadius = '0'
+      el.style.borderRadius = '50%'
     }
     return node
-  }), style({ width: size, height: size, display: 'flex', position: 'relative', borderRadius: '0' }))()
+  }), style({ width: size, height: size, display: 'flex', position: 'relative' }))()
 }
 
