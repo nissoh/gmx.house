@@ -5,6 +5,7 @@ import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
 import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource } from "./types"
 import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
+import { parseFixed } from "."
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -233,9 +234,10 @@ function easeInExpo(x: number) {
   return x === 0 ? 0 : Math.pow(2, 10 * x - 10)
 }
 
-export function liquidationWeight(isLong: boolean, liquidationPriceUSD: number, markPriceUSD: number) {
-  const weight = isLong ? liquidationPriceUSD / markPriceUSD : markPriceUSD / liquidationPriceUSD
-  const value = easeInExpo(weight)
+export function liquidationWeight(isLong: boolean, liquidationPriceUSD: bigint, markPriceUSD: bigint) {
+  const weight = isLong ? liquidationPriceUSD * BASIS_POINTS_DIVISOR / markPriceUSD : markPriceUSD * BASIS_POINTS_DIVISOR / liquidationPriceUSD
+  const newLocal = formatFixed(weight, 4)
+  const value = easeInExpo(newLocal)
   return value > 1 ? 1 : value
 }
 
@@ -251,20 +253,18 @@ export function validateIdentityName(name: string) {
 
 }
 
-export function parseClaim(account: string, name: string): IClaim {
+export function parseTwitterClaim(account: string, name: string): IClaim {
   if (!isAddress(account)) {
     throw new Error('Invalid address')
   }
 
   validateIdentityName(name)
 
-  const isTwitter = name.startsWith('@')
-  const sourceType = isTwitter ? IClaimSource.TWITTER : IClaimSource.UNKNOWN
-
   return {
-    name: isTwitter ? name.slice(1) : name,
+    name: name.slice(1),
     account,
-    sourceType
+    data: '',
+    sourceType: IClaimSource.TWITTER
   }
 }
 

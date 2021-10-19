@@ -38,7 +38,7 @@ export const $Trade = (config: ITrade) => component((
   const tradeSummary = multicast(map(fromJson.toAggregatedOpenTradeSummary, settledPosition))
 
   const $container = screenUtils.isDesktopScreen
-    ? $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))
+    ? $row(style({ flexDirection: 'row-reverse', alignSelf: 'center', width: '100%', maxWidth: '720px', gap: '6vw' }))
     : $column
 
     
@@ -75,7 +75,7 @@ export const $Trade = (config: ITrade) => component((
         $TradeCardPreview({
           chainlinkPricefeed: config.chainlinkPricefeed,
           aggregatedTrade: config.aggregatedTrade,
-          containerOp: style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
+          containerOp: style({ position: 'relative', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
           accountPreview: {
             parentRoute: config.parentRoute
           },
@@ -87,16 +87,13 @@ export const $Trade = (config: ITrade) => component((
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
-            return $column(layoutSheet.spacing,style({ alignItems: 'center' }))(
-              $row(layoutSheet.spacing, style({ placeContent: 'space-evenly', flex: 1, alignSelf: 'stretch' }))(
+            return $column(layoutSheet.spacing, style({ alignItems: 'center', fontSize: '.85em', padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(
+              $row(layoutSheet.spacing, style({ placeContent: 'space-between', flex: 1, alignSelf: 'stretch' }))(
                 $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
 
-                $labelUSD('Size', summary.size),
-                $labelUSD('Average Price', summary.averagePrice),
+                $labelUSD('Paid fees', summary.fee),
+                // $labelUSD('Average Price', summary.averagePrice),
               ),
-
-              style({ alignSelf: 'stretch' }, $seperator),
-              $labelUSD('Paid fees', summary.fee),
             )
           }, tradeSummary)
         ),

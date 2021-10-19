@@ -1,7 +1,7 @@
 import { O } from "@aelea/core"
 import { state } from "@aelea/ui-components"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter } from "@most/core"
+import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter, tap } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
 import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
@@ -55,7 +55,7 @@ function connectWallet<T extends IEthereumProvider = IEthereumProvider>(wallet: 
   const currentAccount = awaitPromises(map(async () => (await provider.listAccounts())[0], now(null)))
 
   const network = merge(networkChange, currentNetwork)
-  const account = merge(accountChange, currentAccount)
+  const account = tap(console.log, merge(accountChange, currentAccount))
 
   return { account, network, provider, wallet, disconnect, connect }
 }

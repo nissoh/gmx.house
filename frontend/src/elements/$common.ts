@@ -3,7 +3,7 @@ import { $ButtonIcon, $column, $icon, $row, layoutSheet, $seperator as $uiSepera
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map } from "@most/core"
 import { Stream } from "@most/types"
-import { formatReadableUSD, IAggregatedOpenPositionSummary, IAggregatedTradeOpen, IAggregatedTradeSummary, strictGet, Token, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP } from "gambit-middleware"
+import { IAggregatedTradeOpen, IAggregatedTradeSummary, strictGet, Token, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP } from "gambit-middleware"
 import { $tokenIconMap } from "../common/$icons"
 import { $alertIcon, $caretDblDown, $trash } from "./$icons"
 

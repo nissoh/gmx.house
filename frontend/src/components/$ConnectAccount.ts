@@ -1,8 +1,8 @@
 import { Behavior, combineArray, O } from "@aelea/core"
 import { $element, $Node, $text, attr, component, style, styleInline } from "@aelea/dom"
-import { $column, $row, layoutSheet } from "@aelea/ui-components"
+import { $column, $row, layoutSheet, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { awaitPromises, constant, empty, fromPromise, map, now, switchLatest } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, map, multicast, now, switchLatest, tap } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { CHAIN, IWalletLink } from "wallet-link"
@@ -23,14 +23,15 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
   [walletChange, walletChangeTether]: Behavior<PointerEvent, IEthereumProvider | null>,
 ) => {
 
+  const accountChange = switchLatest(map(wallet => wallet ? wallet.account : now(null), config.walletLink))
 
   return [
     $column(
       switchLatest(
-        awaitPromises(combineArray(async (walletLink, metamask) => {
+        awaitPromises(combineArray(async (account, walletLink, metamask) => {
 
           // no wallet connected, show connection flow
-          if (walletLink === null) {
+          if (!account || walletLink === null) {
             
             const $walletConnectBtn = $ButtonPrimary({
               $content: $row(layoutSheet.spacing)(
@@ -41,11 +42,11 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
                 $text('Wallet-Connect'),
               ), buttonOp: style({})
             })({
-              click: walletChangeTether(
-                map(async () => walletConnect.enable()),
-                awaitPromises,
-                constant(walletConnect)
-              )
+              // click: walletChangeTether(
+              //   map(async () => walletConnect.enable()),
+              //   awaitPromises,
+              //   constant(walletConnect)
+              // )
             })
 
             if (metamask) {
@@ -59,7 +60,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
                   click: walletChangeTether(
                     map(async () => metamask.enable()),
                     awaitPromises,
-                    constant(metamask)
+                    constant(metamask),
                   ),
                 }),
                 $walletConnectBtn
@@ -70,7 +71,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
           }
 
           return switchLatest(
-            combineArray((chain, account) => {
+            combineArray((chain) => {
 
               if (chain !== CHAIN.ARBITRUM) {
                 return $ButtonPrimary({
@@ -96,9 +97,9 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
               }
                 
               return config.$display
-            }, walletLink.network, walletLink.account)
+            }, walletLink.network)
           )
-        }, config.walletLink, fromPromise(metamaskQuery)))
+        }, accountChange, config.walletLink, fromPromise(metamaskQuery)))
       ),
       
       switchLatest(map(empty, switchNetwork))

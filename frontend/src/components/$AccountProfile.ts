@@ -1,17 +1,17 @@
-import { Behavior, combineObject, O, Op } from "@aelea/core"
+import { Behavior, combineArray, combineObject, O, Op } from "@aelea/core"
 import { $element, $node, $text, attr, component, INode, nodeEvent, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { Web3Provider } from "@ethersproject/providers"
+import { BaseProvider, getDefaultProvider, Web3Provider } from "@ethersproject/providers"
 import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { IClaim, IClaimSource, parseClaim, validateIdentityName } from "gambit-middleware"
+import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "gambit-middleware"
 import * as wallet from "wallet-link"
 import { getAccountExplorerUrl, IWalletLink } from "wallet-link"
-import { $jazzicon } from "../common/gAvatar"
-import { $anchor } from "../elements/$common"
+import { $jazzicon } from "../common/avatar"
+import { $alert, $anchor, $labeledDivider } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
 import { $Link } from "./$Link"
@@ -36,16 +36,28 @@ export interface IProfile extends IAccountClaim {
 }
 
 
-const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%' }))
+const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover' }))
 
 export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') => {
-  const isTwitter = claim?.sourceType === IClaimSource.TWITTER
+  const claimType = claim?.sourceType
 
-  if (isTwitter) {
-    return $photoContainer(
-      style({ width: size, height: size }),
-      attr({ src: `https://unavatar.vercel.app/twitter/${claim.name}` })
-    )()
+  if (claimType) {
+    const isTwitter = claimType === IClaimSource.TWITTER
+
+    if (isTwitter) {
+      return $photoContainer(
+        style({ width: size, height: size }),
+        attr({ src: `https://unavatar.vercel.app/twitter/${claim.name}` })
+      )()
+    } else {
+      const data: IEnsClaim = JSON.parse(claim.data)
+      const imageUrl = data.imageUrl
+
+      return imageUrl
+        ? $element('img')(attr({ src: getGatewayUrl(imageUrl) }), style({ width: size, height: size }))()
+        : $jazzicon(address, size)
+    }
+
   }
 
   return $jazzicon(address, size)
@@ -64,20 +76,26 @@ export const $AccountLabel = (address: string, claim?: IClaim, adressOp: Op<INod
 
 
 export const $ProfileLinks = (address: string, claim?: IClaim) => {
-  const isTwitter = claim?.sourceType === IClaimSource.TWITTER
-
-  const $twitterAnchor = isTwitter
-    ? $anchor(attr({ href: `https://twitter.com/${claim?.name}` }))(
-      $icon({ $content: $twitter, width: '16px', viewBox: `0 0 24 24` })
-    )
-    : empty()
-
-  return $row(layoutSheet.spacingSmall)(
-    $anchor(attr({ href: getAccountExplorerUrl(wallet.CHAIN.ARBITRUM, address) }))(
-      $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
-    ),
-    $twitterAnchor,
+  const $explorer = $anchor(attr({ href: getAccountExplorerUrl(wallet.CHAIN.ARBITRUM, address) }))(
+    $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
   )
+
+  const twitterHandle = claim?.sourceType === IClaimSource.TWITTER
+    ? claim.name
+    : claim?.sourceType === IClaimSource.ENS
+      ? JSON.parse(claim.data).twitterUrl : null
+
+  if (twitterHandle) {
+    return $row(layoutSheet.spacing)(
+      $explorer,
+      $anchor(attr({ href: `https://twitter.com/${twitterHandle}` }))(
+        $icon({ $content: $twitter, width: '16px', viewBox: `0 0 24 24` })
+      ),
+    )
+  }
+
+
+  return $explorer
 }
 
 
@@ -117,7 +135,8 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
   [display, displayTether]: Behavior<any, string>,
-  [claimedAccount, claimedAccountTether]: Behavior<IClaim, IClaim>
+  [claimedAccount, claimedAccountTether]: Behavior<IClaim, IClaim>,
+  [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
 
 ) => {
 
@@ -129,7 +148,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
     map(identity => {
       if (identity) {
         try {
-          return parseClaim(address, identity)
+          return parseTwitterClaim(address, identity)
         } catch {
           return undefined
         }
@@ -148,9 +167,10 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
       $Popover({
         dismiss: claimedAccount,
         $$popContent: map((address) => {
-          return $ClaimForm(address, walletLink)({
+          return $ClaimForm(address, walletLink, claimFromMap)({
             display: displayTether(),
-            claimSucceed: claimedAccountTether()
+            claimSucceed: claimedAccountTether(),
+            walletChange: walletChangeTether()
           })
         }, clickPopoverClaim),
       })(
@@ -169,7 +189,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
                         const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
                         return showActions
                           ? $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
-                            $text(claimChange ? 'Rename' : 'Claim')
+                            $text(claimChange ? 'Update' : 'Claim')
                           )
                           : empty()
                       }, claimer)
@@ -187,6 +207,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
     ),
 
     {
+      walletChange
     }
   ]
 })
@@ -198,10 +219,10 @@ enum ClaimStatus {
   SUCCESS
 }
 
-const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => component((
+const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, claim: Stream<IClaim | undefined>) => component((
   [display, displayTether]: Behavior<string, string>,
   [claimTx, claimTxTether]: Behavior<PointerEvent, any>,
-  [walletConnectedSucceed, walletConnectedSucceedTether]: Behavior<IEthereumProvider, IEthereumProvider>,
+  [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
   [claimSucceed, claimSucceedTether]: Behavior<Promise<IClaim>, IClaim>,
 ) => {
 
@@ -214,96 +235,121 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => 
       switchLatest(
         mergeArray([
           now(
-            $column(layoutSheet.spacing, style({ width: '400px' }))(
-              // $text(style({ fontSize: '1.25em' }))('Claim Account'),
-              $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`Claiming account will make your name appear on the leaderboard`),
-              $node(),
-              // chain(x => $text(String(x)), wallet),
-              $TextField({
-                label: 'Display',
-                hint: `"@" will link to a twitter profile`,
-                value: now(''),
-                validation: map(str => {
-                  try {
-                    validateIdentityName(String(str))
-                  } catch (err) {
-                    return (err as Error).message
+            $IntermediateDisplay({
+              $display: switchLatest(
+                combineArray((wallet, claim) => {
+
+                  if (!wallet) {
+                    return empty()
                   }
-                  return null
-                })
-              })({
-                change: displayTether()
-              }),
-              $node(),
-              $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
-                $IntermediateDisplay({
-                  $display: switchLatest(
-                    map(wallet => {
 
-                      return $ButtonPrimary({
-                        disabled: merge(
-                          merge(now(true), map(name => {
-                            try {
-                              validateIdentityName(name)
-                              return false
-                            } catch (e) {
-                              return true
-                            }
-                          }, display)),
-                          map(walletAddress => {
-                            if (address !== walletAddress) {
-                              return 'Connect a wallet matching this address'
-                            }
+                  const provider = wallet.provider
+                  // const ensNameQuery = fromPromise(wallet.provider.lookupAddress(address))
 
+                  const claimFlowOp = O(
+                    claimSucceedTether(
+                      awaitPromises
+                    ),
+                    map(query => {
+                      const postQuery = query
+                        .then(res => ClaimStatus.SUCCESS)
+                        .catch(() => ClaimStatus.FAILED)
+                              
+
+                      return merge(
+                        fromPromise(postQuery),
+                        now(ClaimStatus.STORING)
+                      )
+                    }),
+                    switchLatest
+                  )
+
+                  return $column(layoutSheet.spacing, style({ width: '400px' }))(
+                    ...(claim ? [] : [
+                      $text(`Claiming account will make your name appear on the leaderboard`),
+                      $node(),
+                    ]),
+                    $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`link Ethereum Name Service(ENS) to this account will lookup for(twitter and NFT profile photo) if assigned`),
+                    // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
+                    $row(style({ justifyContent: 'center' }))(
+                      $ButtonPrimary({
+                        $content: $text(`Sign & ${claim && claim.sourceType === IClaimSource.ENS ? 'Refresh' : 'Link' }`),
+                      })({
+                        click: claimTxTether(
+                          map(async () => {
+
+                            // const mainnetProvider = getDefaultProvider()
+                            const signer = provider.getSigner()
+                            const signature = await signer.signMessage(address)
+
+                            return http.fetchJson<IClaim>('/api/claim-account-ens', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ account: address, signature })
+                            })
+                          }),
+                          claimFlowOp
+                        )
+                      }),
+                    ),
+
+                    $labeledDivider('or'),
+              
+                    // $text(style({ fontSize: '1.25em' }))('Claim Account'),
+                    $node(),
+                    // chain(x => $text(String(x)), wallet),
+                    $TextField({
+                      label: '@Handle',
+                      hint: `Assign twitter account using twitter handle name`,
+                      value: now(''),
+                      validation: map(str => {
+                        try {
+                          validateIdentityName(String(str))
+                        } catch (err) {
+                          return (err as Error).message
+                        }
+                        return null
+                      })
+                    })({
+                      change: displayTether()
+                    }),
+                    $node(),
+                    $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
+                      $ButtonPrimary({
+                        disabled: merge(now(true), map(name => {
+                          try {
+                            validateIdentityName(name)
                             return false
-                          }, wallet!.account)
-                        ),
-                        $content: $text('Sign')
+                          } catch (e) {
+                            return true
+                          }
+                        }, display)),
+                        $content: $text('Sign & Post')
                       })({
                         click: claimTxTether(
                           snapshot(async state => {
-                            if (!state.provider) {
-                              throw new Error('no wallet provider found')
-                            }
 
-                            const signer = state.provider.getSigner()
-                            const account = await signer.getAddress()
+                            const signer = provider.getSigner()
                             const signature = await signer.signMessage(state.display)
 
-                            return http.fetchJson<IClaim>('/api/claim-account', {
+                            return http.fetchJson<IClaim>('/api/claim-account-twitter', {
                               method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json'
-                              },
-                              body: JSON.stringify({ display: state.display, account, signature })
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ display: state.display, account: address, signature })
                             })
-                          }, combineObject({ display, provider })),
-                          claimSucceedTether(
-                            awaitPromises
-                          ),
-                          map(query => {
-                            const postQuery = query
-                              .then(res => ClaimStatus.SUCCESS)
-                              .catch(() => ClaimStatus.FAILED)
-                              
-
-                            return merge(
-                              fromPromise(postQuery),
-                              now(ClaimStatus.STORING)
-                            )
-                          }),
-                          switchLatest
+                          }, combineObject({ display })),
+                          claimFlowOp
                         )
                       })
-
-                    }, walletLink)
-                  ),
-                  walletLink
-                })({
-                  walletChange: walletConnectedSucceedTether()
-                })
+                  
+                    ),
+                  )
+                }, walletLink, claim)
               ),
-            ),
+              walletLink
+            })({
+              walletChange: walletChangeTether()
+            }),
           ),
           map(claimState => {
             const message = claimState === ClaimStatus.STORING ? 'Storing...' : claimState === ClaimStatus.SUCCESS ? 'Done' : 'Failed'
@@ -315,8 +361,37 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>) => 
     {
       claimTx,
       display,
-      claimSucceed
+      claimSucceed,
+      walletChange
     }
   ]
 })
+
+
+
+const CACHE_TTL = intervalInMsMap.WEEK
+
+
+type ICachedId = IEnsClaim & { createdAt: number }
+export async function getCachedMetadata (address: string, provider: BaseProvider) {
+  const normalizedAddress = address.toLowerCase()
+
+  const cachedItem = window.localStorage.getItem(`ens-${normalizedAddress}`)
+  const item: ICachedId = cachedItem && JSON.parse(cachedItem)
+
+  if (!item || item.createdAt > Date.now() + CACHE_TTL) {
+    const ensName = await getIdentityFromENS(address, provider)
+
+    if (ensName?.ensName) {
+      const data: ICachedId = { createdAt: Date.now(), ...ensName }
+      window.localStorage.setItem(`ens-${normalizedAddress}`, JSON.stringify(data))
+    }
+
+    return null
+  }
+
+  return item
+}
+
+
 

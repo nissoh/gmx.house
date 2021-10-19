@@ -4,7 +4,7 @@
     "outDir": ".dist/cjs",
     "rootDir": "src",
     "types": [
-      "node",
+      "node"
     ],
     "module": "CommonJS",
     "declarationDir": ".dist/types",

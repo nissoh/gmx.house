@@ -6,12 +6,12 @@ import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, multicast, snapshot, startWith, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, TradeType } from 'gambit-middleware'
+import { formatReadableUSD, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
-import { $anchor } from '../elements/$common'
-import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, tableRiskColumnCellBody, winLossTableColumn } from "./common"
+import { $anchor, $leverage } from '../elements/$common'
+import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, tableRiskColumnCellBody, winLossTableColumn } from "./common"
 
 
 
@@ -80,7 +80,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const accountTableColumn = {
     $head: $text('Account'),
-    columnOp: style({ minWidth: '138px' }),
+    columnOp: style({ minWidth: '120px' }),
     $body: map(({ account }: IAggregatedTradeSummary) => {
 
       return switchLatest(map(map => {
@@ -98,7 +98,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   return [
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+      $column(layoutSheet.spacing, style({ flex: 1.2, padding: '0 12px' }))(
         $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
           $row(layoutSheet.spacing)(
             $header(layoutSheet.flex)(`Top Settled`),
@@ -146,7 +146,20 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             columns: [
               accountTableColumn,
               winLossTableColumn,
-              tableRiskColumnCellBody,
+              {
+                $head: $text('Risk'),
+                columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
+                $body: map((pos: IAggregatedTradeSummary) => {
+                  return $Risk(pos, style({ fontSize: '.65em' }))({})
+                })
+              },
+              // {
+              //   $head: $text('Size $'),
+              //   columnOp: O(layoutSheet.spacingTiny, style({ textAlign: 'left', maxWidth: '150px', placeContent: 'flex-start' })),
+              //   $body: map((pos: IAggregatedTradeSummary) => {
+              //     return $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.size))
+              //   })
+              // },
               {
                 $head: $text('PnL $'),
                 columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
@@ -180,7 +193,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 $body: map((pos: IAggregatedOpenPositionSummary) =>
                   $Link({
                     anchorOp: style({ position: 'relative' }),
-                    $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
+                    $content: style({ pointerEvents: 'none' }, $Entry(pos)),
                     url: `/p/account/${TradeType.OPEN}-${Date.now()}/${pos.trade.id}`,
                     route: config.parentRoute.create({ fragment: '2121212' })
                   })({ click: routeChangeTether() })
@@ -190,7 +203,11 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               {
                 $head: $text('Risk'),
                 columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                $body: map((pos: IAggregatedOpenPositionSummary) => $RiskLiquidator(pos)({}))
+                $body: map((pos: IAggregatedOpenPositionSummary) => {
+                  const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
+                  
+                  return $RiskLiquidator(pos, positionMarkPrice)({})
+                })
               },
               {
                 $head: $text('PnL $'),

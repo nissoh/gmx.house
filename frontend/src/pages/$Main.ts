@@ -187,7 +187,8 @@ export default ({ baseRoute = '' }: Website) => component((
                 requestAggregatedTrade: requestAggregatedTradeTether(),
                 requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
                 requestAccountAggregation: requestAccountAggregationTether(),
-                changeRoute: linkClickTether()
+                changeRoute: linkClickTether(),
+                walletChange: walletChangeTether()
               })
             ),
           )

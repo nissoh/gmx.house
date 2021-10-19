@@ -2,7 +2,7 @@ import { $Node, $svg, attr } from "@aelea/dom"
 import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS } from "gambit-middleware"
 
 
-interface Icon {
+export interface IIcon {
   width?: number // in pixels
   height?: number // in pixels
   $content: $Node
@@ -12,7 +12,7 @@ interface Icon {
 const $path = $svg('path')
 
 
-export const $icon = ({ $content, width = 24, height = width, viewBox = `0 0 ${width} ${height}`, fill = 'inherit' }: Icon) => (
+export const $icon = ({ $content, width = 24, height = width, viewBox = `0 0 ${width} ${height}`, fill = 'inherit' }: IIcon) => (
   $svg('svg')(
     attr({ viewBox, width, height, fill }),
   )($content)

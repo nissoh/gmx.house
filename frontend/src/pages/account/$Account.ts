@@ -5,6 +5,7 @@ import { Route } from '@aelea/router'
 import { $column, layoutSheet, state } from '@aelea/ui-components'
 import { BaseProvider } from '@ethersproject/providers'
 import { Stream } from '@most/types'
+import { IEthereumProvider } from "eip1193-provider"
 import { AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAccountAggregationMap, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
 import { IWalletLink } from "wallet-link"
 import { $Portfolio } from "./$Portfolio"
@@ -34,6 +35,8 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
   // [requestAggregatedLiquidatedTrade, requestAggregatedLiquidatedOpenTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IRequestAggregatedTradeQueryparam, IRequestAggregatedTradeQueryparam>,
   [changeRoute, changeRouteTether]: Behavior<string, string>,
+  [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
+
 ) => {
 
   const accountRoute = config.parentRoute.create({ fragment: ETH_ADDRESS_REGEXP  })
@@ -58,7 +61,8 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
           walletLink: config.walletLink
         })({
           requestAccountAggregation: requestAccountAggregationTether(),
-          changeRoute: changeRouteTether()
+          changeRoute: changeRouteTether(),
+          walletChange: walletChangeTether()
         })
       ),
       router.match(tradeRoute)(
@@ -76,7 +80,7 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
       )
     ),
 
-    { changeRoute, requestAccountAggregation, requestChainlinkPricefeed, requestAggregatedTrade, }
+    { changeRoute, requestAccountAggregation, requestChainlinkPricefeed, requestAggregatedTrade, walletChange }
   ]
 })
 

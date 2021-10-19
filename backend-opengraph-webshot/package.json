@@ -1,6 +1,6 @@
 {
     "name": "backend-opengraph-webshot",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "module": ".dist/esm/server.js",
     "main": ".dist/cjs/server.js",
@@ -35,7 +35,7 @@
         "@types/express": "^4.17.13",
         "@types/express-serve-static-core": "^4.17.24",
         "@types/express-session": "^1.17.4",
-        "@types/node": "16.10.9",
+        "@types/node": "16.11.1",
         "@types/ws": "^8.2.0",
         "ts-node": "^10.3.0",
         "ts-node-dev": "^1.1.8",

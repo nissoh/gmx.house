@@ -3,7 +3,7 @@ import { $text, component, IBranch, nodeEvent, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $Button, $column, $icon, $Popover, $row, $seperator, layoutSheet } from '@aelea/ui-components'
 import { pallete } from "@aelea/ui-components-theme"
-import { constant, empty, map, switchLatest } from '@most/core'
+import { constant, empty, map, switchLatest, tap } from '@most/core'
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { IClaim } from "gambit-middleware"
@@ -53,11 +53,13 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
               $display: $row(layoutSheet.spacing)(
                 switchLatest(
                   map(address => {
-                    return address ? $AccountPreview({
-                      address: address,
-                      claim: cmap.get(String(address).toLocaleLowerCase()),
-                      parentRoute,
-                    })({ profileClick: O(profileLinkClickTether(), routeChangeTether()) }) : empty()
+                    return address ? 
+                      $AccountPreview({
+                        address: address,
+                        claim: cmap.get(String(address).toLocaleLowerCase()),
+                        parentRoute,
+                      })({ profileClick: O(profileLinkClickTether(), routeChangeTether()) })
+                      : empty()
                   }, wl?.account || empty())
                 ),
                 
@@ -76,7 +78,9 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
                 })
               ),
               walletLink
-            })({ walletChange: walletChangeTether() }),
+            })({
+              walletChange: walletChangeTether()
+            }),
             $Picker([light, dark])({})
           )
         }, clickPopoverClaim, claimMap, walletLink),

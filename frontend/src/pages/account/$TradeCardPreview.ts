@@ -1,6 +1,6 @@
 import { Behavior, combineArray, O, Op } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
-import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
+import { $column, $icon, $NumberTicker, $row, layoutSheet, screenUtils } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
@@ -9,8 +9,8 @@ import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, T
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
 import { $leverage, $seperator } from "../../elements/$common"
-import { $bear, $bull } from "../../elements/$icons"
-import { filterByIndexToken, priceChange } from "../common"
+import { $bear, $bull, $target } from "../../elements/$icons"
+import { $Risk, $RiskLiquidator, $TokenIndex, filterByIndexToken, priceChange } from "../common"
 
 interface IPricefeedTick extends IPositionDelta {
   value: number;
@@ -161,11 +161,6 @@ export const $TradeCardPreview = ({
   const chartRealisedPnl = map(ss => formatFixed(ss.delta, 30), chartPnLCounter)
   const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
-  // const liqPercentage = snapshot(price => {
-  //   // const markPrice = Number(price.delta)
-  //   // const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
-  //   return liquidationWeight(true, 50, 40)
-  // }, tradeSummary, pnlCrosshairMove)
 
   return [
     $column(containerOp)(
@@ -177,7 +172,7 @@ export const $TradeCardPreview = ({
             const trade = summary.trade
             const isOpen = !(`settledPosition` in trade)
 
-            return $row(layoutSheet.spacingBig, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: '25px 35px', zIndex: 100 }))(
+            return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
               $row(style({ alignItems: 'center', placeContent: 'space-evenly' }))(
                 $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                   $row(
@@ -190,28 +185,31 @@ export const $TradeCardPreview = ({
                       })
                     )
                   ),
-                  $text(initPos.isLong ? 'Long' : 'Short')
+                  $column(layoutSheet.spacingTiny)(
+                    $row(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+                      $text(initPos.isLong ? 'Long' : 'Short'),
+                      $text(style({ color: pallete.indeterminate }))(`OPEN`)
+                    ),
+                    $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+                      $TokenIndex(summary, { width: 18 }),
+                      // $icon({
+                      //   $content: $target,
+                      //   viewBox: '0 0 32 32',
+                      //   width: '12px'
+                      // }),
+                      $text(formatReadableUSD(summary.trade.initialPosition.price))
+                    )
+                  )
+                  
                 ),
               ),
 
               $seperator,
 
-              $leverage(summary),
+              isOpen
+                ? $RiskLiquidator(summary, map(feed => feed[feed.length - 1].price, historicPnL))({})
+                : $Risk(summary)({}),
 
-              $seperator,
-
-              $text(
-                strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, initPos.indexToken).symbol
-              ),
-
-              ...isOpen ? [
-                $seperator,
-                $text(style({ color: pallete.indeterminate }))(`OPEN`)
-              ] : [],
-
-              // $tokenLabelFromSummary(summary.trade),
-                  
-              // $seperator,
 
               $row(style({ flex: 1 }))(),
 
@@ -270,14 +268,6 @@ export const $TradeCardPreview = ({
                 price: 0,
               },
               
-              // lineStyle: LineStyle.Solid,
-              
-              // autoscaleInfoProvider: () => {
-              //   debugger
-              //   return {
-                    
-              //   }
-              // },
               
               lineWidth: 2,
               baseLineVisible: false,
@@ -319,13 +309,10 @@ export const $TradeCardPreview = ({
                 color: pallete.negative,
                 lineWidth: 1,
                 axisLabelVisible: true,
-                title: `$${readableNumber(formatedLiqPrice)}`,
+                title: `Liquidation $${readableNumber(formatedLiqPrice)}`,
                 lineStyle: LineStyle.SparseDotted,
               })
             }
-
-
-
 
 
             if (data.length > 10) {

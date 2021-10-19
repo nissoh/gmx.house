@@ -50,13 +50,15 @@ export type IPositionClose = IEntityIndexed & Omit<ExtractAndParseEventType<Vaul
 
 export enum IClaimSource {
   TWITTER = 'TWITTER',
-  UNKNOWN = 'UNKNOWN',
+  ENS = 'ENS',
 }
+
 
 export interface IClaim {
   name: string
   account: string
   sourceType: IClaimSource
+  data: string
 }
 
 export interface Account {

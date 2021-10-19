@@ -1,10 +1,10 @@
 {
     "name": "gambit-middleware",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
-    "sideEffects": false,
+    "sideEffects": true,
     "files": [
         ".dist"
     ],
@@ -27,6 +27,8 @@
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
-        "@most/types": "1.1.0"
+        "@most/types": "1.1.0",
+        "@types/isomorphic-fetch": "^0.0.35",
+        "isomorphic-fetch": "^3.0.0"
     }
 }
