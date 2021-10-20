@@ -6,12 +6,12 @@ import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, multicast, snapshot, startWith, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { formatReadableUSD, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
+import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
-import { $anchor, $leverage } from '../elements/$common'
-import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, tableRiskColumnCellBody, winLossTableColumn } from "./common"
+import { $anchor } from '../elements/$common'
+import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
 
 
 

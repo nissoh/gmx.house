@@ -3,8 +3,8 @@ import { $element, $node, $text, attr, component, INode, nodeEvent, style } from
 import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { BaseProvider, getDefaultProvider, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { BaseProvider } from "@ethersproject/providers"
+import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, multicast, now, snapshot, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "gambit-middleware"
@@ -227,9 +227,6 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
 ) => {
 
 
-  const provider: Stream<Web3Provider | null> = map(wal => wal ? wal.provider : null, walletLink)
-
-
   return [
     $column(
       switchLatest(
@@ -243,8 +240,8 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     return empty()
                   }
 
+                  const isNotMatchedAccount = multicast(map(walletAddress => address !== walletAddress, wallet.account))
                   const provider = wallet.provider
-                  // const ensNameQuery = fromPromise(wallet.provider.lookupAddress(address))
 
                   const claimFlowOp = O(
                     claimSucceedTether(
@@ -269,11 +266,23 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                       $text(`Claiming account will make your name appear on the leaderboard`),
                       $node(),
                     ]),
-                    $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`link Ethereum Name Service(ENS) to this account will lookup for(twitter and NFT profile photo) if assigned`),
+
+                    switchLatest(map(notMatched => {
+                      if (notMatched) {
+                        return $alert($text('Connect a wallet matching this address'))
+                      }
+
+                      return empty()
+                    }, isNotMatchedAccount)),
+
+                    // https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc
+                    $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
+                    $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))($text('Guide on setting ens profile avatar')),
                     // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
                     $row(style({ justifyContent: 'center' }))(
                       $ButtonPrimary({
-                        $content: $text(`Sign & ${claim && claim.sourceType === IClaimSource.ENS ? 'Refresh' : 'Link' }`),
+                        $content: $text(`Sign & ${claim && claim.sourceType === IClaimSource.ENS ? 'Refresh' : 'Link'}`),
+                        disabled: isNotMatchedAccount
                       })({
                         click: claimTxTether(
                           map(async () => {
@@ -303,6 +312,8 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                       hint: `Assign twitter account using twitter handle name`,
                       value: now(''),
                       validation: map(str => {
+
+                        
                         try {
                           validateIdentityName(String(str))
                         } catch (err) {
@@ -316,14 +327,17 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     $node(),
                     $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
                       $ButtonPrimary({
-                        disabled: merge(now(true), map(name => {
-                          try {
-                            validateIdentityName(name)
-                            return false
-                          } catch (e) {
-                            return true
-                          }
-                        }, display)),
+                        disabled: merge(
+                          isNotMatchedAccount,
+                          merge(now(true), map(name => {
+                            try {
+                              validateIdentityName(name)
+                              return false
+                            } catch (e) {
+                              return true
+                            }
+                          }, display))
+                        ),
                         $content: $text('Sign & Post')
                       })({
                         click: claimTxTether(
@@ -352,7 +366,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
             }),
           ),
           map(claimState => {
-            const message = claimState === ClaimStatus.STORING ? 'Storing...' : claimState === ClaimStatus.SUCCESS ? 'Done' : 'Failed'
+            const message = claimState === ClaimStatus.STORING ? 'Setting up...' : claimState === ClaimStatus.SUCCESS ? 'Done' : 'Failed'
             return $text(message)
           }, claimTx)
         ])
