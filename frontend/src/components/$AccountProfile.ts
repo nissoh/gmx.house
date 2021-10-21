@@ -383,7 +383,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
 
 
 
-const CACHE_TTL = intervalInMsMap.WEEK
+const CACHE_TTL = intervalInMsMap.DAY7
 
 
 type ICachedId = IEnsClaim & { createdAt: number }

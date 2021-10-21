@@ -97,7 +97,7 @@ export interface IPageChainlinkPricefeed extends Partial<IPageable>, Partial<ISo
 }
 
 export interface ILeaderboardRequest extends IPageable {
-  timeInterval: intervalInMsMap.DAY | intervalInMsMap.WEEK | intervalInMsMap.MONTH
+  timeInterval: intervalInMsMap.HR24 | intervalInMsMap.DAY7 | intervalInMsMap.MONTH
 }
 export interface AccountHistoricalDataApi extends IAccountQueryParamApi {
   timeInterval: intervalInMsMap

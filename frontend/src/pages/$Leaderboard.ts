@@ -42,7 +42,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
 
-  const timeFrameStore = config.parentStore<ILeaderboardRequest['timeInterval']>('timeframe', intervalInMsMap.DAY)
+  const timeFrameStore = config.parentStore<ILeaderboardRequest['timeInterval']>('timeframe', intervalInMsMap.HR24)
 
   const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
@@ -98,7 +98,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   return [
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-      $column(layoutSheet.spacing, style({ flex: 1.2, padding: '0 12px' }))(
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
         $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
           $row(layoutSheet.spacing)(
             $header(layoutSheet.flex)(`Top Settled`),
@@ -109,14 +109,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $row(layoutSheet.spacing)(
             $text(style({ color: pallete.foreground }))('Time Frame:'),
             $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+              styleBehavior(map(tf => tf === intervalInMsMap.HR24 ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.HR24))
             )(
               $text('24Hour')
             ),
             $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+              styleBehavior(map(tf => tf === intervalInMsMap.DAY7 ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY7))
             )(
               $text('7Day')
             ),
@@ -150,7 +150,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 $head: $text('Risk'),
                 columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
                 $body: map((pos: IAggregatedTradeSummary) => {
-                  return $Risk(pos, style({ fontSize: '.65em' }))({})
+                  return $Risk(pos)({})
                 })
               },
               // {

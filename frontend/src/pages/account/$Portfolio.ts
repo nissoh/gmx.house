@@ -51,7 +51,7 @@ export const $Portfolio = (config: IAccount) => component((
 
   const nonNullAccount = filter(Boolean, config.accountAggregation)
 
-  const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.HR4)
+  const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.DAY7)
 
   const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
@@ -74,7 +74,8 @@ export const $Portfolio = (config: IAccount) => component((
 
   
   const historicKline = multicast(switchLatest(combineArray((token, interval) => {
-    const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval, limit: INTERVAL_TICKS }))
+    // @ts-ignore
+    const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval: timeFrameToInterval[interval], limit: INTERVAL_TICKS }))
     return klineData
   }, selectedToken, chartInterval)))
 
@@ -84,6 +85,17 @@ export const $Portfolio = (config: IAccount) => component((
       return historicalPnLMetric([...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds], interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
+
+
+  const timeFrameToInterval = {
+    [intervalInMsMap.HR4]: intervalInMsMap.SEC60,
+    [intervalInMsMap.HR8]: intervalInMsMap.SEC60,
+    [intervalInMsMap.HR24]: intervalInMsMap.MIN15,
+    [intervalInMsMap.DAY7]: intervalInMsMap.MIN60,
+    [intervalInMsMap.MONTH]: intervalInMsMap.HR4,
+    [intervalInMsMap.MONTH2]: intervalInMsMap.HR24,
+  }
+
 
 
   
@@ -138,57 +150,46 @@ export const $Portfolio = (config: IAccount) => component((
 
 
         $row(layoutSheet.spacing, style({ fontSize: '0.85em', placeContent: 'center' }))(
-          $text(style({ color: pallete.foreground }))('Interval:'),
+          $text(style({ color: pallete.foreground }))('Time Frame:'),
+
+
           // $alert($text('Binance')),
           $anchor(
-            styleBehavior(map(tf => intervalInMsMap.MIN15 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN15))
-          )($text('15Min')),
+            styleBehavior(map(tf => intervalInMsMap.HR24 === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR24))
+          )($text('25Hours')),
           $anchor(
-            styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
-          )($text('4Hour')),
+            styleBehavior(map(tf => intervalInMsMap.DAY7 === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.DAY7))
+          )($text('7Days')),
           $anchor(
-            styleBehavior(map(tf => intervalInMsMap.DAY === tf ? activeTimeframe : null, chartInterval)),
-            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
-          )($text('1Day')),
+            styleBehavior(map(tf => intervalInMsMap.MONTH === tf ? activeTimeframe : null, chartInterval)),
+            timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+          )($text('1Month')),
           $Popover({
             $$popContent: map(x => {
               return $column(layoutSheet.spacingSmall)(
                 $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.MIN === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN))
+                  styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
                 )(
-                  $text('1 Minute')
+                  $text('4Hours')
                 ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.MIN5 === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MIN5))
-                )(
-                  $text('5 Minutes')
-                ),
-                $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.HR === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR))
-                )($text('1 Hour')),
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.HR8 === tf ? activeTimeframe : null, chartInterval)),
                   timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.HR8))
                 )(
-                  $text('8 Hour')
+                  $text('8Hours')
                 ),
                 $anchor(
-                  styleBehavior(map(tf => intervalInMsMap.WEEK === tf ? activeTimeframe : null, chartInterval)),
-                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
-                )(
-                  $text('1 Week')
-                ),
+                  styleBehavior(map(tf => intervalInMsMap.MONTH2 === tf ? activeTimeframe : null, chartInterval)),
+                  timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MONTH2))
+                )($text('2Months')),
               )
             }, selectOtherTimeframe),
-            // dismiss: selectOtherTimeframe
           })(
             $anchor(
-              styleBehavior(map(tf => ![intervalInMsMap.MIN15, intervalInMsMap.HR4, intervalInMsMap.DAY].some(a => a === tf) ? { color: pallete.primary } : null, chartInterval)),
+              styleBehavior(map(tf => ![intervalInMsMap.HR24, intervalInMsMap.DAY7, intervalInMsMap.MONTH].some(a => a === tf) ? { color: pallete.primary } : null, chartInterval)),
               selectOtherTimeframeTether(nodeEvent('click'), constant(intervalInMsMap.HR4))
             )(
               $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
@@ -211,7 +212,6 @@ export const $Portfolio = (config: IAccount) => component((
                     type: 'price',
                     price: 0,
                   },
-              
                   lineWidth: 2,
                   baseLineVisible: false,
                   lastValueVisible: false,
@@ -410,7 +410,7 @@ export const $Portfolio = (config: IAccount) => component((
                   $head: $text('Risk'),
                   columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
                   $body: map((pos: IAggregatedTradeSummary) => {
-                    return $Risk(pos, style({ fontSize: '.65em' }))({})
+                    return $Risk(pos)({})
                   })
                 },
                 {
@@ -431,8 +431,8 @@ export const $Portfolio = (config: IAccount) => component((
             return $Chart({
               initializeSeries: map(api => {
 
-                const startDate = (Date.now() - chartInterval * INTERVAL_TICKS) / 1000
-
+                const endDate = Date.now()
+                const startDate = Math.floor(endDate - chartInterval) / 1000
                 const series = api.addCandlestickSeries({
                   upColor: pallete.foreground,
                   downColor: 'transparent',
@@ -460,7 +460,7 @@ export const $Portfolio = (config: IAccount) => component((
                 })
 
                 const timescale = api.timeScale()
-                timescale.fitContent()
+
 
 
                 const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.initialPosition.indexedAt > startDate)
@@ -505,6 +505,11 @@ export const $Portfolio = (config: IAccount) => component((
 
                   const markers = [...increasePosMarkers, ...closePosMarkers, ...liquidatedPosMarkers].sort((a, b) => a.time as number - (b.time as number))
                   series.setMarkers(markers)
+
+                  timescale.setVisibleRange({
+                    from: startDate as Time,
+                    to: endDate / 1000 as Time
+                  })
                 }, 50)
 
                 return series
@@ -522,13 +527,11 @@ export const $Portfolio = (config: IAccount) => component((
                 // visible: false
                 },
                 timeScale: {
-                  timeVisible: chartInterval < intervalInMsMap.DAY,
-                  secondsVisible: chartInterval < intervalInMsMap.HR,
+                  timeVisible: chartInterval <= intervalInMsMap.DAY7,
+                  secondsVisible: chartInterval <= intervalInMsMap.MIN60,
                   borderVisible: true,
                   borderColor: pallete.horizon,
-                  barSpacing: 415,
-                  rightOffset: 4,
-                  
+                  rightOffset: 3,
                 },
                 crosshair: {
                   mode: CrosshairMode.Normal,
@@ -558,7 +561,7 @@ export const $Portfolio = (config: IAccount) => component((
     {
       requestAccountAggregation: now({
         account: accountAddress,
-        timeInterval: timeFrameStore.state * INTERVAL_TICKS
+        timeInterval: timeFrameStore.state
       }) as Stream<AccountHistoricalDataApi>,
       changeRoute,
       walletChange

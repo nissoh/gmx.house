@@ -256,8 +256,8 @@ const chainlinkClient = prepareClient({
 export const requestAccountAggregation = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
 
-    const to = Date.now() / 1000 | 0
-    const from = (to - (queryParams.timeInterval / 1000 | 0))
+    const to = Math.floor(Date.now() / 1000)
+    const from = to - Math.floor(queryParams.timeInterval / 1000 | 0)
     const account = queryParams.account.toLocaleLowerCase()
     
     const data = await vaultClient(accountAggregationQuery, { from, to, account, offset: 0, pageSize: 1000 })
@@ -279,9 +279,9 @@ export const requestAggregatedSettledTradeList = O(
 )
 
 const cacheLifeMap = {
-  [intervalInMsMap.DAY]: intervalInMsMap.MIN,
-  [intervalInMsMap.WEEK]: intervalInMsMap.MIN15,
-  [intervalInMsMap.MONTH]: intervalInMsMap.HR,
+  [intervalInMsMap.HR24]: intervalInMsMap.SEC60,
+  [intervalInMsMap.DAY7]: intervalInMsMap.MIN15,
+  [intervalInMsMap.MONTH]: intervalInMsMap.MIN60,
 }
 const leaderboardCacheMap = cacheMap({})
 export const requestLeaderboardTopList = O(
@@ -333,7 +333,7 @@ const openTradesCacheMap = cacheMap({})
 export const requestOpenAggregatedTrades = O(
   map(async (queryParams: IPageable) => {
 
-    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
+    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.SEC60, async () => {
       const list = await vaultClient(openAggregateTradesQuery, {})
       const sortedList = list.aggregatedTradeOpens
         // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')

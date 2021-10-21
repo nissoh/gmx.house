@@ -73,7 +73,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
 
-  const rootStore = state.createLocalStorageChain('store')
+  const rootStore = state.createLocalStorageChain('store-2')
 
   const claimMap = state.replayLatest(
     map(list => groupByMap(list, item => item.account.toLowerCase()), claimListQuery())

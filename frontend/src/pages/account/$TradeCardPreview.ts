@@ -1,14 +1,14 @@
 import { Behavior, combineArray, O, Op } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
-import { $column, $icon, $NumberTicker, $row, layoutSheet, screenUtils } from "@aelea/ui-components"
+import { $column, $icon, $NumberTicker, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, unixTimeTzOffset } from "gambit-middleware"
+import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, unixTimeTzOffset } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
-import { $leverage, $seperator } from "../../elements/$common"
+import { $seperator } from "../../elements/$common"
 import { $bear, $bull, $target } from "../../elements/$icons"
 import { $Risk, $RiskLiquidator, $TokenIndex, filterByIndexToken, priceChange } from "../common"
 
@@ -47,9 +47,11 @@ export const $TradeCardPreview = ({
 ) => {
 
   const settledPosition = multicast(aggregatedTrade)
-  const tradeSummary = multicast(map(fromJson.toAggregatedTradeAllSummary, settledPosition))
+  const tradeSummary = state.replayLatest(multicast(map(fromJson.toAggregatedTradeAllSummary, settledPosition)))
+  const latestPrice = switchLatest(map(summary => {
+    return filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)
+  }, tradeSummary))
 
-  
   const parsedPricefeed = map(feed => {
     return feed
       .map(({ unixTimestamp, value }) => ({
@@ -144,7 +146,7 @@ export const $TradeCardPreview = ({
       return merge(
         isSettled
           ? latestPositionDeltaChange ?? empty()
-          : latestPositionDeltaChange ?? map(p => calculatePositionDelta(parseFixed(p.p, 30), summary.isLong, summary), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)),
+          : latestPositionDeltaChange ?? map(p => calculatePositionDelta(parseFixed(p.p, 30), summary.isLong, summary), latestPrice),
         now({ delta: initialDelta.delta - summary.fee, deltaPercentage: initialDelta.deltaPercentage })
       )
     }
@@ -185,22 +187,32 @@ export const $TradeCardPreview = ({
                       })
                     )
                   ),
-                  $column(layoutSheet.spacingTiny)(
-                    $row(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-                      $text(initPos.isLong ? 'Long' : 'Short'),
-                      $text(style({ color: pallete.indeterminate }))(`OPEN`)
-                    ),
+                  $column(style({ gap: '6px' }))(
                     $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
-                      $TokenIndex(summary, { width: 18 }),
+                      $TokenIndex(summary, { width: '18px' }),
                       // $icon({
                       //   $content: $target,
                       //   viewBox: '0 0 32 32',
                       //   width: '12px'
                       // }),
-                      $text(formatReadableUSD(summary.trade.initialPosition.price))
-                    )
+                      $text(formatReadableUSD(summary.averagePrice))
+                    ),
+                    $row(layoutSheet.spacingTiny, style({ alignItems: 'center', fontSize: '.65em' }))(
+                      // $text(initPos.isLong ? 'Long' : 'Short'),
+                      $icon({
+                        $content: $target,
+                        width: '14px',
+                        fill: pallete.indeterminate,
+                        viewBox: '0 0 32 32'
+                      }),
+                      $text(style({ color: pallete.indeterminate }))(
+                        merge(
+                          now('Loading...'),
+                          map(price => readableNumber(Number(price.p)), latestPrice)
+                        )
+                      )
+                    ),
                   )
-                  
                 ),
               ),
 

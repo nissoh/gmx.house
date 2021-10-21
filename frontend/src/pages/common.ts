@@ -1,12 +1,12 @@
 import { O, Op } from "@aelea/core"
 import { $text, component, INode, style, styleBehavior } from "@aelea/dom"
-import { $column, $row, $seperator, layoutSheet } from "@aelea/ui-components"
+import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, multicast } from "@most/core"
 import { Stream } from "@most/types"
 import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, USD_DECIMALS } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
-import { $icon, $tokenIconMap, IIcon } from "../common/$icons"
+import { $tokenIconMap, IIcon } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
 import { $leverage, $liquidationSeparator } from "../elements/$common"
 import { $bear, $bull, $skull } from "../elements/$icons"
@@ -90,16 +90,16 @@ export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => component(()
 
 export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {
   return [
-    $row(layoutSheet.spacingTiny, containerOp)(
-      $leverage(pos),
-      $text(style({ color: pallete.foreground }))('='),
-      $text(formatReadableUSD(pos.size))
+    $column(layoutSheet.spacingTiny, containerOp)(
+      $text(formatReadableUSD(pos.size)),
+      $seperator,
+      style({ textAlign: 'center', fontSize: '.65em' }, $leverage(pos)),
     )
   ]
 })
 
 export const $RiskLiquidator = (pos: IAggregatedOpenPositionSummary, markPrice: Stream<bigint>) => component(() => {
-  const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)
+  const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral, pos.size, pos.averagePrice, pos.isLong)
 
 
   const liqPercentage = map(price => {
@@ -108,16 +108,19 @@ export const $RiskLiquidator = (pos: IAggregatedOpenPositionSummary, markPrice: 
   }, markPrice)
 
   return [
-    $column(layoutSheet.spacingTiny, style({ fontSize: '.65em', minWidth: '100px', alignItems: 'center' }))(
-      $Risk(pos)({}),
+    $column(layoutSheet.spacingTiny, style({ minWidth: '100px', alignItems: 'center' }))(
+      $text(formatReadableUSD(pos.size)),
       $liquidationSeparator(liqPercentage),
-      $row(style({ gap: '2px', alignItems: 'center' }))(
+      $row(style({ fontSize: '.65em', gap: '2px', alignItems: 'center' }))(
+        $leverage(pos),
+
         $icon({
           $content: $skull,
-          width: 12,
+          width: '12px',
+          svgOps: style({ marginLeft: '3px' }),
           viewBox: '0 0 32 32',
         }),
-        $text(
+        $text(style({  }))(
           formatReadableUSD(liquidationPrice)
         )
       )
@@ -146,7 +149,7 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
   ]
 })
 
-export const $TokenIndex = (pos: IAggregatedOpenPositionSummary, IIcon?: Partial<IIcon>) => {
+export const $TokenIndex = (pos: IAggregatedOpenPositionSummary, IIcon?: { width?: string }) => {
   const $token = $tokenIconMap[pos.indexToken]
 
   if (!$token) {
@@ -156,7 +159,7 @@ export const $TokenIndex = (pos: IAggregatedOpenPositionSummary, IIcon?: Partial
   return $icon({
     $content: $token,
     viewBox: '0 0 32 32',
-    width: 24,
+    width: '24px',
     ...IIcon
   })
 }

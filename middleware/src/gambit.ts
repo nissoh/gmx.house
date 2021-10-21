@@ -181,7 +181,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
 export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggregatedTradeLiquidated>, interval: intervalInMsMap, ticks: number, endtime = Date.now() / 1000 | 0) {
   let accumulated = 0
 
-  const intervalInSecs = interval / 1000 | 0
+  const intervalInSecs = Math.floor((interval / ticks) / 1000)
   const initialDataStartTime = endtime - intervalInSecs * ticks
   const closedPosList = list
   // .filter(t => t.settledPosition)
