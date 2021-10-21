@@ -2,7 +2,7 @@ import { Behavior } from "@aelea/core"
 import { $element, $text, attr, component, style } from "@aelea/dom"
 import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { awaitPromises, empty, map, now } from '@most/core'
+import { awaitPromises, empty, map, multicast, now } from '@most/core'
 import { Stream } from '@most/types'
 import { IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
@@ -29,7 +29,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
   const tradeType = tradeTypeUrl[0] as TradeType
 
 
-  const ww = awaitPromises(
+  const feed: Stream<IChainlinkPrice[]> = multicast(awaitPromises(
     map(params => {
       return http.fetchJson('/api/feed', {
         method: 'POST',
@@ -43,7 +43,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
       })
 
     }, requestChainlinkPricefeed)
-  )
+  ))
 
 
   return [
@@ -55,9 +55,9 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
       ),
 
       $TradeCardPreview({
-        chainlinkPricefeed: ww,
+        chainlinkPricefeed: feed,
         aggregatedTrade,
-        latestPositionDeltaChange: empty(),
+        latestPositionPrice: map(feed => Number(feed[feed.length - 1].value), feed),
         containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
         accountPreview: {
           avatarSize: '45px'
