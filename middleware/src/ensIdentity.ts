@@ -123,6 +123,11 @@ export async function getIdentityFromENS(
   }
 
   const resolver = await provider.getResolver(ensName)
+
+  if (!resolver) {
+    throw new Error(`no resolver provided ${address}`)
+  }
+
   const [avatarUrl, twitterUrl] = await Promise.all([resolver.getText('avatar'), resolver.getText('com.twitter')])
 
   if (!avatarUrl)  {
