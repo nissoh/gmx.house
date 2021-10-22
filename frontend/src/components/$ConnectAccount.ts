@@ -7,7 +7,7 @@ import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { CHAIN, IWalletLink } from "wallet-link"
 import { $icon, $walletConnectLogo } from "../common/$icons"
-import { attemptToSwitchNetwork, metamaskQuery, walletConnect } from "../common/wallets"
+import * as wallet from "../common/wallets"
 import { $ButtonPrimary } from "./form/$Button"
 
 
@@ -28,7 +28,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
   return [
     $column(
       switchLatest(
-        awaitPromises(combineArray(async (account, walletLink, metamask) => {
+        awaitPromises(combineArray(async (account, walletLink, metamask, walletConnect) => {
 
           // no wallet connected, show connection flow
           if (!account || walletLink === null) {
@@ -89,7 +89,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
                   )
                 })({
                   click: switchNetworkTether(
-                    map(() => attemptToSwitchNetwork(walletLink.wallet, CHAIN.ARBITRUM)),
+                    map(() => wallet.attemptToSwitchNetwork(walletLink.wallet, CHAIN.ARBITRUM)),
                     awaitPromises,
                     constant(walletLink.wallet)
                   )
@@ -99,7 +99,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
               return config.$display
             }, walletLink.network)
           )
-        }, accountChange, config.walletLink, fromPromise(metamaskQuery)))
+        }, accountChange, config.walletLink, wallet.metamask, wallet.walletConnect))
       ),
       
       switchLatest(map(empty, switchNetwork))

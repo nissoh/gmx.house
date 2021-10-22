@@ -9,7 +9,7 @@ import { IEthereumProvider } from "eip1193-provider"
 import { AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse, IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
 import { initWalletLink } from "wallet-link"
 import { $logo } from '../common/$icons'
-import { metamaskQuery, walletConnect } from "../common/wallets"
+import * as wallet from "../common/wallets"
 import { $MainMenu } from '../components/$MainMenu'
 import { $anchor } from '../elements/$common'
 import { $cubes } from '../elements/$cube'
@@ -89,7 +89,7 @@ export default ({ baseRoute = '' }: Website) => component((
   })
 
   const walletLink = initWalletLink({
-    walletProviders: [fromPromise(metamaskQuery), now(walletConnect)]
+    walletProviders: [wallet.metamask, wallet.walletConnect]
   }, walletChange)
 
   return [

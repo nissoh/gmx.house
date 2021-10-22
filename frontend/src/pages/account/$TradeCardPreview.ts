@@ -4,7 +4,7 @@ import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUti
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, unixTimeTzOffset } from "gambit-middleware"
+import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, unixTimeTzOffset } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
@@ -165,6 +165,18 @@ export const $TradeCardPreview = ({
   const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
 
+  function tradeTitle(summary: IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary): string {
+    const trade = summary.trade
+    const isSettled = `settledPosition` in trade
+
+    if (isSettled) {
+      const settledPos = trade.settledPosition
+      return isSettled ? 'markPrice' in settledPos ? 'LIQUIDATED' : 'CLOSED' : ''
+    }
+    
+    return 'OPEN'
+  }
+
   return [
     $column(containerOp)(
 
@@ -176,7 +188,7 @@ export const $TradeCardPreview = ({
             const isOpen = !(`settledPosition` in trade)
 
             return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
-              $row(style({ alignItems: 'center', placeContent: 'space-evenly' }))(
+              $row(style({ fontFamily: 'RelativeMono', alignItems: 'center', placeContent: 'space-evenly' }))(
                 $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                   $row(
                     style({ borderRadius: '2px', padding: '4px', backgroundColor: pallete.message, })(
@@ -198,13 +210,16 @@ export const $TradeCardPreview = ({
                       // }),
                       $text(formatReadableUSD(summary.averagePrice))
                     ),
-
                     switchLatest(map(summary => {
-                      return $row(layoutSheet.spacingTiny, style({ alignItems: 'center', fontSize: '.65em' }))(
+                      const trade = summary.trade
+                      const isSettled = `settledPosition` in trade
+             
+                      return $row(style({ color: isSettled ? '' : pallete.indeterminate, gap: '3px', alignItems: 'center', fontSize: '.65em' }))(
+                        $text(tradeTitle(summary)),
                         $icon({
                           $content: $target,
-                          width: '14px',
-                          fill: `settledPosition` in summary.trade ? '' : pallete.indeterminate,
+                          width: '12px',
+                          fill: isSettled ? '' : pallete.indeterminate,
                           viewBox: '0 0 32 32'
                         }),
                         $text(style(`settledPosition` in summary.trade ? {} : { color: pallete.indeterminate }))(
