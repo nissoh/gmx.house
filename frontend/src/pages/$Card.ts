@@ -4,7 +4,7 @@ import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { awaitPromises, empty, map, multicast, now } from '@most/core'
 import { Stream } from '@most/types'
-import { IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from 'gambit-middleware'
+import { formatFixed, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, parseFixed, TradeType } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
 
 
@@ -57,7 +57,9 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
       $TradeCardPreview({
         chainlinkPricefeed: feed,
         aggregatedTrade,
-        latestPositionPrice: map(feed => Number(feed[feed.length - 1].value), feed),
+        latestPositionPrice: map(feed => {
+          return formatFixed(BigInt(feed[feed.length - 1].value), 8)
+        }, feed),
         containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
         accountPreview: {
           avatarSize: '45px'
