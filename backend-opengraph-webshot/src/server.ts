@@ -53,6 +53,9 @@ export const openGraphScreenshot = Router()
 openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
   const tradeType = req.query.tradeType
   const tradeId = req.query.tradeId
+  const startDate = req.query.startDate
+  const endDate = req.query.endDate
+  const token = req.query.token
 
   const fragments = [tradeType, tradeId].filter(s => s && typeof s === 'string')
   if (fragments.length !== 2) {
@@ -61,7 +64,7 @@ openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
     })
   }
 
-  const selfRef = `${process.env.APP}/card/${tradeType}/${tradeId}`
+  const selfRef = `${process.env.APP}/card/${token}-${tradeType}-${startDate}-${endDate}/${tradeId}`
   // const file = await screenPage(`http://localhost:3000/card/0x4CC6d33B7605809wc1E5DBb2198758a0010A67E00`)
   const file = await screenPage(selfRef)
   
