@@ -123,14 +123,14 @@ const run = async () => {
 
     if ((req.method === 'GET' || req.method === 'HEAD') && req.accepts('html')) {
 
-      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(0x[a-fA-F0-9]{40})-(closed-\d+-\d+|liquidated-\d+-\d+|open-\d+-\d+)\/(0x[A-Fa-f0-9]{64})$/i)
+      const profilePageMatches = req.originalUrl.match(/(\/p\/account\/)(0x[a-fA-F0-9]{40}-(closed-\d+-\d+|liquidated-\d+-\d+|open-\d+-\d+))\/(0x[A-Fa-f0-9]{64})$/i)
       res.setHeader('content-type', 'text/html; charset=utf-8')
 
       const selfUrl = 'https://' + req.get('host')
 
       if (profilePageMatches?.length === 5) {
         const [token, tradeType, startDate, endDate] = profilePageMatches[2].split('-')
-        const tradeId: string = profilePageMatches[3]
+        const tradeId: string = profilePageMatches[4]
         const ogHtmlFile = htmlFile
           .replace(/\$OG_TITLE/g, 'Trade Details')
           .replace(/\$OG_URL/g, selfUrl + req.originalUrl)
