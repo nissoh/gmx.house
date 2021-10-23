@@ -4,9 +4,13 @@ import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-import { empty, fromPromise, map, merge, mergeArray, multicast, now } from '@most/core'
+import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse, IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
+import {
+  AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
+  IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
+  IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX
+} from 'gambit-middleware'
 import { initWalletLink } from "wallet-link"
 import { $logo } from '../common/$icons'
 import * as wallet from "../common/wallets"
@@ -15,7 +19,6 @@ import { $anchor } from '../elements/$common'
 import { $cubes } from '../elements/$cube'
 import { $github } from '../elements/$icons'
 import { claimListQuery } from "../logic/claim"
-// import { $Tournament } from './tournament/$tournament'
 import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
 import { $Leaderboard } from './$Leaderboard'
@@ -39,14 +42,12 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
-  // [requestAccountListAggregation, requestAccountListAggregationTether]: Behavior<LeaderboardApi, LeaderboardApi>,
   [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
   [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
-  // [accountAggregationQuery, accountAggregationQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -85,7 +86,6 @@ export default ({ baseRoute = '' }: Website) => component((
     requestOpenAggregatedTrades,
     requestChainlinkPricefeed,
     requestAggregatedTrade,
-    // requestAccountListAggregation,
   })
 
   const walletLink = initWalletLink({
@@ -203,7 +203,6 @@ export default ({ baseRoute = '' }: Website) => component((
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({
             requestAggregatedTrade: requestAggregatedTradeTether(),
-            // requestChainlinkPricefeed: requestChainlinkPricefeedTether()
           })
         )
       )

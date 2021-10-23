@@ -4,7 +4,12 @@ import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUti
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { calculatePositionDelta, calculateSettledPositionDelta, CHAINLINK_USD_FEED_ADRESS, fillIntervalGap, formatFixed, formatReadableUSD, fromJson, getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDelta, isTradeSettled, parseFixed, readableNumber, unixTimeTzOffset } from "gambit-middleware"
+import {
+  calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
+  fromJson, getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
+  IAggregatedTradeAll, IChainlinkPrice, IClaim, IPositionDelta, isTradeSettled, parseFixed, readableNumber,
+  unixTimeTzOffset
+} from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
@@ -64,7 +69,7 @@ export const $TradeCardPreview = ({
     return isOpen ? map(price => Number(price.p), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)) : map(feed => formatFixed(feed[feed.length  -1].value, 30), parsedPricefeed)
   }, tradeSummary))
 
-  const historicPnL = multicast(combineArray((summary, pricefeed) => {
+  const historicPnL = state.replayLatest(multicast(combineArray((summary, pricefeed) => {
     const trade = summary.trade
 
     const startTime = trade.initialPosition.indexedAt
@@ -120,7 +125,7 @@ export const $TradeCardPreview = ({
       // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
 
     return filled
-  }, tradeSummary, parsedPricefeed))
+  }, tradeSummary, parsedPricefeed)))
 
 
   const hasSeriesFn = (cross: MouseEventParams): boolean => {
@@ -203,29 +208,26 @@ export const $TradeCardPreview = ({
                   $column(style({ gap: '6px' }))(
                     $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
                       $TokenIndex(summary, { width: '18px' }),
-                      // $icon({
-                      //   $content: $target,
-                      //   viewBox: '0 0 32 32',
-                      //   width: '12px'
-                      // }),
                       $text(formatReadableUSD(summary.averagePrice))
                     ),
                     switchLatest(map(summary => {
                       const trade = summary.trade
                       const isSettled = `settledPosition` in trade
              
-                      return $row(style({ color: isSettled ? '' : pallete.indeterminate, gap: '3px', alignItems: 'center', fontSize: '.65em' }))(
+                      return $row(layoutSheet.spacingSmall, style({ color: isSettled ? '' : pallete.indeterminate, fontSize: '.65em' }))(
                         $text(tradeTitle(summary)),
-                        $icon({
-                          $content: $target,
-                          width: '12px',
-                          fill: isSettled ? '' : pallete.indeterminate,
-                          viewBox: '0 0 32 32'
-                        }),
-                        $text(style(`settledPosition` in summary.trade ? {} : { color: pallete.indeterminate }))(
-                          merge(
-                            now('Loading...'),
-                            map(price => readableNumber(price), latestPrice)
+                        $row(style({ gap: '3px', alignItems: 'baseline' }))(
+                          $icon({
+                            $content: $target,
+                            width: '10px',
+                            fill: isSettled ? '' : pallete.indeterminate,
+                            viewBox: '0 0 32 32'
+                          }),
+                          $text(style(`settledPosition` in summary.trade ? {} : { color: pallete.indeterminate }))(
+                            merge(
+                              now('Loading...'),
+                              map(price => readableNumber(price), latestPrice)
+                            )
                           )
                         )
                       )
@@ -234,7 +236,7 @@ export const $TradeCardPreview = ({
                 ),
               ),
 
-              style({ alignSelf: 'stretch', backgroundColor: pallete.horizon }, $seperator),
+              style({ alignSelf: 'stretch' }, $seperator),
 
               isOpen
                 ? $RiskLiquidator(summary, map(feed => feed[feed.length - 1].price, historicPnL))({})
@@ -430,16 +432,6 @@ export const $TradeCardPreview = ({
     ),
 
     {
-      requestChainlinkPricefeed: map((pos): IPageChainlinkPricefeed => {
-        const feedAddress = CHAINLINK_USD_FEED_ADRESS[pos.initialPosition.indexToken]
-        return {
-          feedAddress,
-          from: pos.initialPosition.indexedAt,
-          to: 'settledPosition' in pos ? pos.settledPosition.indexedAt : Math.floor(Date.now() / 1000),
-          orderBy: 'unixTimestamp'
-        }
-      }, settledPosition),
-
       accountPreviewClick
     }
   ]

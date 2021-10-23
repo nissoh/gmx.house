@@ -194,7 +194,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   $Link({
                     anchorOp: style({ position: 'relative' }),
                     $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                    url: `/p/account/${TradeType.OPEN}-${Date.now()}/${pos.trade.id}`,
+                    url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
                     route: config.parentRoute.create({ fragment: '2121212' })
                   })({ click: routeChangeTether() })
                 )

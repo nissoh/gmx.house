@@ -308,7 +308,7 @@ export const $Portfolio = (config: IAccount) => component((
                         $Link({
                           anchorOp: style({ position: 'relative' }),
                           $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                          url: `/p/account/${TradeType.OPEN}-${Date.now()}/${pos.trade.id}`,
+                          url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
                           route: config.parentRoute.create({ fragment: '2121212' })
                         })({ click: changeRouteTether() })
                       )
@@ -395,16 +395,19 @@ export const $Portfolio = (config: IAccount) => component((
                   $head: $text('Entry'),
                   columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
 
-                  $body: map((pos: IAggregatedOpenPositionSummary) =>
-                    $Link({
+                  $body: map((pos: IAggregatedPositionSettledSummary) => {
+                    const settlement = pos.trade.settledPosition
+                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+
+                    return $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                      url: `/p/account/${TradeType.CLOSED}/${pos.trade.id.split('-')[1]}`,
+                      url: `/p/account/${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: changeRouteTether()
                     })
-                  )
+                  })
                 },
                 {
                   $head: $text('Risk'),

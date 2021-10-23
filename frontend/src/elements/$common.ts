@@ -72,7 +72,9 @@ export const $leverage = (pos: IAggregatedTradeSummary) =>
   
 
 export function $liquidationSeparator(liqWeight: Stream<number>) {
-  return styleInline(map((weight) => ({ width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${`${weight * 100}%`}, ${pallete.foreground} 0)` }), liqWeight))(
+  return styleInline(map((weight) => {
+    return { width: '100%', background: `linear-gradient(90deg, ${pallete.negative} ${`${weight * 100}%`}, ${pallete.foreground} 0)` }
+  }, liqWeight))(
     $uiSeperator
   )
 }

@@ -1,10 +1,9 @@
-import { Behavior } from "@aelea/core"
 import { $element, $text, attr, component, style } from "@aelea/dom"
 import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { awaitPromises, empty, map, multicast, now } from '@most/core'
+import { fromPromise, map, now } from '@most/core'
 import { Stream } from '@most/types'
-import { formatFixed, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, parseFixed, TradeType } from 'gambit-middleware'
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
 
 
@@ -18,32 +17,27 @@ export interface ICard {
 
 
 
-export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
-  [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
+export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
 
-) => {
   const urlFragments = document.location.pathname.split('/')
   const tradeId = urlFragments[urlFragments.length - 1]
-  const tradeTypeUrl = urlFragments[urlFragments.length - 2].split('-')
 
-  const tradeType = tradeTypeUrl[0] as TradeType
+  const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
+  const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
 
 
-  const feed: Stream<IChainlinkPrice[]> = multicast(awaitPromises(
-    map(params => {
-      return http.fetchJson('/api/feed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        // parseJson: jsonList => {
-        //   return jsonList.map(fromJson.positionLiquidatedJson)
-        // },
-        body: JSON.stringify(params)
-      })
-
-    }, requestChainlinkPricefeed)
-  ))
+  const feed: Stream<IChainlinkPrice[]> = fromPromise(http.fetchJson('/api/feed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(<IPageChainlinkPricefeed>{
+      feedAddress,
+      from: Number(from),
+      to: Number(to),
+      orderBy: 'unixTimestamp'
+    })
+  }))
 
 
   return [
@@ -71,9 +65,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
         },
         animatePnl: false,
         claimMap
-      })({
-        requestChainlinkPricefeed: requestChainlinkPricefeedTether()
-      }),
+      })({ }),
 
       $row(
         style({
@@ -95,7 +87,6 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component((
     ),
 
     {
-      // requestChainlinkPricefeed,
       requestAggregatedTrade: now({ id: tradeId, tradeType, }) as Stream<IRequestAggregatedTradeQueryparam>
     }
   ]
