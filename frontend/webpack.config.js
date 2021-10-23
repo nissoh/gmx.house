@@ -1,4 +1,5 @@
 const path = require('path')
+const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const CopyPlugin = require("copy-webpack-plugin")
@@ -38,6 +39,10 @@ module.exports = {
     }
   },
   plugins: [
+    new webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
     new ForkTsCheckerWebpackPlugin(),
     new HtmlWebpackPlugin({
       template: 'index.html'

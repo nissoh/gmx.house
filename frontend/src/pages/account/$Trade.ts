@@ -1,27 +1,27 @@
-import { $text, component, style } from "@aelea/dom"
-import { $column, $row, layoutSheet } from "@aelea/ui-components"
-import { IPageChainlinkPricefeed, IChainlinkPrice, formatReadableUSD, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeAll, IAggregatedOpenPositionSummary, fromJson } from "gambit-middleware"
-import { pallete } from "@aelea/ui-components-theme"
-import { map, switchLatest, multicast, now } from "@most/core"
-import { screenUtils, state } from "@aelea/ui-components"
-import { Stream } from "@most/types"
-import { $TradeCardPreview } from "./$TradeCardPreview"
 import { Behavior, O } from "@aelea/core"
+import { $text, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
+import { $column, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
+import { map, multicast, now, switchLatest } from "@most/core"
+import { Stream } from "@most/types"
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from "gambit-middleware"
 import { timeSince } from "../common"
+import { $TradeCardPreview } from "./$TradeCardPreview"
 
 
 export interface ITrade {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   aggregatedTrade: Stream<IAggregatedTradeAll>
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
+  claimMap: Stream<Map<string, IClaim>>
+
   parentRoute?: Route
 }
 
 
 
 export const $Trade = (config: ITrade) => component((
-  [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
   [changeRoute, changeRouteTether]: Behavior<string, string>,
 
 ) => {
@@ -30,17 +30,16 @@ export const $Trade = (config: ITrade) => component((
   const urlFragments = document.location.pathname.split('/')
   const tradeId = urlFragments[urlFragments.length - 1]
 
-  const tradeTypeUrl = urlFragments[urlFragments.length - 2].split('-')
-  const tradeType = tradeTypeUrl[0] as TradeType
+  const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
+  const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
 
   const settledPosition = multicast(config.aggregatedTrade)
   const tradeSummary = multicast(map(fromJson.toAggregatedOpenTradeSummary, settledPosition))
 
   const $container = screenUtils.isDesktopScreen
-    ? $row(style({ flexDirection: 'row-reverse', gap: '6vw' }))
+    ? $row(style({ flexDirection: 'row-reverse', alignSelf: 'center', width: '100%', maxWidth: '720px', gap: '6vw' }))
     : $column
-
-    
+  
   
   const $label = (label: string, value: string) => $column(
     $text(style({ color: pallete.foreground }))(label),
@@ -74,22 +73,24 @@ export const $Trade = (config: ITrade) => component((
         $TradeCardPreview({
           chainlinkPricefeed: config.chainlinkPricefeed,
           aggregatedTrade: config.aggregatedTrade,
-          containerOp: style({ position: 'relative', maxWidth: '720px', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
+          containerOp: style({ position: 'relative', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
           accountPreview: {
             parentRoute: config.parentRoute
-          }
+          },
+          claimMap: config.claimMap
         })({
-          requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
           accountPreviewClick: changeRouteTether()
         }),
 
         switchLatest(
           map((summary: IAggregatedOpenPositionSummary) => {
-            return $row(layoutSheet.spacing, style({ placeContent: 'space-evenly' }))(
-              $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
+            return $column(layoutSheet.spacing, style({ alignItems: 'center', fontSize: '.85em', padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(
+              $row(layoutSheet.spacing, style({ placeContent: 'space-between', flex: 1, alignSelf: 'stretch' }))(
+                $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
 
-              $labelUSD('Size', summary.size),
-              $labelUSD('Average Price', summary.averagePrice),
+                $labelUSD('Paid fees', summary.fee),
+                // $labelUSD('Average Price', summary.averagePrice),
+              ),
             )
           }, tradeSummary)
         ),
@@ -98,11 +99,8 @@ export const $Trade = (config: ITrade) => component((
     ),
 
     {
-      requestChainlinkPricefeed: requestChainlinkPricefeed,
-      requestAggregatedTrade: now({
-        id: tradeId,
-        tradeType,
-      }) as Stream<IRequestAggregatedTradeQueryparam>,
+      requestChainlinkPricefeed: now(<IPageChainlinkPricefeed>{ feedAddress, from: Number(from), to: Number(to), orderBy: 'unixTimestamp' }),
+      requestAggregatedTrade: now(<IRequestAggregatedTradeQueryparam>{ id: tradeId, tradeType, }),
       changeRoute
     }
   ]

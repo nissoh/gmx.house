@@ -1,16 +1,10 @@
 
+import { O } from '@aelea/core'
 import { awaitPromises, map } from '@most/core'
-import {
-  intervalInMsMap, ILeaderboardRequest, AccountHistoricalDataApi,
-  IAccountAggregationMap, toAggregatedAccountSummary, pageableQuery,
-  IPageable, formatFixed, IPageChainlinkPricefeed,
-  IAggregatedTradeSettledListMap, ITimerange, IAccountQueryParamApi,
-  IChainlinkPrice, IAggregatedTradeOpenListMap, IAggregatedTradeClosed, IIdentifiableEntity, IRequestAggregatedTradeQueryparam, TradeType, IAggregatedTradeOpen, IAggregatedTradeLiquidated, IAggregatedTradeAll, fromJson
-} from 'gambit-middleware'
-import { cacheMap } from '../utils'
-import { O } from '@aelea/utils'
 import { gql, TypedDocumentNode } from '@urql/core'
+import { AccountHistoricalDataApi, formatFixed, fromJson, IAccountAggregationMap, IAccountQueryParamApi, IAggregatedTradeAll, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IChainlinkPrice, IIdentifiableEntity, ILeaderboardRequest, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ITimerange, pageableQuery, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
 import fetch from 'isomorphic-fetch'
+import { cacheMap } from '../utils'
 import { prepareClient } from './common'
 
 
@@ -262,9 +256,9 @@ const chainlinkClient = prepareClient({
 export const requestAccountAggregation = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
 
-    const to = Date.now() / 1000 | 0
-    const from = (to - (queryParams.timeInterval / 1000 | 0))
-    const account = queryParams.account
+    const to = Math.floor(Date.now() / 1000)
+    const from = to - Math.floor(queryParams.timeInterval / 1000 | 0)
+    const account = queryParams.account.toLocaleLowerCase()
     
     const data = await vaultClient(accountAggregationQuery, { from, to, account, offset: 0, pageSize: 1000 })
     return data.accountAggregation
@@ -285,9 +279,9 @@ export const requestAggregatedSettledTradeList = O(
 )
 
 const cacheLifeMap = {
-  [intervalInMsMap.DAY]: intervalInMsMap.MIN,
-  [intervalInMsMap.WEEK]: intervalInMsMap.MIN15,
-  [intervalInMsMap.MONTH]: intervalInMsMap.HR,
+  [intervalInMsMap.HR24]: intervalInMsMap.SEC60,
+  [intervalInMsMap.DAY7]: intervalInMsMap.MIN15,
+  [intervalInMsMap.MONTH]: intervalInMsMap.MIN60,
 }
 const leaderboardCacheMap = cacheMap({})
 export const requestLeaderboardTopList = O(
@@ -339,7 +333,7 @@ const openTradesCacheMap = cacheMap({})
 export const requestOpenAggregatedTrades = O(
   map(async (queryParams: IPageable) => {
 
-    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN, async () => {
+    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.SEC60, async () => {
       const list = await vaultClient(openAggregateTradesQuery, {})
       const sortedList = list.aggregatedTradeOpens
         // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')

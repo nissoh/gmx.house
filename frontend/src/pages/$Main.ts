@@ -1,24 +1,29 @@
+import { Behavior } from "@aelea/core"
 import { $element, $node, $text, attr, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
-import { $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
-import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
-import { $github } from '../elements/$icons'
-import { designSheet } from '@aelea/ui-components'
+import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-
-import { $cubes } from '../elements/$cube'
-import { $MainMenu } from '../components/$MainMenu'
-import { $Leaderboard } from './$Leaderboard'
-import { $anchor } from '../elements/$common'
-import { $Account } from './account/$Account'
-// import { $Tournament } from './tournament/$tournament'
-import { helloBackend } from '../logic/leaderboard'
-import { AccountHistoricalDataApi, IAggregatedAccountSummary, IPagableResponse, ILeaderboardRequest, IPageable, IAggregatedOpenPositionSummary, IPageChainlinkPricefeed, IAccountAggregationMap, IIdentifiableEntity, fromJson, TradeType, TX_HASH_REGEX, ETH_ADDRESS_REGEXP } from 'gambit-middleware'
+import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
+import { IEthereumProvider } from "eip1193-provider"
+import {
+  AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
+  IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
+  IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX
+} from 'gambit-middleware'
+import { initWalletLink } from "wallet-link"
 import { $logo } from '../common/$icons'
-import { $tradeGMX } from '../common/$tradeButton'
-import { Behavior } from "@aelea/core"
+import * as wallet from "../common/wallets"
+import { $MainMenu } from '../components/$MainMenu'
+import { $anchor } from '../elements/$common'
+import { $cubes } from '../elements/$cube'
+import { $github } from '../elements/$icons'
+import { claimListQuery } from "../logic/claim"
+import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
+import { $Leaderboard } from './$Leaderboard'
+import { $Account } from './account/$Account'
+
 
 
 
@@ -37,13 +42,12 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
-  // [requestAccountListAggregation, requestAccountListAggregationTether]: Behavior<LeaderboardApi, LeaderboardApi>,
   [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
   [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
-  // [accountAggregationQuery, accountAggregationQueryTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
+  [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
 
   const changes = merge(locationChange, multicast(routeChanges))
@@ -70,9 +74,11 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
 
-  const rootStore = state.createLocalStorageChain('store')
+  const rootStore = state.createLocalStorageChain('store-2')
 
-  // const claimList = claimListQuery()
+  const claimMap = state.replayLatest(
+    map(list => groupByMap(list, item => item.account.toLowerCase()), claimListQuery())
+  )
 
   const clientApi = helloBackend({
     requestAccountAggregation,
@@ -80,8 +86,11 @@ export default ({ baseRoute = '' }: Website) => component((
     requestOpenAggregatedTrades,
     requestChainlinkPricefeed,
     requestAggregatedTrade,
-    // requestAccountListAggregation,
   })
+
+  const walletLink = initWalletLink({
+    walletProviders: [wallet.metamask, wallet.walletConnect]
+  }, walletChange)
 
   return [
 
@@ -100,8 +109,6 @@ export default ({ baseRoute = '' }: Website) => component((
                 $node(),
                 $node(),
                 $node(),
-
-        
               ),
 
               $row(style({ flex: 1 }))()
@@ -120,8 +127,9 @@ export default ({ baseRoute = '' }: Website) => component((
                   $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
                 ),
                 $node(),
-                $MainMenu({ parentRoute: pagesRoute })({
-                  routeChange: linkClickTether()
+                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute })({
+                  routeChange: linkClickTether(),
+                  walletChange: walletChangeTether()
                 })
               ),
             ),
@@ -139,12 +147,14 @@ export default ({ baseRoute = '' }: Website) => component((
                 })
                 : empty(),
               screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
-              $MainMenu({ parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
-                routeChange: linkClickTether()
+              $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
+                routeChange: linkClickTether(),
+                walletChange: walletChangeTether()
               })
             ),
             router.match(leaderboardRoute)(
               $Leaderboard({
+                claimMap,
                 parentRoute: rootRoute,
                 parentStore: rootStore,
                 openAggregatedTrades: map((x: IPagableResponse<IAggregatedOpenPositionSummary>) => ({ ...x, page: x.page.map(fromJson.toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
@@ -166,16 +176,19 @@ export default ({ baseRoute = '' }: Website) => component((
             // ),
             router.contains(accountRoute)(
               $Account({
+                claimMap,
                 parentRoute: accountRoute,
                 parentStore: rootStore,
-                aggregatedTradeList: map(fromJson.toAccountAggregationJson, clientApi.requestAccountAggregation),
+                aggregatedTradeList: map(res => res ? fromJson.toAccountAggregationJson(res): null, clientApi.requestAccountAggregation),
                 settledPosition: clientApi.requestAggregatedTrade,
-                chainlinkPricefeed: clientApi.requestChainlinkPricefeed
+                chainlinkPricefeed: clientApi.requestChainlinkPricefeed,
+                walletLink
               })({
                 requestAggregatedTrade: requestAggregatedTradeTether(),
                 requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
                 requestAccountAggregation: requestAccountAggregationTether(),
-                changeRoute: linkClickTether()
+                changeRoute: linkClickTether(),
+                walletChange: walletChangeTether()
               })
             ),
           )
@@ -185,12 +198,11 @@ export default ({ baseRoute = '' }: Website) => component((
       router.contains(cardRoute)(
         $node(designSheet.main, style({ overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
           $Card({
-            
+            claimMap,
             aggregatedTrade: clientApi.requestAggregatedTrade,
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({
             requestAggregatedTrade: requestAggregatedTradeTether(),
-            // requestChainlinkPricefeed: requestChainlinkPricefeedTether()
           })
         )
       )

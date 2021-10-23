@@ -1,85 +1,115 @@
-import { Behavior } from "@aelea/core"
-import { $text, component, style, $Node, attr } from "@aelea/dom"
-import { $column, layoutSheet } from "@aelea/ui-components"
-import { combine, map, merge, switchLatest } from "@most/core"
-import { shortenAddress } from "gambit-middleware"
-import { account, requestAccounts, CHAIN, network, provider } from "wallet-link"
-import { $alert, $anchor } from "../elements/$common"
+import { Behavior, combineArray, O } from "@aelea/core"
+import { $element, $Node, $text, attr, component, style, styleInline } from "@aelea/dom"
+import { $column, $row, layoutSheet } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
+import { awaitPromises, constant, empty, fromPromise, map, multicast, now, switchLatest } from "@most/core"
+import { Stream } from "@most/types"
+import { IEthereumProvider } from "eip1193-provider"
+import { CHAIN, IWalletLink } from "wallet-link"
+import { $icon, $walletConnectLogo } from "../common/$icons"
+import * as wallet from "../common/wallets"
 import { $ButtonPrimary } from "./form/$Button"
 
 
 
 export interface IIntermediateDisplay {
   $display: $Node
-  // wallet: Stream<Wallet>
+  walletLink: Stream<IWalletLink | null>
 }
 
 export const $IntermediateDisplay = (config: IIntermediateDisplay) => component((
-  [connectedWalletSucceed, connectedWalletSucceedTether]: Behavior<any, string>,
+  // [connectedWalletSucceed, connectedWalletSucceedTether]: Behavior<any, T>,
+  [switchNetwork, switchNetworkTether]: Behavior<PointerEvent, IEthereumProvider>,
+  [walletChange, walletChangeTether]: Behavior<PointerEvent, IEthereumProvider | null>,
 ) => {
 
-  const $connectButton = $ButtonPrimary({ $content: $text('Connect Wallet'), buttonOp: style({ zoom: .75 }) })({
-    click: connectedWalletSucceedTether(
-      map(() => requestAccounts),
-      switchLatest,
-      map(list => {
-        return list[0]
-      })
-    ) 
-  })
-
-  const $installMetamaskWarning = $alert(
-    $column(layoutSheet.spacingTiny)(
-      $text('No metamask detected. get it from '),
-      $anchor(attr({ href: 'https://metamask.io' }))($text('https://metamask.io'))
-    )
-  )
-
+  const accountChange = switchLatest(map(wallet => wallet ? wallet.account : now(null), config.walletLink))
 
   return [
     $column(
       switchLatest(
-        map(prov => {
-          if (prov === null)
-            return $installMetamaskWarning
+        awaitPromises(combineArray(async (account, walletLink, metamask, walletConnect) => {
+
+          // no wallet connected, show connection flow
+          if (!account || walletLink === null) {
+            
+            const $walletConnectBtn = $ButtonPrimary({
+              $content: $row(layoutSheet.spacing)(
+                $icon({
+                  viewBox: '0 0 32 32',
+                  $content: $walletConnectLogo,
+                }),
+                $text('Wallet-Connect'),
+              ), buttonOp: style({})
+            })({
+              click: walletChangeTether(
+                map(async () => walletConnect.enable()),
+                awaitPromises,
+                constant(walletConnect)
+              )
+            })
+
+            if (metamask) {
+              return $column(
+                $ButtonPrimary({
+                  $content: $row(layoutSheet.spacing)(
+                    $element('img')(attr({ src: '/assets/metamask-fox.svg' }), style({ width: '24px' }))(),
+                    $text('Connect Metamask')
+                  ), buttonOp: style({})
+                })({
+                  click: walletChangeTether(
+                    map(async () => metamask.enable()),
+                    awaitPromises,
+                    constant(metamask),
+                  ),
+                }),
+                $walletConnectBtn
+              )
+            } else {  // no mm resolved, show wallet-connect only
+              return $walletConnectBtn
+            }
+          }
 
           return switchLatest(
-            combine((chain, account) => {
-              if (account === undefined)
-                return $connectButton
-              if (chain !== CHAIN.ARBITRUM)
-                return $alert(
-                  $text('Switch to Arbitrum Network')
-                )
+            combineArray((chain) => {
+
+              if (chain !== CHAIN.ARBITRUM) {
+                return $ButtonPrimary({
+                  $content: $text('Switch to Arbitrum Network'),
+                  buttonOp: O(
+                    style({
+                      background: `transparent`, borderColor: pallete.negative,
+                      backgroundImage: `linear-gradient(0deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`,
+                      backgroundClip: 'text',
+                    }),
+                    styleInline(now({
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent'
+                    })),
+                  )
+                })({
+                  click: switchNetworkTether(
+                    map(() => wallet.attemptToSwitchNetwork(walletLink.wallet, CHAIN.ARBITRUM)),
+                    awaitPromises,
+                    constant(walletLink.wallet)
+                  )
+                })
+              }
+                
               return config.$display
-            }, network, account)
+            }, walletLink.network)
           )
-        }, provider)
+        }, accountChange, config.walletLink, wallet.metamask, wallet.walletConnect))
       ),
-      $text(map(shortenAddress, connectedWalletSucceed))
+      
+      switchLatest(map(empty, switchNetwork))
     ),
 
     {
-      connectedWalletSucceed: merge(account, connectedWalletSucceed)
+      walletChange: multicast(walletChange)
     }
   ]
 })
-
-// export const $AccountButton = (config: IIntermediateDisplay) => component((
-//   [requestWallet, sampleRequestWallet]: Behavior<any, any>
-// ) => {
-
-
-//   const $installMetamaskWarning = $text('installMetamask')
-
-
-//   return [
-//     $IntermediateDisplay({
-//       $display: $userConnectionStatus('d')
-//     })({}),
-//     {  }
-//   ]
-// })
 
 
 

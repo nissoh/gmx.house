@@ -1,12 +1,12 @@
-import { O } from "@aelea/core"
-import { $text, component, style, styleBehavior, styleInline } from "@aelea/dom"
-import { $column, $row, $seperator, layoutSheet } from "@aelea/ui-components"
+import { O, Op } from "@aelea/core"
+import { $text, component, INode, style, styleBehavior } from "@aelea/dom"
+import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, multicast, snapshot } from "@most/core"
+import { filter, map, multicast } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeAll, IAggregatedTradeOpen, IAggregatedTradeSummary, liquidationWeight, parseFixed, USD_DECIMALS } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, USD_DECIMALS } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
-import { $icon, $tokenIconMap } from "../common/$icons"
+import { $tokenIconMap, IIcon } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
 import { $leverage, $liquidationSeparator } from "../elements/$common"
 import { $bear, $bull, $skull } from "../elements/$icons"
@@ -56,16 +56,20 @@ export const winLossTableColumn = {
 
 export const tableRiskColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
   $head: $text('Risk'),
-  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, flexDirection: 'column', textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
   $body: map((pos: IAggregatedTradeSummary) => {
 
-    return $column(style({ alignItems: 'center', fontSize: '.65em' }))(
-      $row(layoutSheet.spacingTiny)(
-        $leverage(pos),
-        $text(formatReadableUSD(pos.collateral - pos.fee))
-      ),
-      style({ width: '100%' }, $seperator),
-      $text(style({  }))(formatReadableUSD(pos.size - pos.fee)),
+    return $leverage(pos)
+  })
+}
+
+export const tableSizeColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
+  $head: $text('Risk'),
+  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, textAlign: 'left', minWidth: '80px', placeContent: 'flex-start' })),
+  $body: map((pos: IAggregatedTradeSummary) => {
+
+    return $row(style({ alignItems: 'center', fontSize: '.65em' }), layoutSheet.spacingTiny)(
+      $text(formatReadableUSD(pos.size))
     )
   })
 }
@@ -83,31 +87,40 @@ export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => component(()
 })
 
 
-export const $RiskLiquidator = (pos: IAggregatedOpenPositionSummary) => component(() => {
-  const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral - getPositionMarginFee(pos.size), pos.size, pos.averagePrice, pos.isLong)
 
-  const positionMarkPrice = filterByIndexToken(pos.indexToken)(priceChange)
+export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {
+  return [
+    $column(layoutSheet.spacingTiny, containerOp)(
+      $text(formatReadableUSD(pos.size)),
+      $seperator,
+      style({ textAlign: 'center', fontSize: '.65em' }, $leverage(pos)),
+    )
+  ]
+})
+
+export const $RiskLiquidator = (pos: IAggregatedOpenPositionSummary, markPrice: Stream<bigint>) => component(() => {
+  const liquidationPrice = getLiquidationPriceFromDelta(pos.collateral, pos.size, pos.averagePrice, pos.isLong)
+
 
   const liqPercentage = map(price => {
-    const markPrice = Number(price.p)
-    const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
-    return liquidationWeight(pos.isLong, liquidationPriceUsd, markPrice)
-  }, positionMarkPrice)
+    const weight = liquidationWeight(pos.isLong, liquidationPrice, price)
+    return weight
+  }, markPrice)
 
   return [
-    $column(style({ fontSize: '.65em', alignItems: 'center' }))(
-      $row(layoutSheet.spacingTiny)(
-        $leverage(pos),
-        $text(formatReadableUSD(pos.collateral - pos.fee))
-      ),
+    $column(layoutSheet.spacingTiny, style({ minWidth: '100px', alignItems: 'center' }))(
+      $text(formatReadableUSD(pos.size)),
       $liquidationSeparator(liqPercentage),
-      $row(style({ gap: '2px', alignItems: 'center' }))(
+      $row(style({ fontSize: '.65em', gap: '2px', alignItems: 'center' }))(
+        $leverage(pos),
+
         $icon({
           $content: $skull,
-          width: 12,
+          width: '12px',
+          svgOps: style({ marginLeft: '3px' }),
           viewBox: '0 0 32 32',
         }),
-        $text(
+        $text(style({  }))(
           formatReadableUSD(liquidationPrice)
         )
       )
@@ -136,37 +149,36 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
   ]
 })
 
+export const $TokenIndex = (pos: IAggregatedOpenPositionSummary, IIcon?: { width?: string }) => {
+  const $token = $tokenIconMap[pos.indexToken]
 
-export const $Entry = (pos: IAggregatedOpenPositionSummary) => component(() => {
-  const idx = Object.entries(ARBITRUM_TRADEABLE_ADDRESS).find(([k, v]) => v === pos.indexToken)?.[1]
-
-  if (!idx) {
+  if (!$token) {
     throw new Error('Unable to find matched token')
   }
 
-  const $token = $tokenIconMap[idx]
+  return $icon({
+    $content: $token,
+    viewBox: '0 0 32 32',
+    width: '24px',
+    ...IIcon
+  })
+}
 
-  return [
-    $row(
-      $column(layoutSheet.spacingTiny, style({ alignSelf: 'flex-start' }))(
-        $row(style({ position: 'relative', flexDirection: 'row-reverse', alignSelf: 'center' }))(
+export const $Entry = (pos: IAggregatedOpenPositionSummary) =>
+  $row(
+    $column(layoutSheet.spacingTiny, style({ alignSelf: 'flex-start' }))(
+      $row(style({ position: 'relative', flexDirection: 'row-reverse', alignSelf: 'center' }))(
+        $TokenIndex(pos),
+        style({ borderRadius: '50%', padding: '3px', marginRight: '-5px', backgroundColor: pallete.background, })(
           $icon({
-            $content: $token,
+            $content: pos.isLong ? $bull : $bear,
             viewBox: '0 0 32 32',
-            width: 24,
-          }),
-          style({ borderRadius: '50%', padding: '3px', marginRight: '-5px', backgroundColor: pallete.background, })(
-            $icon({
-              $content: pos.isLong ? $bull : $bear,
-              viewBox: '0 0 32 32',
-            })
-          ),
-        ),  
-        $text(style({ fontSize: '.65em', textAlign: 'center', color: pallete.primary }))(formatReadableUSD(pos.averagePrice))
-      )
+          })
+        ),
+      ),  
+      $text(style({ fontSize: '.65em', textAlign: 'center', color: pallete.primary }))(formatReadableUSD(pos.averagePrice))
     )
-  ]
-})
+  )
 
 
 

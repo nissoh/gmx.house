@@ -1,3 +1,4 @@
+import { O } from "@aelea/core"
 import { style } from "@aelea/dom"
 import { $Button, $row, IButton } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
@@ -7,7 +8,10 @@ import { pallete } from "@aelea/ui-components-theme"
 export const $ButtonPrimary = (config: IButton) => {
   return $Button({
     ...config,
-    buttonOp: style({ background: `linear-gradient(45deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`, borderRadius: '30px', padding: '12px 24px', fontWeight: 'bold', borderColor: pallete.background })
+    buttonOp: O(
+      style({ color: 'white', whiteSpace: 'nowrap', fill: 'white', background: `linear-gradient(45deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)`, borderRadius: '30px', padding: '12px 24px', fontWeight: 'bold', borderColor: pallete.background }),
+      config.buttonOp || O()
+    )
   })
 }
 

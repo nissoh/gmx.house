@@ -23,32 +23,20 @@ export type WSBTCPriceEvent =  {
   m: true                    // Is the buyer the market maker?
   M: true                    // Ignore
 }
-// 1m
-// 3m
-// 5m
-// 15m
-// 30m
-// 1h
-// 2h
-// 4h
-// 6h
-// 8h
-// 12h
-// 1d
-// 3d
-// 1w
-// 1M
+
+
 type kineEvent = [openTime: number, open: string, high: string, low: string, close: string, volume: string, closeTime: number]
 
 const intervampMap = {
-  [intervalInMsMap.MIN]: '1m',
+  [intervalInMsMap.SEC60]: '1m',
   [intervalInMsMap.MIN5]: '5m',
   [intervalInMsMap.MIN15]: '15m',
-  [intervalInMsMap.HR]: '1h',
+  [intervalInMsMap.MIN60]: '1h',
+  [intervalInMsMap.HR2]: '2h',
   [intervalInMsMap.HR4]: '4h',
   [intervalInMsMap.HR8]: '8h',
-  [intervalInMsMap.DAY]: '1d',
-  [intervalInMsMap.WEEK]: '1w',
+  [intervalInMsMap.HR24]: '1d',
+  [intervalInMsMap.DAY7]: '1w',
 }
 
 export interface IBinanceApiParams {

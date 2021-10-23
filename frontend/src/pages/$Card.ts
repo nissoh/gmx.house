@@ -1,77 +1,92 @@
-import { $text, component, style } from "@aelea/dom"
-import { $column, $icon, $row, http, layoutSheet } from '@aelea/ui-components'
-
-import {  IAggregatedTradeSettledAll, IChainlinkPrice, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType  } from 'gambit-middleware'
-import { Stream } from '@most/types'
-import { awaitPromises, empty, map, now } from '@most/core'
+import { $element, $text, attr, component, style } from "@aelea/dom"
+import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
-import { $logo } from '../common/$icons'
+import { fromPromise, map, now } from '@most/core'
+import { Stream } from '@most/types'
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
-import { Behavior } from "@aelea/core"
+
 
 
 export interface ICard {
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
   aggregatedTrade: Stream<IAggregatedTradeSettledAll>
+
+  claimMap: Stream<Map<string, IClaim>>
 }
 
 
 
-export const $Card = ({ aggregatedTrade }: ICard) => component((
-  [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
+export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
 
-) => {
   const urlFragments = document.location.pathname.split('/')
   const tradeId = urlFragments[urlFragments.length - 1]
-  const tradeTypeUrl = urlFragments[urlFragments.length - 2].split('-')
 
-  const tradeType = tradeTypeUrl[0] as TradeType
+  const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
+  const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
 
 
-  const ww = awaitPromises(
-    map(params => {
-      return http.fetchJson('/api/feed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        // parseJson: jsonList => {
-        //   return jsonList.map(fromJson.positionLiquidatedJson)
-        // },
-        body: JSON.stringify(params)
-      })
-
-    }, requestChainlinkPricefeed)
-  )
+  const feed: Stream<IChainlinkPrice[]> = fromPromise(http.fetchJson('/api/feed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(<IPageChainlinkPricefeed>{
+      feedAddress,
+      from: Number(from),
+      to: Number(to),
+      orderBy: 'unixTimestamp'
+    })
+  }))
 
 
   return [
-    $column(layoutSheet.spacingBig, style({ fontSize: '150%' }))(
+    $column(layoutSheet.spacingBig, style({ height: '100vh', fontSize: '1.25em', fontFamily: 'RelativePro', backgroundColor: 'rgb(14, 15, 32)' }))(
 
-      $row(layoutSheet.spacingSmall, style({ alignItems: 'center', position: 'absolute', left: '10px', bottom: '10px' }))(
-        $icon({ $content: $logo, fill: pallete.foreground, width: '46px', height: '38px', viewBox: '0 0 32 32' }),
-        $text(style({ color: pallete.foreground, fontSize: '.55em', }))('GMX.house')
+      $row(layoutSheet.spacing, style({ alignItems: 'center', position: 'absolute', left: '15px', bottom: '15px' }))(
+        $element('img')(attr({ src: '/assets/gmx-logo.png' }), style({ width: '42px' }))(),
+        $text(style({ color: pallete.message, fontSize: '.75em', fontWeight: 'bold' }))('GMX.io')
       ),
 
       $TradeCardPreview({
-        chainlinkPricefeed: ww,
+        chainlinkPricefeed: feed,
         aggregatedTrade,
-        latestPositionDeltaChange: empty(),
-        containerOp: style({ position: 'absolute', inset: `0px 0px 35px`, }),
+        latestPositionPrice: map(feed => {
+          return formatFixed(BigInt(feed[feed.length - 1].value), 8)
+        }, feed),
+        containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
+        accountPreview: {
+          avatarSize: '45px'
+        },
         chartConfig: {
           timeScale: {
             visible: false
           }
         },
         animatePnl: false,
-      })({
-        requestChainlinkPricefeed: requestChainlinkPricefeedTether()
-      })
+        claimMap
+      })({ }),
+
+      $row(
+        style({
+          backgroundImage: 'url(/assets/field-overlay.png)',
+          position: 'absolute',
+          zIndex: 2222,
+          inset: 0,
+          backgroundPositionY: '40px',
+          backgroundRepeat: 'no-repeat',
+          // filter: 'opacity(.7)',
+          mixBlendMode: 'soft-light',  
+        })
+      )($row(style({
+        position: 'absolute',
+        inset: 0,
+        backgroundImage: 'radial-gradient(at center top, rgba(255, 255, 255, 0) -5%, rgba(14, 15, 32, 0.72) 67%)'
+      }))())
 
     ),
 
     {
-      // requestChainlinkPricefeed,
       requestAggregatedTrade: now({ id: tradeId, tradeType, }) as Stream<IRequestAggregatedTradeQueryparam>
     }
   ]

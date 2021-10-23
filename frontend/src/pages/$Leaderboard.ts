@@ -1,19 +1,17 @@
-import { $text, component, style, styleBehavior, StyleCSS, nodeEvent, $node } from "@aelea/dom"
-import { O, } from '@aelea/utils'
-import { $card, $column, $row, layoutSheet, state } from '@aelea/ui-components'
-import { pallete } from '@aelea/ui-components-theme'
-import { constant, map, multicast, snapshot, startWith } from '@most/core'
-import { intervalInMsMap, ILeaderboardRequest, IAggregatedAccountSummary, IAggregatedTradeSummary, IPagableResponse, IAggregatedOpenPositionSummary, IPageable, IAggregatedSettledTradeSummary, TradeType } from 'gambit-middleware'
+import { Behavior, O } from '@aelea/core'
+import { $node, $text, component, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $anchor } from '../elements/$common'
-import { Stream } from '@most/types'
+import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
+import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { $AccountPreview } from '../components/$AccountProfile'
-import { Behavior } from "@aelea/core"
-import { $Link } from "../components/$Link"
-import { screenUtils } from "@aelea/ui-components"
+import { constant, map, multicast, snapshot, startWith, switchLatest } from '@most/core'
+import { Stream } from '@most/types'
+import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2, TablePageResponse } from "../common/$Table2"
-import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, tableRiskColumnCellBody, winLossTableColumn } from "./common"
+import { $AccountPreview } from '../components/$AccountProfile'
+import { $Link } from "../components/$Link"
+import { $anchor } from '../elements/$common'
+import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
 
 
 
@@ -21,6 +19,7 @@ import { $Entry, $LivePnl, $ProfitLoss, $RiskLiquidator, tableRiskColumnCellBody
 export interface ILeaderboard<T extends BaseProvider> {
   parentRoute: Route
   provider?: Stream<T>
+  claimMap: Stream<Map<string, IClaim>>
 
   requestLeaderboardTopList: Stream<IPagableResponse<IAggregatedAccountSummary>>
   openAggregatedTrades: Stream<IPagableResponse<IAggregatedOpenPositionSummary>>
@@ -43,7 +42,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
 
-  const timeFrameStore = config.parentStore<ILeaderboardRequest['timeInterval']>('timeframe', intervalInMsMap.DAY)
+  const timeFrameStore = config.parentStore<ILeaderboardRequest['timeInterval']>('timeframe', intervalInMsMap.HR24)
 
   const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
@@ -81,11 +80,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const accountTableColumn = {
     $head: $text('Account'),
-    columnOp: style({ minWidth: '138px' }),
+    columnOp: style({ minWidth: '120px' }),
     $body: map(({ account }: IAggregatedTradeSummary) => {
-      return $AccountPreview({ address: account, parentRoute: config.parentRoute })({
-        profileClick: routeChangeTether()
-      })
+
+      return switchLatest(map(map => {
+        return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
+          profileClick: routeChangeTether()
+        })
+      }, config.claimMap))
     })
   }
 
@@ -107,14 +109,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $row(layoutSheet.spacing)(
             $text(style({ color: pallete.foreground }))('Time Frame:'),
             $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.DAY ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY))
+              styleBehavior(map(tf => tf === intervalInMsMap.HR24 ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.HR24))
             )(
               $text('24Hour')
             ),
             $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.WEEK ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.WEEK))
+              styleBehavior(map(tf => tf === intervalInMsMap.DAY7 ? activeTimeframe : null, filterByTimeFrameState)),
+              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY7))
             )(
               $text('7Day')
             ),
@@ -144,7 +146,20 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             columns: [
               accountTableColumn,
               winLossTableColumn,
-              tableRiskColumnCellBody,
+              {
+                $head: $text('Risk'),
+                columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
+                $body: map((pos: IAggregatedTradeSummary) => {
+                  return $Risk(pos)({})
+                })
+              },
+              // {
+              //   $head: $text('Size $'),
+              //   columnOp: O(layoutSheet.spacingTiny, style({ textAlign: 'left', maxWidth: '150px', placeContent: 'flex-start' })),
+              //   $body: map((pos: IAggregatedTradeSummary) => {
+              //     return $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.size))
+              //   })
+              // },
               {
                 $head: $text('PnL $'),
                 columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
@@ -174,12 +189,12 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             columns: [
               {
                 $head: $text('Entry'),
-                columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
                 $body: map((pos: IAggregatedOpenPositionSummary) =>
                   $Link({
                     anchorOp: style({ position: 'relative' }),
-                    $content: style({ pointerEvents: 'none' }, $Entry(pos)({})),
-                    url: `/p/account/${TradeType.OPEN}-${Date.now()}/${pos.trade.id}`,
+                    $content: style({ pointerEvents: 'none' }, $Entry(pos)),
+                    url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
                     route: config.parentRoute.create({ fragment: '2121212' })
                   })({ click: routeChangeTether() })
                 )
@@ -188,7 +203,11 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               {
                 $head: $text('Risk'),
                 columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                $body: map((pos: IAggregatedOpenPositionSummary) => $RiskLiquidator(pos)({}))
+                $body: map((pos: IAggregatedOpenPositionSummary) => {
+                  const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
+                  
+                  return $RiskLiquidator(pos, positionMarkPrice)({})
+                })
               },
               {
                 $head: $text('PnL $'),

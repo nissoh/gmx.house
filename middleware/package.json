@@ -1,10 +1,10 @@
 {
     "name": "gambit-middleware",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
-    "sideEffects": false,
+    "sideEffects": true,
     "files": [
         ".dist"
     ],
@@ -16,18 +16,19 @@
         "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
     },
     "dependencies": {
-        "@aelea/utils": "1.1.0",
-        "@ethersproject/abi": "5.4.1",
-        "@ethersproject/abstract-signer": "5.4.1",
-        "@ethersproject/bignumber": "^5.4.2",
-        "@ethersproject/bytes": "5.4.0",
-        "@ethersproject/contracts": "^5.4.1",
-        "@ethersproject/providers": "5.4.5",
+        "@aelea/core": "1.1.0",
+        "@ethersproject/abi": "5.5.0",
+        "@ethersproject/abstract-signer": "5.5.0",
+        "@ethersproject/bignumber": "^5.5.0",
+        "@ethersproject/bytes": "5.5.0",
+        "@ethersproject/contracts": "^5.5.0",
+        "@ethersproject/providers": "5.5.0",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/node": "^16.10.2"
+        "@types/isomorphic-fetch": "^0.0.35",
+        "isomorphic-fetch": "^3.0.0"
     }
 }

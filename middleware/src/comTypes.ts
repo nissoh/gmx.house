@@ -1,4 +1,4 @@
-import { O, Op } from "@aelea/utils"
+import { O, Op } from "@aelea/core"
 import { filter, map } from "@most/core"
 
 

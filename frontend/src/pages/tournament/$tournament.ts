@@ -1,5 +1,5 @@
 // import { $text, component, style } from "@aelea/dom"
-// import { O, } from '@aelea/utils'
+// import { O, } from '@aelea/core'
 // import { $card, $column, $row, layoutSheet, $Table, TablePageResponse, state } from '@aelea/ui-components'
 // import { pallete } from '@aelea/ui-components-theme'
 // import { map, now, switchLatest } from '@most/core'
@@ -13,7 +13,7 @@
 // export interface ILeaderboard<T extends BaseProvider> {
 //   parentRoute: Route
 //   provider?: Stream<T>
-//   claimList: Stream<IClaim[]>
+//   claimMap: Stream<Map<string, IClaim>>
 
 //   tournamentQuery: Stream<Account[]>
 

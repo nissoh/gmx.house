@@ -1,8 +1,7 @@
-import { Behavior } from "@aelea/core"
+import { Behavior, Op } from "@aelea/core"
 import { $Node, $text, component, INode, nodeEvent, style, styleBehavior } from "@aelea/dom"
 import { $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { Op } from "@aelea/utils"
 import { constant, map, merge, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 

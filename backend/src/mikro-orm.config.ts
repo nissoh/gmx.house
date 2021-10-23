@@ -1,12 +1,13 @@
 import { Options } from '@mikro-orm/core'
+import { Claim } from './logic/dto'
 // import { TsMorphMetadataProvider } from '@mikro-orm/reflection'
 
 
 const options: Options = {
   type: 'mongo',
-  entities: [], // Object.values(dto),
+  entities: [Claim], // Object.values(dto),
   // metadataProvider: TsMorphMetadataProvider,
-  dbName: 'gmx',
+  dbName: 'gmx-house',
   // highlighter: new MongoHighlighter(),
   // debug: true,
   ensureIndexes: true,

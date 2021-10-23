@@ -3,9 +3,11 @@
   "compilerOptions": {
     "outDir": ".dist/esm",
     "rootDir": "src",
-    "types": [
-      "node"
+    "lib": [
+      "es2021",
+      "DOM"
     ],
+    "types": [],
     "declarationDir": ".dist/types"
   }
 }

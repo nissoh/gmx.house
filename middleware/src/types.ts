@@ -48,12 +48,17 @@ export type IPositionDecrease = IEntityIndexed & Omit<ExtractAndParseEventType<V
 export type IPositionUpdate = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 export type IPositionClose = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 
-
+export enum IClaimSource {
+  TWITTER = 'TWITTER',
+  ENS = 'ENS',
+}
 
 
 export interface IClaim {
-  latestClaimBlockNumber: number
-  identity: string
+  name: string
+  account: string
+  sourceType: IClaimSource
+  data: string
 }
 
 export interface Account {
@@ -92,7 +97,7 @@ export interface IPageChainlinkPricefeed extends Partial<IPageable>, Partial<ISo
 }
 
 export interface ILeaderboardRequest extends IPageable {
-  timeInterval: intervalInMsMap.DAY | intervalInMsMap.WEEK | intervalInMsMap.MONTH
+  timeInterval: intervalInMsMap.HR24 | intervalInMsMap.DAY7 | intervalInMsMap.MONTH
 }
 export interface AccountHistoricalDataApi extends IAccountQueryParamApi {
   timeInterval: intervalInMsMap

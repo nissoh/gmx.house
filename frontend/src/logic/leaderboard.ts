@@ -1,8 +1,8 @@
+import { O } from "@aelea/core"
 import { http } from "@aelea/ui-components"
-import { O } from "@aelea/utils"
 import { filter, fromPromise, map, mergeArray, multicast } from "@most/core"
 import { Stream } from "@most/types"
-import { ICommunicationMessage, IPositionLiquidated, ILeaderboardRequest, fromJson } from "gambit-middleware"
+import { fromJson, ICommunicationMessage, ILeaderboardRequest, IPositionLiquidated } from "gambit-middleware"
 
 
 export type ILoopMap<T> = {
@@ -17,7 +17,7 @@ export const helloBackend = <IN extends ILoopMap<IN>, OUT>(inMap: IN): {[k: stri
     return map(body => ({ topic, body }), source)
   }, {} as ILoopMap<OUT>)
   
-  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`wss://${location.host}/api-ws`, multicast(mergeArray(outMapEntries)))
+  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`ws://${location.host}/api-ws`, multicast(mergeArray(outMapEntries)))
   const multicastConnection = multicast(wss)
 
   const outMap = entriesInMap.reduce((seed, [topic, source]) => {

@@ -1,16 +1,20 @@
-import { combineArray, Behavior, Op, O } from "@aelea/core"
-import { $text, style, motion, MOTION_NO_WOBBLE, component, INode, styleBehavior } from "@aelea/dom"
-import { $column, $icon, $NumberTicker, $row, layoutSheet } from "@aelea/ui-components"
+import { Behavior, combineArray, O, Op } from "@aelea/core"
+import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
+import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { switchLatest, skip, skipRepeatsWith, multicast, map, filter, now, skipRepeats, startWith, merge, empty, snapshot } from "@most/core"
+import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, formatFixed, unixTimeTzOffset, formatReadableUSD, IChainlinkPrice, IAggregatedTradeAll, parseFixed, calculatePositionDelta, fillIntervalGap, fromJson, IPageChainlinkPricefeed, CHAINLINK_USD_FEED_ADRESS, IPositionDelta, isTradeSettled, liquidationWeight, calculateSettledPositionDelta } from "gambit-middleware"
+import {
+  calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
+  fromJson, getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
+  IAggregatedTradeAll, IChainlinkPrice, IClaim, IPositionDelta, isTradeSettled, parseFixed, readableNumber,
+  unixTimeTzOffset
+} from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
-import { $leverage, $seperator } from "../../elements/$common"
-import { $bull, $bear } from "../../elements/$icons"
-import { filterByIndexToken, priceChange } from "../common"
+import { $bear, $bull, $target } from "../../elements/$icons"
+import { $Risk, $RiskLiquidator, $TokenIndex, filterByIndexToken, priceChange } from "../common"
 
 interface IPricefeedTick extends IPositionDelta {
   value: number;
@@ -21,14 +25,14 @@ interface IPricefeedTick extends IPositionDelta {
 export interface ITradeCardPreview {
   chainlinkPricefeed: Stream<IChainlinkPrice[]>,
   aggregatedTrade: Stream<IAggregatedTradeAll>,
-  latestPositionDeltaChange?: Stream<IPositionDelta>
+  latestPositionPrice?: Stream<number>
   
   containerOp?: Op<INode, INode>,
   chartConfig?: DeepPartial<ChartOptions>,
 
   animatePnl?: boolean
 
-
+  claimMap: Stream<Map<string, IClaim>>
   accountPreview?: Partial<IAccountPreview>
 }
 
@@ -37,28 +41,35 @@ export const $TradeCardPreview = ({
   aggregatedTrade,
   containerOp = O(),
   chartConfig = {},
-  latestPositionDeltaChange,
+  latestPositionPrice,
   animatePnl = true,
-  accountPreview
+  accountPreview,
+  claimMap
 }: ITradeCardPreview) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
   [accountPreviewClick, accountPreviewClickTether]: Behavior<string, string>,
 ) => {
 
   const settledPosition = multicast(aggregatedTrade)
-  const tradeSummary = multicast(map(fromJson.toAggregatedTradeAllSummary, settledPosition))
+  const tradeSummary = state.replayLatest(multicast(map(fromJson.toAggregatedTradeAllSummary, settledPosition)))
 
-  
-  const parsedPricefeed = map(feed => {
+  const parsedPricefeed = multicast(map(feed => {
     return feed
       .map(({ unixTimestamp, value }) => ({
         value: parseFixed(String(Number(value) / 1e8), 30),
         time: unixTimestamp,
       }))
       .sort((a, b) => a.time - b.time)
-  }, chainlinkPricefeed)
+  }, chainlinkPricefeed))
 
-  const historicPnL = multicast(combineArray((summary, pricefeed) => {
+  const latestPrice = latestPositionPrice ? latestPositionPrice : switchLatest(map(summary => {
+    const trade = summary.trade
+    const isOpen = !(`settledPosition` in trade)
+
+    return isOpen ? map(price => Number(price.p), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)) : map(feed => formatFixed(feed[feed.length  -1].value, 30), parsedPricefeed)
+  }, tradeSummary))
+
+  const historicPnL = state.replayLatest(multicast(combineArray((summary, pricefeed) => {
     const trade = summary.trade
 
     const startTime = trade.initialPosition.indexedAt
@@ -114,7 +125,7 @@ export const $TradeCardPreview = ({
       // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
 
     return filled
-  }, tradeSummary, parsedPricefeed))
+  }, tradeSummary, parsedPricefeed)))
 
 
   const hasSeriesFn = (cross: MouseEventParams): boolean => {
@@ -141,9 +152,7 @@ export const $TradeCardPreview = ({
         : calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.initialPosition.isLong, summary)
 
       return merge(
-        isSettled
-          ? latestPositionDeltaChange ?? empty()
-          : latestPositionDeltaChange ?? map(p => calculatePositionDelta(parseFixed(p.p, 30), summary.isLong, summary), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange)),
+        map(price => calculatePositionDelta(parseFixed(price, 30), summary.isLong, summary), latestPositionPrice ?? latestPrice),
         now({ delta: initialDelta.delta - summary.fee, deltaPercentage: initialDelta.deltaPercentage })
       )
     }
@@ -160,11 +169,18 @@ export const $TradeCardPreview = ({
   const chartRealisedPnl = map(ss => formatFixed(ss.delta, 30), chartPnLCounter)
   const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
-  const liqPercentage = snapshot(price => {
-    // const markPrice = Number(price.delta)
-    // const liquidationPriceUsd = formatFixed(liquidationPrice, USD_DECIMALS)
-    return liquidationWeight(true, 50, 40)
-  }, tradeSummary, pnlCrosshairMove)
+
+  function tradeTitle(summary: IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary): string {
+    const trade = summary.trade
+    const isSettled = `settledPosition` in trade
+
+    if (isSettled) {
+      const settledPos = trade.settledPosition
+      return isSettled ? 'markPrice' in settledPos ? 'LIQUIDATED' : 'CLOSED' : ''
+    }
+    
+    return 'OPEN'
+  }
 
   return [
     $column(containerOp)(
@@ -176,9 +192,9 @@ export const $TradeCardPreview = ({
             const trade = summary.trade
             const isOpen = !(`settledPosition` in trade)
 
-            return $row(layoutSheet.spacing, style({ alignItems: 'center', padding: '25px 35px', zIndex: 100 }))(
-              $row(style({ alignItems: 'center', placeContent: 'space-evenly' }))(
-                $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+            return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
+              $row(style({ fontFamily: 'RelativeMono', alignItems: 'center', placeContent: 'space-evenly' }))(
+                $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                   $row(
                     style({ borderRadius: '2px', padding: '4px', backgroundColor: pallete.message, })(
                       $icon({
@@ -189,71 +205,84 @@ export const $TradeCardPreview = ({
                       })
                     )
                   ),
-                  $text(initPos.isLong ? 'Long' : 'Short')
+                  $column(style({ gap: '6px' }))(
+                    $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
+                      $TokenIndex(summary, { width: '18px' }),
+                      $text(formatReadableUSD(summary.averagePrice))
+                    ),
+                    switchLatest(map(summary => {
+                      const trade = summary.trade
+                      const isSettled = `settledPosition` in trade
+             
+                      return $row(layoutSheet.spacingSmall, style({ color: isSettled ? '' : pallete.indeterminate, fontSize: '.65em' }))(
+                        $text(tradeTitle(summary)),
+                        $row(style({ gap: '3px', alignItems: 'baseline' }))(
+                          $icon({
+                            $content: $target,
+                            width: '10px',
+                            fill: isSettled ? '' : pallete.indeterminate,
+                            viewBox: '0 0 32 32'
+                          }),
+                          $text(style(`settledPosition` in summary.trade ? {} : { color: pallete.indeterminate }))(
+                            merge(
+                              now('Loading...'),
+                              map(price => readableNumber(price), latestPrice)
+                            )
+                          )
+                        )
+                      )
+                    }, tradeSummary)),
+                  )
                 ),
               ),
 
-              $seperator,
+              style({ alignSelf: 'stretch' }, $seperator),
 
-              $leverage(summary),
+              isOpen
+                ? $RiskLiquidator(summary, map(feed => feed[feed.length - 1].price, historicPnL))({})
+                : $Risk(summary)({}),
 
-              $seperator,
-
-              $text(
-                strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, initPos.indexToken).symbol
-              ),
-
-              ...isOpen ? [
-                $seperator,
-                $text(style({ color: pallete.indeterminate }))(`LIVE`)
-              ] : [],
-
-              // $tokenLabelFromSummary(summary.trade),
-                  
-              // $seperator,
 
               $row(style({ flex: 1 }))(),
 
-              $AccountPreview({ ...accountPreview, address: summary.account, })({
-                profileClick: accountPreviewClickTether()
-              }),
+              switchLatest(map(map => {
+                return $AccountPreview({ ...accountPreview, address: summary.account, claim: map.get(summary.account.toLocaleLowerCase()) })({
+                  profileClick: accountPreviewClickTether()
+                })
+              }, claimMap)),
 
 
             )
           }, tradeSummary)
         ),
 
-        $column(layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none' }))(
-          $row(style({ alignItems: 'baseline' }))(
+        $row(layoutSheet.spacing, style({ alignItems: 'baseline', placeContent: 'center', pointerEvents: 'none' }))(
+          $row(style({ fontSize: '2.25em', alignItems: 'baseline', paddingTop: '26px' }))(
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
-                  textStyle: {
-                    fontSize: '2.45em',
-                  },
                   value$: map(Math.round, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartRealisedPnl)),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '2.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, x => x.toLocaleString()), chartRealisedPnl)),
-            $text(style({ color: pallete.foreground }))('$'),
+              : $text(tickerStyle, styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartRealisedPnl)))(map(O(Math.floor, x => `${x > 0 ? '+' : ''}` + x.toLocaleString()), chartRealisedPnl)),
+            $text(style({ fontSize: '.75em', color: pallete.foreground }))('$'),
           ),
           // $liquidationSeparator(liqPercentage),
-          $row(style({ alignItems: 'baseline' }))(
+          $row(style({ fontSize: '1.75em', alignItems: 'baseline' }))(
+            $text(style({ color: pallete.foreground }))('('),
             animatePnl
               ? tickerStyle(
                 $NumberTicker({
-                  textStyle: {
-                    fontSize: '1.45em',
-                  },
                   value$: map(Math.round, skip(1, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, chartPnlPercentage))),
                   incrementColor: pallete.positive,
                   decrementColor: pallete.negative
                 })
               )
-              : $text(tickerStyle, style({ fontSize: '1.45em' }), styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, String), chartPnlPercentage)),
+              : $text(tickerStyle, styleBehavior(map(pnl => ({ color: pnl > 0 ? pallete.positive : pallete.negative }), chartPnlPercentage)))(map(O(Math.floor, n => `${n > 0 ? '+' : ''}` + n), chartPnlPercentage)),
             $text(tickerStyle, style({ color: pallete.foreground }))('%'),
+            $text(style({ color: pallete.foreground }))(')'),
           ),
         )
       ),
@@ -271,14 +300,6 @@ export const $TradeCardPreview = ({
                 price: 0,
               },
               
-              // lineStyle: LineStyle.Solid,
-              
-              // autoscaleInfoProvider: () => {
-              //   debugger
-              //   return {
-                    
-              //   }
-              // },
               
               lineWidth: 2,
               baseLineVisible: false,
@@ -307,9 +328,23 @@ export const $TradeCardPreview = ({
                 title: '',
                 lineStyle: LineStyle.SparseDotted,
               })
-
             }
 
+            if (low.delta < 0) {
+              const liquidationPrice = getLiquidationPriceFromDelta(tradeSummary.collateral, tradeSummary.size, tradeSummary.averagePrice, tradeSummary.isLong)
+              const posDelta = calculatePositionDelta(liquidationPrice, tradeSummary.isLong, tradeSummary)
+              const formatedLiqPrice = formatFixed(posDelta.delta, 30)
+            
+
+              series.createPriceLine({
+                price: formatedLiqPrice,
+                color: pallete.negative,
+                lineWidth: 1,
+                axisLabelVisible: true,
+                title: `Liquidation $${readableNumber(formatedLiqPrice)}`,
+                lineStyle: LineStyle.SparseDotted,
+              })
+            }
 
 
             if (data.length > 10) {
@@ -397,16 +432,6 @@ export const $TradeCardPreview = ({
     ),
 
     {
-      requestChainlinkPricefeed: map((pos): IPageChainlinkPricefeed => {
-        const feedAddress = CHAINLINK_USD_FEED_ADRESS[pos.initialPosition.indexToken]
-        return {
-          feedAddress,
-          from: pos.initialPosition.indexedAt,
-          to: 'settledPosition' in pos ? pos.settledPosition.indexedAt : Math.floor(Date.now() / 1000),
-          orderBy: 'unixTimestamp'
-        }
-      }, settledPosition),
-
       accountPreviewClick
     }
   ]
