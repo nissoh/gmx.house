@@ -151,12 +151,13 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
 
     const tradeSummaries = allSettled.map(toAggregatedTradeSettledSummary)
     const fee = tradeSummaries.reduce((seed, pos) => seed + pos.fee, 0n)
-    const realisedPnl = allSettled.reduce((seed, pos) => {
-      if (pos.settledPosition.realisedPnl > 0n) {
+    const realisedPnl = tradeSummaries.reduce((seed, pos) => {
+      if (pos.pnl > 0n) {
         profitablePositionsCount++
       }
-      return seed + pos.settledPosition.realisedPnl
+      return seed + pos.pnl
     }, 0n)
+
 
     const summary: IAggregatedAccountSummary = {
       account, fee, profitablePositionsCount,

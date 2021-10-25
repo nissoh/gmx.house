@@ -163,7 +163,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               {
                 $head: $text('PnL $'),
                 columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
-                $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
+                $body: map((pos: IAggregatedSettledTradeSummary) => $row($ProfitLoss(pos)))
               },
             ],
           })({ scrollIndex: tableTopPnlRequestTether(), })
@@ -194,7 +194,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   $Link({
                     anchorOp: style({ position: 'relative' }),
                     $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                    url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
+                    url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}/${pos.trade.id}`,
                     route: config.parentRoute.create({ fragment: '2121212' })
                   })({ click: routeChangeTether() })
                 )

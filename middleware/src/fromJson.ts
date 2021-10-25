@@ -151,7 +151,7 @@ function toAggregatedTradeAllSummary<T extends IAggregatedTradeAll>(json: T): IA
   if (json.settledPosition) {  // @ts-ignore
     if ('markPrice' in json.settledPosition) {
       // @ts-ignore
-      return toAggregatedTradeLiquidatedJson(toAggregatedTradeLiquidatedJson(json))
+      return toAggregatedTradeSettledSummary(toAggregatedTradeLiquidatedJson(json))
     } else {
       // @ts-ignore
       return toAggregatedTradeSettledSummary(toAggregatedTradeClosedJson(json))

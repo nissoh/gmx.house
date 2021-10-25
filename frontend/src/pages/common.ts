@@ -2,7 +2,7 @@ import { O, Op } from "@aelea/core"
 import { $text, component, INode, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, multicast } from "@most/core"
+import { filter, map, multicast, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, USD_DECIMALS } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
@@ -74,18 +74,13 @@ export const tableSizeColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
   })
 }
 
+export const $ProfitLossText = (pnl: bigint) => {
+  const str = formatReadableUSD(pnl)
+  const isNegative = str.indexOf('-') > -1
+  return $text(style({ color: isNegative ? pallete.negative : pallete.positive }))(isNegative ? str : '+' + str)
+}
 
-
-export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => component(() => {
-  const str = formatReadableUSD(pos.pnl - pos.fee)
-
-  return [
-    $row(
-      $text(style({ color: str.indexOf('-') > -1 ? pallete.negative : pallete.positive }))(str)
-    )
-  ]
-})
-
+export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.pnl - pos.fee)
 
 
 export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {
@@ -138,13 +133,10 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
 
   return [
     $row(
-      $text(styleBehavior(map(s => ({ color: s.delta > 0 ? pallete.positive : pallete.negative }), pnlPosition)))(
-        map(meta => {
-
-          const pnl = formatReadableUSD(meta.delta - pos.fee)
-          return `${meta.delta > 0 ? pnl : `${pnl.startsWith('-') ? pnl : '-' + pnl}`}`
-        }, pnlPosition)
-      )
+      switchLatest(map(meta => {
+        const pnl = $ProfitLossText(meta.delta - pos.fee)
+        return pnl
+      }, pnlPosition))
     )
   ]
 })

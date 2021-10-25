@@ -14,7 +14,7 @@ import { $Table2 } from "../../common/$Table2"
 import { $ProfilePreviewClaim } from "../../components/$AccountProfile"
 import { $Link } from "../../components/$Link"
 import { $Chart } from "../../components/chart/$Chart"
-import { $anchor, $leverage, $tokenLabelFromSummary } from "../../elements/$common"
+import { $anchor, $tokenLabelFromSummary } from "../../elements/$common"
 import { $caretDown } from "../../elements/$icons"
 import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, timeSince } from "../common"
 
@@ -308,7 +308,7 @@ export const $Portfolio = (config: IAccount) => component((
                         $Link({
                           anchorOp: style({ position: 'relative' }),
                           $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                          url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
+                          url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}/${pos.trade.id}`,
                           route: config.parentRoute.create({ fragment: '2121212' })
                         })({ click: changeRouteTether() })
                       )
@@ -402,7 +402,7 @@ export const $Portfolio = (config: IAccount) => component((
                     return $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                      url: `/p/account/${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
+                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: changeRouteTether()
@@ -419,7 +419,7 @@ export const $Portfolio = (config: IAccount) => component((
                 {
                   $head: $text('PnL $'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
+                  $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos))
                 }
               ],
             })({

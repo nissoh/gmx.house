@@ -11,6 +11,7 @@ import { prepareClient } from './common'
 const schemaFragments = `
 
 fragment increasePositionFields on IncreasePosition {
+  id
   account
 
   indexedAt
@@ -26,7 +27,7 @@ fragment increasePositionFields on IncreasePosition {
 }
 
 fragment decreasePositionFields on DecreasePosition {
-  # key
+  id
   indexedAt
 
   account
@@ -40,7 +41,7 @@ fragment decreasePositionFields on DecreasePosition {
 }
 
 fragment updatePositionFields on UpdatePosition {
-  # key
+  id
 
   indexedAt
   size
@@ -52,7 +53,7 @@ fragment updatePositionFields on UpdatePosition {
 }
 
 fragment closePositionFields on ClosePosition {
-  # key
+  id
 
   indexedAt
 
@@ -65,7 +66,7 @@ fragment closePositionFields on ClosePosition {
 }
 
 fragment liquidatePositionFields on LiquidatePosition {
-  # key
+  id
 
   indexedAt
 
@@ -226,7 +227,7 @@ query ($id: String) {
 
 const chainlinkPricefeedQuery: TypedDocumentNode<{rounds: IChainlinkPrice[]}, IPageChainlinkPricefeed> = gql`
 
-query ($feedAddress: String, $from: Int = 0, $to: Int = 9e10, $offset: Int = 0, $orderDirection: OrderDirection = asc, $orderBy: Round_orderBy = unixTimestamp) {
+query ($feedAddress: String, $from: Int, $to: Int, $offset: Int = 0, $orderDirection: OrderDirection = asc, $orderBy: Round_orderBy = unixTimestamp) {
   rounds(first: 1000, skip: $offset, orderBy: $orderBy, orderDirection: $orderDirection, where: { feed: $feedAddress, unixTimestamp_gte: $from, unixTimestamp_lte: $to }) {
     unixTimestamp,
     value
@@ -351,8 +352,10 @@ export const requestOpenAggregatedTrades = O(
 export const requestChainlinkPricefeed = O(
   map(async (queryParams: IPageChainlinkPricefeed) => {
 
+    const { to = Math.floor(Date.now() / 1000) } = queryParams
+
     const fethPage = async (offset: number): Promise<{ rounds: IChainlinkPrice[]; }> => {
-      const list = await chainlinkClient(chainlinkPricefeedQuery, { ...queryParams, pageSize: 1000, offset })
+      const list = await chainlinkClient(chainlinkPricefeedQuery, { ...queryParams, to, pageSize: 1000, offset })
 
       if (list.rounds.length === 1000) {
         const newPage = await fethPage(offset + 1000)

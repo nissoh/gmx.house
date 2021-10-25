@@ -3,7 +3,7 @@ import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromPromise, map, now } from '@most/core'
 import { Stream } from '@most/types'
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam } from 'gambit-middleware'
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
 
 
@@ -24,6 +24,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
 
   const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
   const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
+  const tradeSummary = map(fromJson.toAggregatedTradeAllSummary, aggregatedTrade)
 
 
   const feed: Stream<IChainlinkPrice[]> = fromPromise(http.fetchJson('/api/feed', {
@@ -50,7 +51,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
 
       $TradeCardPreview({
         chainlinkPricefeed: feed,
-        aggregatedTrade,
+        aggregatedTrade: tradeSummary,
         latestPositionPrice: map(feed => {
           return formatFixed(BigInt(feed[feed.length - 1].value), 8)
         }, feed),
