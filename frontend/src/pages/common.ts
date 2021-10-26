@@ -1,8 +1,8 @@
-import { O, Op } from "@aelea/core"
+import { isStream, O, Op } from "@aelea/core"
 import { $text, component, INode, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, multicast, switchLatest } from "@most/core"
+import { filter, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, USD_DECIMALS } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
@@ -74,13 +74,21 @@ export const tableSizeColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
   })
 }
 
-export const $ProfitLossText = (pnl: bigint) => {
-  const str = formatReadableUSD(pnl)
-  const isNegative = str.indexOf('-') > -1
-  return $text(style({ color: isNegative ? pallete.negative : pallete.positive }))(isNegative ? str : '+' + str)
+export const $ProfitLossText = (pnl: Stream<bigint> | bigint) => {
+  const pnls = isStream(pnl) ? pnl : now(pnl)
+
+  const display = multicast(map(n => {
+    return n > 0n ? '+' + formatReadableUSD(n) : formatReadableUSD(n)
+  }, pnls))
+
+  // const str = formatReadableUSD(pnl)
+  return $text(styleBehavior(map(str => {
+    const isNegative = str.indexOf('-') > -1
+    return { color: isNegative ? pallete.negative : pallete.positive }
+  }, display)))(display)
 }
 
-export const $ProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.pnl - pos.fee)
+export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.pnl - pos.fee)
 
 
 export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {
@@ -133,10 +141,9 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
 
   return [
     $row(
-      switchLatest(map(meta => {
-        const pnl = $ProfitLossText(meta.delta - pos.fee)
-        return pnl
-      }, pnlPosition))
+      $ProfitLossText(
+        map(meta => meta.delta - pos.fee, pnlPosition)
+      )
     )
   ]
 })

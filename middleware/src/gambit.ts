@@ -135,6 +135,7 @@ export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed
   
   const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
     ...parsedAgg, pnl,
+    fee: isLiquidated ? 0n : parsedAgg.fee,
     settledTimestamp: trade.indexedAt,
   }
 

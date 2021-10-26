@@ -11,7 +11,7 @@ import { $Table2, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
 import { $anchor } from '../elements/$common'
-import { $Entry, $LivePnl, $ProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
+import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
 
 
 
@@ -163,7 +163,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               {
                 $head: $text('PnL $'),
                 columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
-                $body: map((pos: IAggregatedSettledTradeSummary) => $row($ProfitLoss(pos)))
+                $body: map((pos: IAggregatedSettledTradeSummary) => $row($SummaryProfitLoss(pos)))
               },
             ],
           })({ scrollIndex: tableTopPnlRequestTether(), })
@@ -187,6 +187,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             // headerCellOp: style({ fontSize: '.65em' }),
             // bodyRowOp: O(layoutSheet.spacing),
             columns: [
+              accountTableColumn,
               {
                 $head: $text('Entry'),
                 columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
@@ -199,7 +200,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })({ click: routeChangeTether() })
                 )
               },
-              accountTableColumn,
               {
                 $head: $text('Risk'),
                 columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
@@ -211,7 +211,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               },
               {
                 $head: $text('PnL $'),
-                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '110px' }),
                 $body: map((pos) => $LivePnl(pos)({}))
               },
             ],

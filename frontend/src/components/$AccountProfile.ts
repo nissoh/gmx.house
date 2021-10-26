@@ -1,5 +1,5 @@
 import { Behavior, combineArray, combineObject, O, Op } from "@aelea/core"
-import { $element, $node, $text, attr, component, INode, nodeEvent, style } from "@aelea/dom"
+import { $element, $node, $text, attr, component, INode, nodeEvent, style, stylePseudo } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
@@ -36,7 +36,7 @@ export interface IProfile extends IAccountClaim {
 }
 
 
-const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover' }))
+const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%', overflow: 'hidden' }))
 
 export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') => {
   const claimType = claim?.sourceType
@@ -54,7 +54,7 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
       const imageUrl = data.imageUrl
 
       return imageUrl
-        ? $element('img')(attr({ src: getGatewayUrl(imageUrl) }), style({ width: size, height: size }))()
+        ? $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ width: size, height: size }))()
         : $jazzicon(address, size)
     }
 
@@ -180,20 +180,28 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
               return $row(layoutSheet.row, layoutSheet.spacing, style({ alignItems: 'center', textDecoration: 'none' }))(
                 $AccountPhoto(address, claimChange, avatarSize),
 
-                $column(layoutSheet.spacingSmall)(
-                  $AccountLabel(address, claimChange, style({ fontSize: labelSize })),
-                  $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                    $ProfileLinks(address, claimChange),
-                    switchLatest(
-                      map((claimerAddress) => {
-                        const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
-                        return showActions
-                          ? $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
-                            $text(claimChange ? 'Update' : 'Claim')
-                          )
-                          : empty()
-                      }, claimer)
-                    )
+                $AccountLabel(address, claimChange, style({ fontSize: labelSize, lineHeight: 1 })),
+                $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
+                  $ProfileLinks(address, claimChange),
+                  switchLatest(
+                    map((claimerAddress) => {
+                      const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
+                      return showActions
+                        ? $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
+
+                          
+                          claimChange ? $text('Update') : $text(
+                            style({
+                              backgroundImage: 'linear-gradient(45deg, rgb(80, 10, 245), rgb(43, 118, 224) 35%, rgb(7, 157, 250) 77%, rgb(2, 207, 207))',
+                              borderRadius: '20px',
+                              padding: '5px 10px',
+                              fontWeight: 'bold',
+                            }),
+                            stylePseudo(':hover', { color: pallete.message })
+                          )(claimChange ? 'Update' : 'Claim account')
+                        )
+                        : empty()
+                    }, claimer)
                   )
                 )
               )
