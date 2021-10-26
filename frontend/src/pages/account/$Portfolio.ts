@@ -473,8 +473,10 @@ export const $Portfolio = (config: IAccount) => component((
                 const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.settledPosition.indexedAt > startDate)
                 const liquidatedTradeList = accountHistoryPnL.aggregatedTradeLiquidateds.filter(pos => pos.settledPosition.indexedAt > startDate)
 
+                const settledList = [...closedTradeList, ...liquidatedTradeList]
+
                 setTimeout(() => {
-                  const increasePosMarkers = [...closedTradeList, ...liquidatedTradeList]
+                  const increasePosMarkers = settledList
                     .filter(pos => selectedToken.address === pos.initialPosition.indexToken)
                     .map((pos): SeriesMarker<Time> => {
                       return {

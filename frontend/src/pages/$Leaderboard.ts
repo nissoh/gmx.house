@@ -177,6 +177,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
           ),
         ),
+        
         $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
           $Table2<IAggregatedOpenPositionSummary>({
             bodyContainerOp: layoutSheet.spacing,
