@@ -69,14 +69,6 @@ function heartbeat() {
 }
 
 
-// wss.on('connection', function connection(ws) {
-//   connections.set(ws, { ws, isAlive: true })
-
-//   ws.on('pong', (ws) => {
-//     console.log(ws)
-//     // connections.get(this.)
-//   })
-// })
 
 const apiComponent = helloFrontend(wss, {
   requestAggregatedSettledTradeList,

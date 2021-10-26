@@ -351,8 +351,7 @@ export const requestOpenAggregatedTrades = O(
 
 export const requestChainlinkPricefeed = O(
   map(async (queryParams: IPageChainlinkPricefeed) => {
-
-    const { to = Math.floor(Date.now() / 1000) } = queryParams
+    const to = queryParams.to || Math.floor(Date.now() / 1000)
 
     const fethPage = async (offset: number): Promise<{ rounds: IChainlinkPrice[]; }> => {
       const list = await chainlinkClient(chainlinkPricefeedQuery, { ...queryParams, to, pageSize: 1000, offset })
