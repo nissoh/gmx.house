@@ -63,7 +63,6 @@ export const helloFrontend = <T extends ILoopMap<T>, OUT>(wss: ws.Server | ws, i
     op,
     map(body => JSON.stringify({ body, topic })),
     recoverWith(error => {
-      console.error(error)
       return empty()
     })
   ), {} as ILoopMap<OUT>)

@@ -52,6 +52,7 @@ export const $TradeCardPreview = ({
 ) => {
 
   const aggregatedTradeState = state.replayLatest(multicast(aggregatedTrade))
+  const nullishTrade = filter(x => x === null, aggregatedTradeState)
 
   const parsedPricefeed = state.replayLatest(multicast(map(feed => {
     return feed
@@ -148,10 +149,14 @@ export const $TradeCardPreview = ({
     } else {
       const trade = summary.trade
       const isSettled = isTradeSettled(trade)
+      
 
-      const initialDelta = isSettled
-        ? calculateSettledPositionDelta(trade) // calculatePositionDelta(summary.trade.updateList[summary.trade.updateList.length - 1].averagePrice, trade.initialPosition.isLong, summary)
-        : calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.initialPosition.isLong, summary)
+      if (isSettled) {
+        const initialDelta = calculateSettledPositionDelta(trade)
+        return now({ delta: initialDelta.delta - summary.fee, deltaPercentage: initialDelta.deltaPercentage })
+      }
+
+      const initialDelta = calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.initialPosition.isLong, summary)
 
       return merge(
         map(price => calculatePositionDelta(parseFixed(price, 30), summary.isLong, summary), latestPositionPrice ?? latestPrice),
@@ -184,13 +189,16 @@ export const $TradeCardPreview = ({
     return 'OPEN'
   }
 
+
   return [
     $column(containerOp)(
 
 
-      switchLatest(map(x => $row(style({ placeContent: 'center', padding: '30px' }))(
-        $alert($text('Could not find requested trade'))
-      ), filter(x => x === null, aggregatedTradeState))),
+      switchLatest(map(x => {
+        return $row(style({ placeContent: 'center', padding: '30px' }))(
+          $alert($text('Could not find trade. it may have been settled'))
+        )
+      }, nullishTrade)),
 
       $column(
         switchLatest(

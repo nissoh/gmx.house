@@ -2,11 +2,11 @@ import { isStream, O, Op } from "@aelea/core"
 import { $text, component, INode, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, multicast, now, switchLatest } from "@most/core"
+import { filter, map, multicast, now } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, getPositionMarginFee, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, USD_DECIMALS } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
-import { $tokenIconMap, IIcon } from "../common/$icons"
+import { $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
 import { $leverage, $liquidationSeparator } from "../elements/$common"
 import { $bear, $bull, $skull } from "../elements/$icons"
@@ -74,18 +74,22 @@ export const tableSizeColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
   })
 }
 
-export const $ProfitLossText = (pnl: Stream<bigint> | bigint) => {
+export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) => {
   const pnls = isStream(pnl) ? pnl : now(pnl)
 
   const display = multicast(map(n => {
     return n > 0n ? '+' + formatReadableUSD(n) : formatReadableUSD(n)
   }, pnls))
 
-  // const str = formatReadableUSD(pnl)
-  return $text(styleBehavior(map(str => {
-    const isNegative = str.indexOf('-') > -1
-    return { color: isNegative ? pallete.negative : pallete.positive }
-  }, display)))(display)
+  const colorStyle = colorful
+    ? styleBehavior(map(str => {
+      const isNegative = str.indexOf('-') > -1
+      return { color: isNegative ? pallete.negative : pallete.positive }
+    }, display))
+    : O()
+  
+  // @ts-ignore
+  return $text(colorStyle)(display)
 }
 
 export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.pnl - pos.fee)

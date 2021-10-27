@@ -42,11 +42,13 @@ export interface IEntityIndexed extends IIdentifiableEntity {
   indexedAt: number
 }
 
-export type IPositionLiquidated = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'LiquidatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionIncrease = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'IncreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionDecrease = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'DecreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionUpdate = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionClose = IEntityIndexed & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type TypeName<T extends string> = { __typename: T }
+
+export type IPositionLiquidated = IEntityIndexed & TypeName<'LiquidatePosition'> & Omit<ExtractAndParseEventType<Vault, 'LiquidatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionIncrease = IEntityIndexed & TypeName<'IncreasePosition'> & Omit<ExtractAndParseEventType<Vault, 'IncreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionDecrease = IEntityIndexed & TypeName<'DecreasePosition'> & Omit<ExtractAndParseEventType<Vault, 'DecreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionUpdate = IEntityIndexed & TypeName<'UpdatePosition'> & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionClose = IEntityIndexed & TypeName<'ClosePosition'> & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 
 export enum IClaimSource {
   TWITTER = 'TWITTER',

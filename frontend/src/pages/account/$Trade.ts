@@ -1,17 +1,16 @@
 import { Behavior, O } from "@aelea/core"
 import { $text, attr, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
-import { $card, $column, $icon, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { empty, filter, map, multicast, now, switchLatest } from "@most/core"
+import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from "gambit-middleware"
 import * as wallet from "wallet-link"
 import { $Table2 } from "../../common/$Table2"
-import { $Link } from "../../components/$Link"
 import { $anchor } from "../../elements/$common"
 import { $ethScan } from "../../elements/$icons"
-import { $Entry, $ProfitLossText, timeSince } from "../common"
+import { $ProfitLossText, timeSince } from "../common"
 import { $TradeCardPreview } from "./$TradeCardPreview"
 
 
@@ -25,6 +24,9 @@ export interface ITrade {
 }
 
 
+const $explorer = (txHash: string) => $anchor(attr({ href: wallet.getTxExplorerUrl(wallet.CHAIN.ARBITRUM, txHash) }))(
+  $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
+)
 
 export const $Trade = (config: ITrade) => component((
   [changeRoute, changeRouteTether]: Behavior<string, string>,
@@ -69,10 +71,16 @@ export const $Trade = (config: ITrade) => component((
 
             const trade = summary.trade
             const isSettled = 'settledPosition' in trade
+
+            const txHash = (isSettled ? summary.trade.id : summary.trade.initialPosition.id).split('-')[1]
             
             return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center' }))(
-              O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
-                isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
+              $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
+                O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
+                  isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
+                ),
+
+                $explorer(txHash),
               ),
 
               O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
@@ -112,83 +120,81 @@ export const $Trade = (config: ITrade) => component((
                 // $labelUSD('Average Price', summary.averagePrice),
               ),
 
-              $card($Table2({
-                dataSource: now([...summary.trade.increaseList, ...summary.trade.decreaseList, ...maybeSettled].sort((a, b) => b.indexedAt - a.indexedAt)),
-                bodyContainerOp: layoutSheet.spacing,
-                scrollConfig: {
-                  containerOps: O(layoutSheet.spacingBig)
-                },
-                columns: [
-                  {
-                    $head: $text('Timestamp'),
-                    columnOp: O(style({  flex: 1.2 })),
+              // $card($Table2({
+              //   dataSource: now([...summary.trade.increaseList, ...summary.trade.decreaseList, ...maybeSettled].sort((a, b) => b.indexedAt - a.indexedAt)),
+              //   bodyContainerOp: layoutSheet.spacing,
+              //   scrollConfig: {
+              //     containerOps: O(layoutSheet.spacingBig)
+              //   },
+              //   columns: [
+              //     {
+              //       $head: $text('Timestamp'),
+              //       columnOp: O(style({  flex: 1.2 })),
 
-                    $body: map((pos) => {
-                      return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-                        $text(timeSince(pos.indexedAt)),
-                        $text(new Date(pos.indexedAt * 1000).toLocaleDateString()),  
-                      )
-                    })
-                  },
-                  {
-                    $head: $text('Action'),
-                    columnOp: O(style({ flex: 1.2 })),
+              //       $body: map((pos) => {
+              //         return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+              //           $text(timeSince(pos.indexedAt)),
+              //           $text(new Date(pos.indexedAt * 1000).toLocaleDateString()),  
+              //         )
+              //       })
+              //     },
+              //     {
+              //       $head: $text('Action'),
+              //       columnOp: O(style({ flex: 1.2 })),
                     
-                    $body: map((pos) => {
-                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+              //       $body: map((pos) => {
+              //         const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-                      const $explorer = (txHash: string) => $anchor(attr({ href: wallet.getTxExplorerUrl(wallet.CHAIN.ARBITRUM, txHash) }))(
-                        $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
-                      )
 
-                      if ('markPrice' in pos) {
-                        return $container(
-                          $text('Liquidate'),
-                          $ProfitLossText(-pos.collateral),
-                          $explorer(pos.id.split('-')[1])
-                        )
-                      } else if ('realisedPnl' in pos) {
-                        return $container(
-                          $text('Close'),
-                          $ProfitLossText(pos.realisedPnl),
-                          $explorer(pos.id.split('-')[1])
-                        )
-                      } else {
-                        return $container(
-                          $text('Increase'),
-                          $ProfitLossText(pos.collateralDelta),
-                          $explorer(pos.id.split('-')[1])
-                        )
-                      }
-                    })
-                  },
-                  // {
-                  //   $head: $text('Delta'),
-                  //   columnOp: O(style({ flex: 1.2 })),
+              //         if ('markPrice' in pos) {
+              //           return $container(
+              //             $text('Liquidate'),
+              //             $ProfitLossText(-pos.collateral),
+              //             $explorer(pos.id.split('-')[1])
+              //           )
+              //         } else if ('realisedPnl' in pos) {
+              //           return $container(
+              //             $text('Close'),
+              //             $ProfitLossText(pos.realisedPnl),
+              //             $explorer(pos.id.split('-')[1])
+              //           )
+              //         } else {
+              //           const isDecrease = pos.__typename === "DecreasePosition"
+              //           return $container(
+              //             $text(isDecrease ? 'Decrease' : 'Increase'),
+              //             $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.collateralDelta, false),
+              //             $explorer(pos.id.split('-')[1])
+              //           )
+              //         }
+              //       })
+              //     },
+              //     // {
+              //     //   $head: $text('Delta'),
+              //     //   columnOp: O(style({ flex: 1.2 })),
                     
-                  //   $body: map((pos) => {
-                  //     const $container = $row(layoutSheet.spacing)
+              //     //   $body: map((pos) => {
+              //     //     const $container = $row(layoutSheet.spacing)
 
-                  //     if ('markPrice' in pos) {
-                  //       return $container(
-                  //         $text('Liquidate'),
-                  //         $text(formatReadableUSD(pos.collateral))
-                  //       )
-                  //     } else if ('realisedPnl' in pos) {
-                  //       return $container(
-                  //         $text('Close'),
-                  //         $text(formatReadableUSD(pos.realisedPnl))
-                  //       )
-                  //     } else {
-                  //       return $container(
-                  //         $text('Increase'),
-                  //         $text(formatReadableUSD(pos.sizeDelta))
-                  //       )
-                  //     }
-                  //   })
-                  // },
-                ]
-              })({}))
+              //     //     if ('markPrice' in pos) {
+              //     //       return $container(
+              //     //         $text('Liquidate'),
+              //     //         $text(formatReadableUSD(pos.collateral))
+              //     //       )
+              //     //     } else if ('realisedPnl' in pos) {
+              //     //       return $container(
+              //     //         $text('Close'),
+              //     //         $text(formatReadableUSD(pos.realisedPnl))
+              //     //       )
+              //     //     } else {
+              //     //       return $container(
+              //     //         $text('Increase'),
+              //     //         $text(formatReadableUSD(pos.sizeDelta))
+              //     //       )
+              //     //     }
+              //     //   })
+              //     // },
+              //   ]
+              // })({}))
             )
           }, tradeSummary)
         ),
@@ -197,7 +203,7 @@ export const $Trade = (config: ITrade) => component((
     ),
 
     {
-      requestChainlinkPricefeed: now(<IPageChainlinkPricefeed>{ feedAddress, from: Number(from), to: tradeType === TradeType.OPEN ? undefined : Number(to), orderBy: 'unixTimestamp' }),
+      requestChainlinkPricefeed: now(<IPageChainlinkPricefeed>{ feedAddress, from: Number(from), to: tradeType === TradeType.OPEN ? null : Number(to), orderBy: 'unixTimestamp' }),
       requestAggregatedTrade: now(<IRequestAggregatedTradeQueryparam>{ id: tradeId, tradeType, }),
       changeRoute
     }

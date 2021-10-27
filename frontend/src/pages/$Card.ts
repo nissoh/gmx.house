@@ -3,7 +3,7 @@ import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromPromise, map, now } from '@most/core'
 import { Stream } from '@most/types'
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam } from 'gambit-middleware'
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from 'gambit-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
 
 
@@ -35,7 +35,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
     body: JSON.stringify(<IPageChainlinkPricefeed>{
       feedAddress,
       from: Number(from),
-      to: Number(to),
+      to: tradeType === TradeType.OPEN ? null : Number(to),
       orderBy: 'unixTimestamp'
     })
   }))
