@@ -128,7 +128,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             )
           )
         ),
-        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
           $Table2<IAggregatedAccountSummary>({
             bodyContainerOp: layoutSheet.spacing,
             scrollConfig: {
@@ -185,8 +185,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               containerOps: O(layoutSheet.spacingBig)
             },
             dataSource: openPositions,
-            // headerCellOp: style({ fontSize: '.65em' }),
-            // bodyRowOp: O(layoutSheet.spacing),
             columns: [
               accountTableColumn,
               {

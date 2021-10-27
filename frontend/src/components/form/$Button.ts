@@ -1,9 +1,17 @@
 import { O } from "@aelea/core"
-import { style } from "@aelea/dom"
-import { $Button, $row, IButton } from "@aelea/ui-components"
+import { $element, style, stylePseudo } from "@aelea/dom"
+import { $Button, $row, IButton, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 
 
+const secondaryButtonStyle = style({
+  backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0), rgba(255, 255, 255, 0)), linear-gradient(45deg,#500af5,#2b76e0 35%,#079dfa 77%,#02cfcf)',
+  boxShadow: `2px 1000px 1px ${pallete.background} inset`,
+  backgroundOrigin: 'border-box',
+  backgroundClip: 'content-box, border-box',
+  border: '1px solid transparent',
+  borderRadius: '50px'
+})
 
 export const $ButtonPrimary = (config: IButton) => {
   return $Button({
@@ -15,11 +23,26 @@ export const $ButtonPrimary = (config: IButton) => {
   })
 }
 
-export const $ButtonAnimated = (config: IButton) => {
-  return $row(
-    
-  )
+export const $ButtonSecondary = (config: IButton) => {
+  return $Button({
+    ...config,
+    buttonOp: O(secondaryButtonStyle, style({ fontSize: '.85em' }), config.buttonOp || O())
+  })
 }
+
+export const $buttonAnchor = $element('a')(
+  layoutSheet.spacingSmall,
+  secondaryButtonStyle,
+  stylePseudo(':hover', { color: 'inherit', boxShadow: 'none' }),
+  style({
+    alignItems: 'center',
+    textDecoration: 'none',
+    padding: '6px 12px',
+    display: 'flex',
+    cursor: 'pointer',
+    color: pallete.message
+  }),
+)
 
 
 // <div>

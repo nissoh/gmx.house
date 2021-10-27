@@ -1,5 +1,5 @@
 import { Behavior, combineArray, combineObject, O, Op } from "@aelea/core"
-import { $element, $node, $text, attr, component, INode, nodeEvent, style, stylePseudo } from "@aelea/dom"
+import { $element, $node, $text, attr, component, INode, nodeEvent, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
@@ -15,7 +15,7 @@ import { $alert, $anchor, $labeledDivider } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
 import { $IntermediateDisplay } from "./$ConnectAccount"
 import { $Link } from "./$Link"
-import { $ButtonPrimary } from "./form/$Button"
+import { $ButtonPrimary, $ButtonSecondary } from "./form/$Button"
 
 
 export interface IAccountPreview {
@@ -54,7 +54,7 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
       const imageUrl = data.imageUrl
 
       return imageUrl
-        ? $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ width: size, height: size }))()
+        ? $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ minWidth: size, height: size }))()
         : $jazzicon(address, size)
     }
 
@@ -103,7 +103,6 @@ export const $ProfileLinks = (address: string, claim?: IClaim) => {
 export const $AccountPreview = ({
   address, labelSize = '16px', avatarSize = '38px',
   parentRoute, claim,
-
 }: IAccountPreview) => component((
   [profileClick, profileClickTether]: Behavior<string, string>
 ) => {
@@ -187,18 +186,12 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
                     map((claimerAddress) => {
                       const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
                       return showActions
-                        ? $anchor(style({ fontSize: '.7em' }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
+                        ? $anchor(style({  }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
 
                           
-                          claimChange ? $text('Update') : $text(
-                            style({
-                              backgroundImage: 'linear-gradient(45deg, rgb(80, 10, 245), rgb(43, 118, 224) 35%, rgb(7, 157, 250) 77%, rgb(2, 207, 207))',
-                              borderRadius: '20px',
-                              padding: '5px 10px',
-                              fontWeight: 'bold',
-                            }),
-                            stylePseudo(':hover', { color: pallete.message })
-                          )(claimChange ? 'Update' : 'Claim account')
+                          claimChange ? $text('Update') : $ButtonSecondary({
+                            $content: $text(claimChange ? 'Update' : 'Claim account'),
+                          })({})
                         )
                         : empty()
                     }, claimer)

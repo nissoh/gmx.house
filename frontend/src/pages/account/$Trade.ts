@@ -1,16 +1,16 @@
 import { Behavior, O } from "@aelea/core"
 import { $text, attr, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
-import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from "gambit-middleware"
 import * as wallet from "wallet-link"
-import { $Table2 } from "../../common/$Table2"
+import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"
-import { $ethScan } from "../../elements/$icons"
-import { $ProfitLossText, timeSince } from "../common"
+import { $ethScan, $twitter } from "../../elements/$icons"
+import { timeSince } from "../common"
 import { $TradeCardPreview } from "./$TradeCardPreview"
 
 
@@ -74,7 +74,7 @@ export const $Trade = (config: ITrade) => component((
 
             const txHash = (isSettled ? summary.trade.id : summary.trade.initialPosition.id).split('-')[1]
             
-            return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center' }))(
+            return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center', alignItems: 'center', }))(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
                 O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
                   isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
@@ -85,7 +85,19 @@ export const $Trade = (config: ITrade) => component((
 
               O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
                 $labelUSD('Collateral', summary.collateral),
+              ),
+
+              $buttonAnchor(attr({
+                href: `https://twitter.com/intent/tweet?text=\n${document.location.href}`
+              }))(
+                $icon({
+                  $content: $twitter,
+                  width: '14px',
+                  viewBox: '0 0 24 24'
+                }),
+                $text('share'),
               )
+              
 
               // $labelUSD('Collateral', summary.collateral),
             )
