@@ -36,7 +36,7 @@ export interface IProfile extends IAccountClaim {
 }
 
 
-const $photoContainer = $element('img')(style({ display: 'block', backgroundSize: 'cover', borderRadius: '50%', overflow: 'hidden' }))
+const $photoContainer = $element('img')(style({ display: 'block', backgroundColor: pallete.background, position: 'relative', backgroundSize: 'cover', borderRadius: '50%', overflow: 'hidden' }))
 
 export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') => {
   const claimType = claim?.sourceType
@@ -187,10 +187,8 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
                       const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
                       return showActions
                         ? $anchor(style({  }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
-
-                          
-                          claimChange ? $text('Update') : $ButtonSecondary({
-                            $content: $text(claimChange ? 'Update' : 'Claim account'),
+                          $ButtonSecondary({
+                            $content: claimChange ? $text('Update') : $text('Claim account'),
                           })({})
                         )
                         : empty()
@@ -262,7 +260,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     switchLatest
                   )
 
-                  return $column(layoutSheet.spacing, style({ width: '400px' }))(
+                  return $column(layoutSheet.spacing, style({ width: '400px', fontSize: '.85em' }))(
                     ...(claim ? [] : [
                       $text(`Claiming account will make your name appear on the leaderboard`),
                       $node(),
@@ -277,7 +275,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     }, isNotMatchedAccount)),
 
                     // https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc
-                    $text(style({ color: pallete.foreground, fontSize: '.85em' }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
+                    $text(style({ color: pallete.foreground }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
                     $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))($text('Guide on setting ens profile avatar')),
                     // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
                     $row(style({ justifyContent: 'center' }))(

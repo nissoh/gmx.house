@@ -127,7 +127,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
                 ),
                 $node(),
-                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute })({
+                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, showAccount: false })({
                   routeChange: linkClickTether(),
                   walletChange: walletChangeTether()
                 })

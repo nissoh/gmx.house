@@ -140,100 +140,102 @@ export const $Portfolio = (config: IAccount) => component((
     $container(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
-        $row(style({ marginBottom: '-40px', marginLeft: '20px', zIndex: 50 }))(
-          $ProfilePreviewClaim({ address: accountAddress, claimMap: config.claimMap, avatarSize: '100px', labelSize: '1.2em', walletLink: config.walletLink })({
-            walletChange: walletChangeTether()
-          }),
-        ),
-
-        $row(style({ boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background }))(
-
-          // margin-top: -112 px ; background-image: ; z-index: 111;
-          $row(layoutSheet.spacingBig, style({ width: '100%', alignItems: 'center', placeContent: 'space-evenly' }))(
-            $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', overflow: 'hidden', }))(
-              switchLatest(map(data => $Chart({
-                initializeSeries: map((api) => {
-                  const series = api.addAreaBaselineSeries({
-                    topLineColor: pallete.positive,
-                    baseValue: {
-                      type: 'price',
-                      price: 0,
-                    },
-                    lineWidth: 2,
-                    baseLineVisible: false,
-                    lastValueVisible: false,
-                    priceLineVisible: false,
-                  })
-
-                  series.setData(data)
-                  api.timeScale().fitContent()
-
-                  const high = data[data.reduce((seed, b, idx) => b.value > data[seed].value ? idx : seed, Math.min(6, data.length - 1))]
-                  const low = data[data.reduce((seed, b, idx) => b.value <= data[seed].value ? idx : seed, 0)]
-
-                  if (high.value > 0 && low.value < 0) {
-                    series.createPriceLine({
-                      price: 0,
-                      color: pallete.foreground,
-                      lineWidth: 1,
-                      axisLabelVisible: true,
-                      title: '',
-                      lineStyle: LineStyle.SparseDotted,
-                    })
-                  }
-
-                  series.applyOptions({
-                    scaleMargins: {
-                      top: .45,
-                      bottom: 0
-                    }
-                  })
-
-                  return series
-                }),
-                chartConfig: {
-                  handleScale: false,
-                  handleScroll: false,
-                  timeScale: {
-                    // rightOffset: 110,
-                    secondsVisible: false,
-                    timeVisible: true,
-                    // visible: false,
-                    rightBarStaysOnScroll: true,
-                  }
-                },
-                containerOp: style({
-                  display: 'flex',
-                  // position: 'absolute', left: 0, top: 0, right: 0, bottom: 0
-                }),
-              })({
-                crosshairMove: pnlCrosshairMoveTether(
-                  skipRepeatsWith((a, b) => a.point?.x === b.point?.x)
-                )
-              }), historicalPnl)),
-
-              $row(style({ position: 'absolute', top: '6px', placeContent: 'center', right: '6px', left: '6px' }))(
-                $row(style({ alignItems: 'baseline' }))(
-                  $NumberTicker({
-                    textStyle: {
-                      fontSize: '1.6em',
-                      // pointerEvents: 'none',
-                      lineHeight: 1,
-                      zIndex: 50,
-                      position: 'relative'
-              
-                      // fontWeight: 'normal',
-                    },
-                    value$: map(Math.floor, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, timeframePnLCounter)),
-                    incrementColor: pallete.positive,
-                    decrementColor: pallete.negative
-                  }),
-                  $text(style({ color: pallete.foreground }))('$'),
-                )
-              )
-            ),
+        $column(
+          $row(style({ marginBottom: '-20px', marginLeft: '20px' }))(
+            $ProfilePreviewClaim({ address: accountAddress, claimMap: config.claimMap, avatarSize: '100px', labelSize: '1.2em', walletLink: config.walletLink })({
+              walletChange: walletChangeTether()
+            }),
           ),
 
+          $row(style({ boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background }))(
+
+            // margin-top: -112 px ; background-image: ; z-index: 111;
+            $row(layoutSheet.spacingBig, style({ width: '100%', alignItems: 'center', placeContent: 'space-evenly' }))(
+              $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', overflow: 'hidden', }))(
+                switchLatest(map(data => $Chart({
+                  initializeSeries: map((api) => {
+                    const series = api.addAreaBaselineSeries({
+                      topLineColor: pallete.positive,
+                      baseValue: {
+                        type: 'price',
+                        price: 0,
+                      },
+                      lineWidth: 2,
+                      baseLineVisible: false,
+                      lastValueVisible: false,
+                      priceLineVisible: false,
+                    })
+
+                    series.setData(data)
+                    api.timeScale().fitContent()
+
+                    const high = data[data.reduce((seed, b, idx) => b.value > data[seed].value ? idx : seed, Math.min(6, data.length - 1))]
+                    const low = data[data.reduce((seed, b, idx) => b.value <= data[seed].value ? idx : seed, 0)]
+
+                    if (high.value > 0 && low.value < 0) {
+                      series.createPriceLine({
+                        price: 0,
+                        color: pallete.foreground,
+                        lineWidth: 1,
+                        axisLabelVisible: true,
+                        title: '',
+                        lineStyle: LineStyle.SparseDotted,
+                      })
+                    }
+
+                    series.applyOptions({
+                      scaleMargins: {
+                        top: .45,
+                        bottom: 0
+                      }
+                    })
+
+                    return series
+                  }),
+                  chartConfig: {
+                    handleScale: false,
+                    handleScroll: false,
+                    timeScale: {
+                    // rightOffset: 110,
+                      secondsVisible: false,
+                      timeVisible: true,
+                      // visible: false,
+                      rightBarStaysOnScroll: true,
+                    }
+                  },
+                  containerOp: style({
+                    display: 'flex',
+                  // position: 'absolute', left: 0, top: 0, right: 0, bottom: 0
+                  }),
+                })({
+                  crosshairMove: pnlCrosshairMoveTether(
+                    skipRepeatsWith((a, b) => a.point?.x === b.point?.x)
+                  )
+                }), historicalPnl)),
+
+                $row(style({ position: 'absolute', top: '6px', placeContent: 'center', right: '6px', left: '6px' }))(
+                  $row(style({ alignItems: 'baseline' }))(
+                    $NumberTicker({
+                      textStyle: {
+                        fontSize: '1.6em',
+                        // pointerEvents: 'none',
+                        lineHeight: 1,
+                        zIndex: 50,
+                        position: 'relative'
+              
+                      // fontWeight: 'normal',
+                      },
+                      value$: map(Math.floor, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, timeframePnLCounter)),
+                      incrementColor: pallete.positive,
+                      decrementColor: pallete.negative
+                    }),
+                    $text(style({ color: pallete.foreground }))('$'),
+                  )
+                )
+              ),
+            ),
+
+          ),
         ),
 
 
