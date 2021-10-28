@@ -66,11 +66,16 @@ openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
 
   const selfRef = `${process.env.APP}/card/${token}-${tradeType}-${startDate}-${endDate}/${tradeId}`
   // const file = await screenPage(`http://localhost:3000/card/0x4CC6d33B7605809wc1E5DBb2198758a0010A67E00`)
-  const file = await screenPage(selfRef)
   
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
-  res.setHeader('Content-Type', `image/jpeg`)
-  res.end(file)
+  try {
+    const file = await screenPage(selfRef)
+  
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
+    res.setHeader('Content-Type', `image/jpeg`)
+    res.end(file)
+  } catch (error: any) {
+    res.status(403).json({ message: error.message })
+  }
 })
 
 
