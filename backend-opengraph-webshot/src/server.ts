@@ -6,13 +6,6 @@ import Router from 'express-promise-router'
 const port = process.env.PORT
 
 
-const executablePath =
-  process.platform === "win32"
-    ? "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
-    : process.platform === "linux"
-      ? "/usr/bin/google-chrome"
-      : "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-
 async function runPuppeteer() {
   
   const browser = await puppeteer.launch({
@@ -60,6 +53,9 @@ export const openGraphScreenshot = Router()
 openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
   const tradeType = req.query.tradeType
   const tradeId = req.query.tradeId
+  const startDate = req.query.startDate
+  const endDate = req.query.endDate
+  const token = req.query.token
 
   const fragments = [tradeType, tradeId].filter(s => s && typeof s === 'string')
   if (fragments.length !== 2) {
@@ -68,13 +64,18 @@ openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
     })
   }
 
-  const selfRef = `http://localhost:5555/card/${tradeType}/${tradeId}`
+  const selfRef = `${process.env.APP}/card/${token}-${tradeType}-${startDate}-${endDate}/${tradeId}`
   // const file = await screenPage(`http://localhost:3000/card/0x4CC6d33B7605809wc1E5DBb2198758a0010A67E00`)
-  const file = await screenPage(selfRef)
   
-  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
-  res.setHeader('Content-Type', `image/jpeg`)
-  res.end(file)
+  try {
+    const file = await screenPage(selfRef)
+  
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
+    res.setHeader('Content-Type', `image/jpeg`)
+    res.end(file)
+  } catch (error: any) {
+    res.status(403).json({ message: error.message })
+  }
 })
 
 
