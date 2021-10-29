@@ -17,7 +17,7 @@ export const helloBackend = <IN extends ILoopMap<IN>, OUT>(inMap: IN): {[k: stri
     return map(body => ({ topic, body }), source)
   }, {} as ILoopMap<OUT>)
   
-  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`ws://${location.host}/api-ws`, multicast(mergeArray(outMapEntries)))
+  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`wss://${location.host}/api-ws`, multicast(mergeArray(outMapEntries)))
   const multicastConnection = multicast(wss)
 
   const outMap = entriesInMap.reduce((seed, [topic, source]) => {

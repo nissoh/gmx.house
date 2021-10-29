@@ -4,7 +4,7 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, map, multicast, snapshot, startWith, switchLatest } from '@most/core'
+import { constant, map, multicast, periodic, snapshot, startWith, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
 import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2, TablePageResponse } from "../common/$Table2"
@@ -93,132 +93,170 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
 
+  // Set the date we're counting down to
+  const countDownDate = new Date("Nov 4, 2021 00:00:00").getTime()
+
+  const competitionCountdown = map(() => {
+    const now = new Date().getTime()
+
+    // Find the distance between now and the count down date
+    const distance = countDownDate - now
+
+
+    // Time calculations for days, hours, minutes and seconds
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+    // Display the result in the element with id="demo"
+    return days + "d " + hours + "h " + minutes + "m " + seconds + "s "
+  }, periodic(1000))
 
 
 
   return [
-    $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-        $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
-          $row(layoutSheet.spacing)(
-            $header(layoutSheet.flex)(`Top Settled`),
-          // $header(layoutSheet.flex)(`Settled`),
-          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
-          ),
 
-          $row(layoutSheet.spacing)(
-            $text(style({ color: pallete.foreground }))('Time Frame:'),
-            $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.HR24 ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.HR24))
-            )(
-              $text('24Hour')
-            ),
-            $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.DAY7 ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY7))
-            )(
-              $text('7Day')
-            ),
-            $anchor(
-              styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
-              topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
-            )(
-              $text('1Month')
-            )
-          )
+    $column(
+      $column(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
+        $text(style({ fontSize: '.85em' }))('GMX November Kickoff'),
+        $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
+          $text(style({  }))('vs.'),
+          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
         ),
-        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
-          $Table2<IAggregatedAccountSummary>({
-            bodyContainerOp: layoutSheet.spacing,
-            scrollConfig: {
-              containerOps: O(layoutSheet.spacingBig)
-            },
-            filterChange: topPnlTimeframeChange,
-            dataSource: map((res) => {
-              return {
-                data: res.page,
-                pageSize: res.pageSize,
-                offset: res.offset,
-              }
-            }, config.requestLeaderboardTopList),
-            // bodyRowOp: O(layoutSheet.spacing),
-            columns: [
-              accountTableColumn,
-              winLossTableColumn,
-              {
-                $head: $text('Risk'),
-                columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
-                $body: map((pos: IAggregatedTradeSummary) => {
-                  return $Risk(pos)({})
-                })
-              },
-              // {
-              //   $head: $text('Size $'),
-              //   columnOp: O(layoutSheet.spacingTiny, style({ textAlign: 'left', maxWidth: '150px', placeContent: 'flex-start' })),
-              //   $body: map((pos: IAggregatedTradeSummary) => {
-              //     return $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.size))
-              //   })
-              // },
-              {
-                $head: $text('PnL $'),
-                columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
-                $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
-              },
-            ],
-          })({ scrollIndex: tableTopPnlRequestTether(), })
-        ),
+        $row(layoutSheet.spacingSmall)(
+          $text(style({ fontSize: '.85em' }))('Starting in... '),
+          $text(style({ fontSize: '.85em' }))(competitionCountdown),
+        )
       ),
-      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-        $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
-          $row(layoutSheet.spacing)(
-            $header(layoutSheet.flex)(`Top Open`),
-          // $header(layoutSheet.flex)(`Settled`),
-          // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+
+      $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
+
+        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+
+          $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
+            $row(layoutSheet.spacing)(
+              $header(layoutSheet.flex)(`Top Settled`),
+              // $header(layoutSheet.flex)(`Settled`),
+              // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+            ),
+
+            $row(layoutSheet.spacing)(
+              $text(style({ color: pallete.foreground }))('Time Frame:'),
+              $anchor(
+                styleBehavior(map(tf => tf === intervalInMsMap.HR24 ? activeTimeframe : null, filterByTimeFrameState)),
+                topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.HR24))
+              )(
+                $text('24Hour')
+              ),
+              $anchor(
+                styleBehavior(map(tf => tf === intervalInMsMap.DAY7 ? activeTimeframe : null, filterByTimeFrameState)),
+                topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.DAY7))
+              )(
+                $text('7Day')
+              ),
+              $anchor(
+                styleBehavior(map(tf => tf === intervalInMsMap.MONTH ? activeTimeframe : null, filterByTimeFrameState)),
+                topPnlTimeframeChangeTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
+              )(
+                $text('1Month')
+              )
+            )
+          ),
+          $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+            $Table2<IAggregatedAccountSummary>({
+              bodyContainerOp: layoutSheet.spacing,
+              scrollConfig: {
+                containerOps: O(layoutSheet.spacingBig)
+              },
+              filterChange: topPnlTimeframeChange,
+              dataSource: map((res) => {
+                return {
+                  data: res.page,
+                  pageSize: res.pageSize,
+                  offset: res.offset,
+                }
+              }, config.requestLeaderboardTopList),
+              // bodyRowOp: O(layoutSheet.spacing),
+              columns: [
+                accountTableColumn,
+                winLossTableColumn,
+                {
+                  $head: $text('Risk'),
+                  columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
+                  $body: map((pos: IAggregatedTradeSummary) => {
+                    return $Risk(pos)({})
+                  })
+                },
+                // {
+                //   $head: $text('Size $'),
+                //   columnOp: O(layoutSheet.spacingTiny, style({ textAlign: 'left', maxWidth: '150px', placeContent: 'flex-start' })),
+                //   $body: map((pos: IAggregatedTradeSummary) => {
+                //     return $text(style({ fontSize: '.65em' }))(formatReadableUSD(pos.size))
+                //   })
+                // },
+                {
+                  $head: $text('PnL $'),
+                  columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                  $body: map((pos: IAggregatedSettledTradeSummary) => $ProfitLoss(pos)({}))
+                },
+              ],
+            })({ scrollIndex: tableTopPnlRequestTether(), })
           ),
         ),
-        $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
-          $Table2<IAggregatedOpenPositionSummary>({
-            bodyContainerOp: layoutSheet.spacing,
-            scrollConfig: {
-              containerOps: O(layoutSheet.spacingBig)
-            },
-            dataSource: openPositions,
-            // headerCellOp: style({ fontSize: '.65em' }),
-            // bodyRowOp: O(layoutSheet.spacing),
-            columns: [
-              {
-                $head: $text('Entry'),
-                columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                $body: map((pos: IAggregatedOpenPositionSummary) =>
-                  $Link({
-                    anchorOp: style({ position: 'relative' }),
-                    $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                    url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
-                    route: config.parentRoute.create({ fragment: '2121212' })
-                  })({ click: routeChangeTether() })
-                )
+        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+          $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
+            $row(layoutSheet.spacing)(
+              $header(layoutSheet.flex)(`Top Open`),
+              // $header(layoutSheet.flex)(`Settled`),
+              // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+            ),
+          ),
+          $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+            $Table2<IAggregatedOpenPositionSummary>({
+              bodyContainerOp: layoutSheet.spacing,
+              scrollConfig: {
+                containerOps: O(layoutSheet.spacingBig)
               },
-              accountTableColumn,
-              {
-                $head: $text('Risk'),
-                columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                $body: map((pos: IAggregatedOpenPositionSummary) => {
-                  const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
+              dataSource: openPositions,
+              // headerCellOp: style({ fontSize: '.65em' }),
+              // bodyRowOp: O(layoutSheet.spacing),
+              columns: [
+                {
+                  $head: $text('Entry'),
+                  columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                  $body: map((pos: IAggregatedOpenPositionSummary) =>
+                    $Link({
+                      anchorOp: style({ position: 'relative' }),
+                      $content: style({ pointerEvents: 'none' }, $Entry(pos)),
+                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
+                      route: config.parentRoute.create({ fragment: '2121212' })
+                    })({ click: routeChangeTether() })
+                  )
+                },
+                accountTableColumn,
+                {
+                  $head: $text('Risk'),
+                  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                  $body: map((pos: IAggregatedOpenPositionSummary) => {
+                    const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
                   
-                  return $RiskLiquidator(pos, positionMarkPrice)({})
-                })
-              },
-              {
-                $head: $text('PnL $'),
-                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                $body: map((pos) => $LivePnl(pos)({}))
-              },
-            ],
-          })({ scrollIndex: openPositionsRequestTether() })
-        ),
-      )
+                    return $RiskLiquidator(pos, positionMarkPrice)({})
+                  })
+                },
+                {
+                  $head: $text('PnL $'),
+                  columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                  $body: map((pos) => $LivePnl(pos)({}))
+                },
+              ],
+            })({ scrollIndex: openPositionsRequestTether() })
+          ),
+        )
+      ),
     ),
+
 
     {
       requestLeaderboardTopList: tableRequestState,
