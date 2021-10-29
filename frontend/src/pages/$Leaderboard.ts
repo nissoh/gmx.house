@@ -119,7 +119,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
     $column(
       $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
-        $text(style({ fontSize: '.85em' }))('GMX November Kickoff'),
+        $text(style({ fontSize: '.85em' }))('November Competition Kickoff'),
         $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
           $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
           $text(style({  }))('vs.'),
@@ -127,7 +127,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         ),
         $row(layoutSheet.spacingSmall)(
           $text(style({  }))('Starting in... '),
-          $text(style({  }))(competitionCountdown),
+          $text(style({ fontWeight: 'bold' }))(competitionCountdown),
         )
       ),
 
