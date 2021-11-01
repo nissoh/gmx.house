@@ -1,4 +1,4 @@
 [submodule "contracts/"]
 	path = contracts
-	url = https://github.com/xvi10/gambit-contracts
-	branch = v2
+	url = https://github.com/gmx-io/gmx-contracts
+	branch = master

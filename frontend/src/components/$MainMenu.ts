@@ -50,7 +50,7 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
         ? $Popover({
           dismiss: profileLinkClick,
           $$popContent: combineArray((_, cmap, wl) => {
-            return $column(layoutSheet.spacing)(
+            return $column(layoutSheet.spacingBig)(
               $IntermediateDisplay({
                 $display: $row(layoutSheet.spacing)(
                   switchLatest(

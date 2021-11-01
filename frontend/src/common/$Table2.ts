@@ -71,7 +71,7 @@ export const $Table2 = <T, FilterState = never>({
   const $cellHeader = $row(
     cellStyle,
     layoutSheet.spacingSmall,
-    style({ fontSize: '15px', color: pallete.foreground, }),
+    style({ fontSize: '15px', alignItems: 'center', color: pallete.foreground, }),
     cellOp || O(),
     headerCellOp || O()
   )
@@ -112,8 +112,8 @@ export const $Table2 = <T, FilterState = never>({
           switchLatest(map(s => {
 
             return $column(style({ cursor: 'pointer' }))(
-              $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'asc' ? pallete.foreground : '' : pallete.foreground, svgOps: style({ transform: 'rotate(180deg)' }), width: '6px', viewBox: '0 0 32 19.43' }),
-              $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'desc' ? pallete.foreground : '' : pallete.foreground, width: '6px', viewBox: '0 0 32 19.43' })
+              $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'asc' ? pallete.foreground : '' : pallete.foreground, svgOps: style({ transform: 'rotate(180deg)' }), width: '8px', viewBox: '0 0 32 19.43' }),
+              $icon({ $content: $sortArrowDown, fill: s.name === col.sortBy ? s.direction === 'desc' ? pallete.foreground : '' : pallete.foreground, width: '8px', viewBox: '0 0 32 19.43' })
             )
           }, sortBy))
         )
@@ -127,10 +127,10 @@ export const $Table2 = <T, FilterState = never>({
     })
   )
 
+  const requestPageFilters = merge(sortByChange, filterChange)
 
-  const newLocal = merge(sortByChange, filterChange)
-  const $body = switchLatest(map(() =>
-    $VirtualScroll({
+  const $body = switchLatest(map(() => {
+    return $VirtualScroll({
       ...scrollConfig,
       dataSource: map((res): ScrollResponse => {
         const $items = (Array.isArray(res) ? res : res.data).map(rowData => $rowContainer(
@@ -153,7 +153,7 @@ export const $Table2 = <T, FilterState = never>({
     })({
       scrollIndex: scrollIndexTether()
     })
-  , startWith(null, newLocal)))
+  }, startWith(null, requestPageFilters)))
 
   return [
     $column(bodyContainerOp)(

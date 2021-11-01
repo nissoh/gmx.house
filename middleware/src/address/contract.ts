@@ -47,8 +47,20 @@ export enum ARBITRUM_ADDRESS {
   USDT = "0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9",
 }
 
-    
 
+const tradableAdressToNameMap = Object.entries(ARBITRUM_TRADEABLE_ADDRESS).reduce((seed, [name, address]) => {
+  return { ...seed, [address]: name }
+}, {} as {[key: string]: string})
+
+
+export function indexTokenToName(address: ARBITRUM_TRADEABLE_ADDRESS): string {
+  const name = tradableAdressToNameMap[address]
+
+  if (!name) {
+    throw new Error('No index token matched this address')
+  }
+  return name
+}
     
     
   

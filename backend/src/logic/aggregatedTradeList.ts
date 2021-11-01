@@ -1,8 +1,8 @@
 
-import { O } from '@aelea/core'
-import { awaitPromises, map } from '@most/core'
+import { O, replayLatest } from '@aelea/core'
+import { awaitPromises, map, merge, multicast, now, periodic, snapshot } from '@most/core'
 import { gql, TypedDocumentNode } from '@urql/core'
-import { AccountHistoricalDataApi, formatFixed, fromJson, IAccountAggregationMap, IAccountQueryParamApi, IAggregatedTradeAll, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IChainlinkPrice, IIdentifiableEntity, ILeaderboardRequest, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ITimerange, pageableQuery, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
+import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAccountAggregationMap, IAccountQueryParamApi, IAggregatedTradeAll, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IChainlinkPrice, IIdentifiableEntity, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
 import fetch from 'isomorphic-fetch'
 import { cacheMap } from '../utils'
 import { prepareClient } from './common'
@@ -227,8 +227,65 @@ query ($id: String) {
 
 const chainlinkPricefeedQuery: TypedDocumentNode<{rounds: IChainlinkPrice[]}, IPageChainlinkPricefeed> = gql`
 
-query ($feedAddress: String, $from: Int, $to: Int, $offset: Int = 0, $orderDirection: OrderDirection = asc, $orderBy: Round_orderBy = unixTimestamp) {
-  rounds(first: 1000, skip: $offset, orderBy: $orderBy, orderDirection: $orderDirection, where: { feed: $feedAddress, unixTimestamp_gte: $from, unixTimestamp_lte: $to }) {
+query ($feedAddress: String, $from: Int, $to: Int, $offset: Int = 0, $sortDirection: OrderDirection = asc, $sortBy: Round_orderBy = unixTimestamp) {
+  rounds(first: 1000, skip: $offset, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: $feedAddress, unixTimestamp_gte: $from, unixTimestamp_lte: $to }) {
+    unixTimestamp,
+    value
+  }
+}
+
+`
+
+
+interface IChainLinkMap {
+  WBTC: IChainlinkPrice,
+  WETH : IChainlinkPrice,
+  LINK : IChainlinkPrice,
+  UNI : IChainlinkPrice,
+}
+
+const latestPricefeedMapQuery: TypedDocumentNode<IChainLinkMap, {}> = gql`
+
+query ($sortDirection: OrderDirection = desc, $sortBy: Round_orderBy = unixTimestamp) {
+  WBTC: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0xae74faa92cb67a95ebcab07358bc222e33a34da7" }) {
+    unixTimestamp,
+    value
+  }
+  
+  WETH: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0x37bc7498f4ff12c19678ee8fe19d713b87f6a9e6" }) {
+    unixTimestamp,
+    value
+  }
+  
+  LINK: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0xdfd03bfc3465107ce570a0397b247f546a42d0fa" }) {
+    unixTimestamp,
+    value
+  }
+  
+  UNI: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0x68577f915131087199fe48913d8b416b3984fd38" }) {
+    unixTimestamp,
+    value
+  }
+}
+
+`
+
+const latestPricefeedMapQuery2: TypedDocumentNode<{rounds: IChainlinkPrice[]}, null> = gql`
+
+query {
+  WBTC: round(id: "0xae74faa92cb67a95ebcab07358bc222e33a34da7/10325") {
+    unixTimestamp
+    value
+  }
+  WETH: round(id: "0x37bc7498f4ff12c19678ee8fe19d713b87f6a9e6/13283") {
+    unixTimestamp,
+    value
+  }
+  LINK: round(id: "0xdfd03bfc3465107ce570a0397b247f546a42d0fa/6665") {
+    unixTimestamp,
+    value
+  }
+  UNI: round(id: "0x68577f915131087199fe48913d8b416b3984fd38/6722") {
     unixTimestamp,
     value
   }
@@ -253,6 +310,41 @@ const chainlinkClient = prepareClient({
 
 
 
+export const latestPricefeedMap = O(
+  map(async () => {
+    const list = await chainlinkClient(latestPricefeedMapQuery, {})
+    return list
+  }),
+  awaitPromises
+)
+
+export const latestPricefeedMapSource = replayLatest(multicast(merge(
+  latestPricefeedMap(periodic(15000)),
+  latestPricefeedMap(now(null))
+)))
+
+export const requestChainlinkPricefeed = O(
+  map(async (queryParams: IPageChainlinkPricefeed) => {
+    const to = queryParams.to || Math.floor(Date.now() / 1000)
+
+    const fethPage = async (offset: number): Promise<{ rounds: IChainlinkPrice[]; }> => {
+      const list = await chainlinkClient(chainlinkPricefeedQuery, { ...queryParams, to, pageSize: 1000, offset })
+
+      if (list.rounds.length === 1000) {
+        const newPage = await fethPage(offset + 1000)
+
+        return { rounds: [...list.rounds, ...newPage.rounds] }
+      }
+
+      return list
+    }
+
+    const priceFeedQuery = await fethPage(0)
+
+    return priceFeedQuery.rounds
+  }),
+  awaitPromises
+)
 
 export const requestAccountAggregation = O(
   map(async (queryParams: AccountHistoricalDataApi) => {
@@ -310,9 +402,8 @@ export const requestLeaderboardTopList = O(
 
       return summary
     })
-    
-
-    return pageableQuery(queryParams, cacheQuery)
+ 
+    return pagingQuery(queryParams, cacheQuery)
   }),
   awaitPromises
 )
@@ -332,45 +423,35 @@ export const requestAccountListAggregation = O(
 
 const openTradesCacheMap = cacheMap({})
 export const requestOpenAggregatedTrades = O(
-  map(async (queryParams: IPageable) => {
+  snapshot(async (feedMap, queryParams: IPageable & ISortable<'size' | 'delta' | 'deltaPercentage'>) => {
 
-    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.SEC60, async () => {
+    const cacheQuery = openTradesCacheMap('open', intervalInMsMap.MIN5, async () => {
       const list = await vaultClient(openAggregateTradesQuery, {})
-      const sortedList = list.aggregatedTradeOpens
-        // .filter(a => a.account == '0x04d52e150e49c1bbc9ddde258060a3bf28d9fd70')
-        .map(fromJson.toAggregatedOpenTradeSummary).sort((a, b) => formatFixed(b.size) - formatFixed(a.size))
+      const sortedList = list.aggregatedTradeOpens.map(fromJson.toAggregatedOpenTradeSummary)
       return sortedList
     })
 
-    const query = await pageableQuery(queryParams, cacheQuery)
-    
-    return { ...query, page: query.page }
-  }),
-  awaitPromises
-)
+    if (queryParams.sortBy === 'deltaPercentage' || queryParams.sortBy === 'delta') {
+      const queryResults = cacheQuery.then(list => list.map(summary => {
 
-export const requestChainlinkPricefeed = O(
-  map(async (queryParams: IPageChainlinkPricefeed) => {
-    const to = queryParams.to || Math.floor(Date.now() / 1000)
+        // @ts-ignore
+        const feed: IChainlinkPrice[] = feedMap[indexTokenToName(summary.indexToken)]      
+        const priceUsd = Number(feed[0].value) / 1e8
+        const marketPrice = parseFixed(priceUsd, 30)
 
-    const fethPage = async (offset: number): Promise<{ rounds: IChainlinkPrice[]; }> => {
-      const list = await chainlinkClient(chainlinkPricefeedQuery, { ...queryParams, to, pageSize: 1000, offset })
+        const posDelta = calculatePositionDelta(marketPrice, summary.isLong, summary)
 
-      if (list.rounds.length === 1000) {
-        const newPage = await fethPage(offset + 1000)
+        return { ...summary, delta: posDelta.delta - summary.fee, deltaPercentage: posDelta.deltaPercentage }
+      }))
 
-        return { rounds: [...list.rounds, ...newPage.rounds] }
-      }
-
-      return list
+      return pagingQuery(queryParams, queryResults)
     }
-
-    const priceFeedQuery = await fethPage(0)
-
-    return priceFeedQuery.rounds
-  }),
+    
+    return pagingQuery(queryParams, cacheQuery)
+  }, latestPricefeedMapSource),
   awaitPromises
 )
+
 
 export const requestAggregatedLiquidatedTrade = O(
   map(async (queryParams: IRequestAggregatedTradeQueryparam) => {

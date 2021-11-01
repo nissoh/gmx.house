@@ -1,4 +1,4 @@
-import { O } from "@aelea/core"
+import { O, replayLatest } from "@aelea/core"
 import { state } from "@aelea/ui-components"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
 import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter, tap } from "@most/core"
@@ -76,7 +76,7 @@ export function initWalletLink(config: IWalletLinkConfig, changeProvider: Stream
   const initialConnection = skipAfter(res => res !== null, attemptConnect(mergeArray(config.walletProviders)))
   const withProviderChange = attemptConnect(changeProvider)
 
-  const connection = state.replayLatest(multicast(merge(withProviderChange, initialConnection)))
+  const connection = replayLatest(multicast(merge(withProviderChange, initialConnection)))
   
   return connection
 }

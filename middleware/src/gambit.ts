@@ -5,7 +5,6 @@ import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
 import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource } from "./types"
 import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
-import { parseFixed } from "."
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
@@ -99,7 +98,9 @@ export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, a
   return isLong ? averagePrice - priceDelta : averagePrice + priceDelta
 }
 
-
+export function getFundingFee(entryFundingRate: bigint, cumulativeFundingRate: bigint, size: bigint) {
+  return (size * (cumulativeFundingRate - entryFundingRate)) / FUNDING_RATE_PRECISION
+}
 
 
 export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(trade: T): IAggregatedOpenPositionSummary<T> {
@@ -136,6 +137,7 @@ export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed
   const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
     ...parsedAgg, pnl,
     fee: isLiquidated ? 0n : parsedAgg.fee,
+    realisedPnl: pnl - parsedAgg.fee,
     settledTimestamp: trade.indexedAt,
   }
 
@@ -152,7 +154,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
 
     const tradeSummaries = allSettled.map(toAggregatedTradeSettledSummary)
     const fee = tradeSummaries.reduce((seed, pos) => seed + pos.fee, 0n)
-    const realisedPnl = tradeSummaries.reduce((seed, pos) => {
+    const pnl = tradeSummaries.reduce((seed, pos) => {
       if (pos.pnl > 0n) {
         profitablePositionsCount++
       }
@@ -166,7 +168,8 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
       leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0) / tradeSummaries.length,
       claim: null,
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
-      pnl: realisedPnl,
+      pnl: pnl,
+      realisedPnl: pnl - fee,
       size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n),
       averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length)
     }
@@ -176,7 +179,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
     return seed
   }, [] as IAggregatedAccountSummary[])
 
-  return topMap.sort((a, b) => formatFixed(b.pnl - b.fee) - formatFixed(a.pnl - a.fee))
+  return topMap
 }
 
 

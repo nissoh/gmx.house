@@ -1,4 +1,4 @@
-import { Behavior, combineArray, combineObject, O } from "@aelea/core"
+import { Behavior, combineArray, combineObject, O, replayLatest } from "@aelea/core"
 import { $node, $text, component, IBranch, INode, motion, MOTION_NO_WOBBLE, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
@@ -53,7 +53,7 @@ export const $Portfolio = (config: IAccount) => component((
 
   const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.DAY7)
 
-  const chartInterval = startWith(timeFrameStore.state, state.replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
+  const chartInterval = startWith(timeFrameStore.state, replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
 
   const accountHistoryPnL = multicast(filter(arr => {

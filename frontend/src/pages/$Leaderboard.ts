@@ -1,18 +1,24 @@
-import { Behavior, O } from '@aelea/core'
+import { Behavior, combineArray, combineObject, O, replayLatest } from '@aelea/core'
 import { $node, $text, component, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, map, multicast, periodic, snapshot, startWith, switchLatest } from '@most/core'
+import { constant, filter, map, merge, multicast, now, periodic, skipRepeats, snapshot, startWith, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, parseFixed, TradeType } from 'gambit-middleware'
-import { $Table2, TablePageResponse } from "../common/$Table2"
+import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, IPositionDelta, ISortable, parseFixed, TradeType } from 'gambit-middleware'
+import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
-import { $Link } from "../components/$Link"
+import { $AnchorLink, $Link } from "../components/$Link"
 import { $anchor } from '../elements/$common'
-import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn, $ProfitLossText } from "./common"
+import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
 
+
+enum CompetitionDisplay {
+  CONUTER,
+  COMPETITION_DETAILS,
+  COMPETITION_RESULTS,
+}
 
 
 
@@ -35,6 +41,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [tableTopPnlRequest, tableTopPnlRequestTether]: Behavior<number, number>,
   [openPositionsRequest, openPositionsRequestTether]: Behavior<number, number>,
+  [tableTopSettledsortByChange, tableTopSettledsortByChangeTether]: Behavior<ISortBy<IAggregatedAccountSummary>, ISortBy<IAggregatedAccountSummary>>,
+  [tableTopOpenSortByChange, tableTopOpenSortByChangeTether]: Behavior<ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>, ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>>,
 
 ) => {
 
@@ -43,20 +51,28 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   const timeFrameStore = config.parentStore<ILeaderboardRequest['timeInterval']>('timeframe', intervalInMsMap.HR24)
+  const tableTopSettledSortByStore = config.parentStore<ISortBy<IAggregatedAccountSummary>>('tableTopSettledSortByStore', { name: 'realisedPnl', direction: 'asc' })
+  const tableTopOpenSortByStore = config.parentStore<ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>>('tableTopOpenSortByStore', { name: 'delta', direction: 'asc' })
+  
+  const tableTopSettledSortBy = replayLatest(multicast(startWith(tableTopSettledSortByStore.state, tableTopSettledSortByStore.store(tableTopSettledsortByChange, map(x => x)))))
+  const tableTopOpenSortBy = startWith(tableTopOpenSortByStore.state, tableTopOpenSortByStore.store(tableTopOpenSortByChange, map(x => x)))
+  const filterByTimeFrameState = replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
-  const filterByTimeFrameState = state.replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
+  const tableRequestState = snapshot(({ filterByTimeFrameState: timeInterval, tableTopSettledSortBy: sortBy }, page): ILeaderboardRequest => {
+    const name = sortBy.name
 
-  const tableRequestState = snapshot((timeInterval, page): ILeaderboardRequest => {
     return {
       timeInterval,
       offset: page * 20,
-      pageSize: 20
+      pageSize: 20,
+      sortBy: name,
+      sortDirection: sortBy.direction
     }
-  }, filterByTimeFrameState, tableTopPnlRequest)
+  }, combineObject({ tableTopSettledSortBy, filterByTimeFrameState }), tableTopPnlRequest)
 
-  const tableTopOpenState = map((page): IPageable => {
-    return { offset: page * 20, pageSize: 20 }
-  }, openPositionsRequest)
+  const tableTopOpenState = combineArray((page, sortBy): IPageable & ISortable<any> => {
+    return { offset: page * 20, pageSize: 20, sortBy: sortBy.name, sortDirection: sortBy.direction }
+  }, openPositionsRequest, tableTopOpenSortBy)
 
 
   const openPositions: Stream<TablePageResponse<IAggregatedOpenPositionSummary>> = map((res) => {
@@ -94,30 +110,59 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   // Set the date we're counting down to
-  const countDownDate = new Date("Nov 4, 2021 00:00:00").getTime()
+  const competitionStartDate = new Date("Nov 3, 2021 00:00:00").getTime()
+  // const competitionStartDate = new Date("Oct 31, 2021 14:17:24").getTime()
+  const competitionEndDate = new Date("Dec 1, 2021 00:00:00").getTime()
 
-  const competitionCountdown = map(() => {
-    const now = new Date().getTime()
+  const secondsCountdown = map(Date.now, periodic(1000))
 
-    // Find the distance between now and the count down date
-    const distance = countDownDate - now
+  const competitionCountdown = map(now => {
+    const distance = competitionStartDate - now
 
-
-    // Time calculations for days, hours, minutes and seconds
     const days = Math.floor(distance / (1000 * 60 * 60 * 24))
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
     const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+      
+    return `${days ? days + "d " : ''} ${hours ? hours + "h " : '' } ${ minutes ? minutes + "m " : ''} ${seconds ? seconds + "s " : ''}`
+  }, secondsCountdown)
 
-    // Display the result in the element with id="demo"
-    return days + "d " + hours + "h " + minutes + "m " + seconds + "s "
-  }, periodic(1000))
+  const $competitionTimer = $text(style({ fontWeight: 'bold' }))(competitionCountdown)
 
+  // const competitionEntryDetails = '
 
+ 
+  const competitionTypeChange = skipRepeats(map(now => {
+    if (competitionStartDate > now) {
+      return CompetitionDisplay.CONUTER
+    }
+
+    return now > competitionEndDate ? CompetitionDisplay.COMPETITION_RESULTS : CompetitionDisplay.COMPETITION_DETAILS
+  }, secondsCountdown))
+
+  const stateMap = {
+    [CompetitionDisplay.CONUTER]: $row(layoutSheet.spacingSmall)(
+      $text(style({}))('Starting in... '),
+      $competitionTimer
+    ),
+    [CompetitionDisplay.COMPETITION_DETAILS]: $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
+      $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
+      $AnchorLink({
+        anchorOp: style({ position: 'relative' }),
+        $content: $text('Competition Page'),
+        url: `/p/competition`,
+        route: config.parentRoute.create({ fragment: '2121212' })
+      })({ click: routeChangeTether() }),
+    ),
+    [CompetitionDisplay.COMPETITION_RESULTS]: $text('RESULTS'),
+  }
+
+  const $details = switchLatest(map(state => stateMap[state], competitionTypeChange))
 
   return [
 
     $column(
+      
       $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
         $text(style({ fontSize: '.85em' }))('November Competition Kickoff'),
         $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
@@ -125,10 +170,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $text(style({  }))('vs.'),
           $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
         ),
-        $row(layoutSheet.spacingSmall)(
-          $text(style({  }))('Starting in... '),
-          $text(style({ fontWeight: 'bold' }))(competitionCountdown),
-        )
+        $details
       ),
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
@@ -170,7 +212,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
-              filterChange: topPnlTimeframeChange,
+              sortChange: now(tableTopSettledSortByStore.state),
+              filterChange: merge(topPnlTimeframeChange, tableTopSettledsortByChange),
               dataSource: map((res) => {
                 return {
                   data: res.page,
@@ -183,8 +226,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 accountTableColumn,
                 winLossTableColumn,
                 {
-                  $head: $text('Risk'),
-                  columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
+                  $head: $text('Risk-$'),
+                  sortBy: 'size',
+                  columnOp: style({ placeContent: 'center' }),
                   $body: map((pos: IAggregatedTradeSummary) => {
                     return $Risk(pos)({})
                   })
@@ -197,12 +241,13 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 //   })
                 // },
                 {
-                  $head: $text('PnL $'),
+                  $head: $text('PnL-$'),
+                  sortBy: 'realisedPnl',
                   columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
                   $body: map((pos: IAggregatedSettledTradeSummary) => $row($SummaryProfitLoss(pos)))
                 },
               ],
-            })({ scrollIndex: tableTopPnlRequestTether(), })
+            })({ scrollIndex: tableTopPnlRequestTether(), sortBy: tableTopSettledsortByChangeTether() })
           ),
         ),
         $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
@@ -213,15 +258,15 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
             ),
           ),
-          $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '26px', margin: '0 -12px' }))(
+          $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
             $Table2<IAggregatedOpenPositionSummary>({
               bodyContainerOp: layoutSheet.spacing,
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
+              sortChange: now(tableTopOpenSortByStore.state),
               dataSource: openPositions,
-              // headerCellOp: style({ fontSize: '.65em' }),
-              // bodyRowOp: O(layoutSheet.spacing),
+              filterChange: topPnlTimeframeChange,
               columns: [
                 accountTableColumn,
                 {
@@ -237,8 +282,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   )
                 },
                 {
-                  $head: $text('Risk'),
-                  columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                  $head: $text('Risk-$'),
+                  sortBy: 'size',
+                  columnOp: style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' }),
                   $body: map((pos: IAggregatedOpenPositionSummary) => {
                     const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
                   
@@ -246,12 +292,17 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                   })
                 },
                 {
-                  $head: $text('PnL $'),
+                  $head: $text('PnL-$'),
+                  // @ts-ignore
+                  sortBy: 'delta',
                   columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos) => $LivePnl(pos)({}))
                 },
               ],
-            })({ scrollIndex: openPositionsRequestTether() })
+            })({ scrollIndex: openPositionsRequestTether(), sortBy: tableTopOpenSortByChangeTether() }),
+            // sideEffect, avoid reconnecting websocket every sort change
+            
+            filter(x => false, priceChange) as Stream<never>,
           ),
         )
       ),

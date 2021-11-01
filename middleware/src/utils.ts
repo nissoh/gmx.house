@@ -1,5 +1,5 @@
 import { intervalInMsMap, USD_DECIMALS } from "./constant"
-import { IPagableResponse, IPageable } from "./types"
+import { IPagableResponse, IPageable, ISortable } from "./types"
 
 export const ETH_ADDRESS_REGEXP = /^0x[a-fA-F0-9]{40}$/i
 export const TX_HASH_REGEX = /^0x([A-Fa-f0-9]{64})$/i
@@ -271,10 +271,21 @@ export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
 
 
 
-export async function pageableQuery<T, ReqParams extends IPageable>(reqParams: ReqParams, query: Promise<T[]>): Promise<IPagableResponse<T>> {
+export async function pagingQuery<T, ReqParams extends IPageable & (ISortable<keyof T> | {})>(queryParams: ReqParams, query: Promise<T[]>): Promise<IPagableResponse<T>> {
   const res = await query
-  const { pageSize, offset } = reqParams
-  const page = res.slice(reqParams.offset, offset + pageSize)
+  let list = res
+  if ('sortBy' in queryParams) {
+    const sortBy = queryParams.sortBy
+
+    list = res.sort((a, b) =>
+      queryParams.sortDirection === 'asc'
+        ? Number(b[sortBy]) - Number(a[sortBy])
+        : Number(a[sortBy]) - Number(b[sortBy])
+    )
+  }
+
+  const { pageSize, offset } = queryParams
+  const page = list.slice(queryParams.offset, offset + pageSize)
   return { offset, page, pageSize }
 }
 

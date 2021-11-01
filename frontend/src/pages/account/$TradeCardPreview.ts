@@ -1,4 +1,4 @@
-import { Behavior, combineArray, O, Op } from "@aelea/core"
+import { Behavior, combineArray, O, Op, replayLatest } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
@@ -51,15 +51,19 @@ export const $TradeCardPreview = ({
   [accountPreviewClick, accountPreviewClickTether]: Behavior<string, string>,
 ) => {
 
-  const aggregatedTradeState = state.replayLatest(multicast(aggregatedTrade))
+  const aggregatedTradeState = replayLatest(multicast(aggregatedTrade))
   const nullishTrade = filter(x => x === null, aggregatedTradeState)
 
-  const parsedPricefeed = state.replayLatest(multicast(map(feed => {
+  const parsedPricefeed = replayLatest(multicast(map(feed => {
     return feed
-      .map(({ unixTimestamp, value }) => ({
-        value: parseFixed(String(Number(value) / 1e8), 30),
-        time: unixTimestamp,
-      }))
+      .map(({ unixTimestamp, value }) => {
+
+        const parsedValue = parseFixed(Number(value) / 1e8, 30)
+        return {
+          value: parsedValue,
+          time: unixTimestamp,
+        }
+      })
       .sort((a, b) => a.time - b.time)
   }, chainlinkPricefeed)))
 
@@ -72,7 +76,7 @@ export const $TradeCardPreview = ({
       : map(feed => formatFixed(feed[feed.length - 1].value, 30), parsedPricefeed)
   }, aggregatedTradeState))
 
-  const historicPnL = state.replayLatest(multicast(combineArray((summary, pricefeed) => {
+  const historicPnL = replayLatest(multicast(combineArray((summary, pricefeed) => {
     const trade = summary.trade
 
     const startTime = trade.initialPosition.indexedAt

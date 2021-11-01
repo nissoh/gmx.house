@@ -1,4 +1,4 @@
-import { Behavior } from "@aelea/core"
+import { Behavior, replayLatest } from "@aelea/core"
 import { $element, $node, $text, attr, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
@@ -64,6 +64,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
+  const competitionRoute = pagesRoute.create({ fragment: 'competition', title: 'Red vs. Green November competition' })
 
   const cardRoute = rootRoute
     .create({ fragment: 'card' })
@@ -74,9 +75,9 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
 
-  const rootStore = state.createLocalStorageChain('store-2')
+  const rootStore = state.createLocalStorageChain('store-3')
 
-  const claimMap = state.replayLatest(
+  const claimMap = replayLatest(
     map(list => groupByMap(list, item => item.account.toLowerCase()), claimListQuery())
   )
 
@@ -169,9 +170,21 @@ export default ({ baseRoute = '' }: Website) => component((
                 routeChange: linkClickTether()
               })
             ),
-            // router.match(tournamentRoute)(
-            //   $Tournament({ parentRoute: rootRoute, parentStore: rootStore, claimList, tournamentQuery: map(x => x.map(leaderboardAccountJson), clientApi.tournament) })({
-            //     tournamentQuery: tournamentQueryTether()
+            // router.match(competitionRoute)(
+            //   $Competition({
+            //     claimMap,
+            //     parentRoute: rootRoute,
+            //     parentStore: rootStore,
+            //     openAggregatedTrades: map((x: IPagableResponse<IAggregatedOpenPositionSummary>) => ({ ...x, page: x.page.map(fromJson.toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
+            //     requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
+            //       page: data.page.map(fromJson.accountSummaryJson),
+            //       offset: data.offset,
+            //       pageSize: data.pageSize
+            //     }), clientApi.requestLeaderboardTopList),
+            //   })({
+            //     requestLeaderboardTopList: requestLeaderboardTopListTether(),
+            //     requestOpenAggregatedTrades: requestOpenAggregatedTradesTether(),
+            //     routeChange: linkClickTether()
             //   })
             // ),
             router.contains(accountRoute)(

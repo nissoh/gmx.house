@@ -81,6 +81,17 @@ export async function fetchHistoricKline(symbol: TOKEN_SYMBOL, params: IBinanceA
   return klineBars
 }
 
+export async function fetchTickerPriceList() {
+  
+  const queryParams = new URLSearchParams({
+    symbols: JSON.stringify(Object.values(PRICE_EVENT_TICKER_MAP)),
+  })
+
+  const kLineData = await http.fetchJson(`https://api.binance.com/api/v3/ticker/price?${queryParams.toString()}`)
+
+  return kLineData
+}
+
 // function convertBusinessDayToUTCTimestamp(date) {
 //   return new Date(Date.UTC(date.year, date.month - 1, date.day, 0, 0, 0, 0))
 // }

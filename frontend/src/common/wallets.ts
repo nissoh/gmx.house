@@ -1,4 +1,4 @@
-import { state } from "@aelea/ui-components"
+import { replayLatest } from "@aelea/core"
 import detectEthereumProvider from "@metamask/detect-provider"
 import { awaitPromises, map, multicast, now } from "@most/core"
 import WalletConnectProvider from "@walletconnect/ethereum-provider"
@@ -7,7 +7,7 @@ import { CHAIN } from "wallet-link"
 import { NETWORK_METADATA } from "wallet-link/src/const"
 
 
-export const walletConnect = state.replayLatest(multicast(map(() =>
+export const walletConnect = replayLatest(multicast(map(() =>
   new WalletConnectProvider({
     rpc: {
       [CHAIN.ARBITRUM]: "https://arb1.arbitrum.io/rpc"
@@ -26,7 +26,7 @@ export const walletConnect = state.replayLatest(multicast(map(() =>
   })
 , now(null))))
 
-export const metamask = state.replayLatest(multicast(awaitPromises(map(() =>
+export const metamask = replayLatest(multicast(awaitPromises(map(() =>
   detectEthereumProvider({ mustBeMetaMask: true, silent: true }) as Promise<IEthereumProvider & { selectedAddress: string } | null>
 , now(null)))))
 

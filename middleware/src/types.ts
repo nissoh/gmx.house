@@ -85,20 +85,20 @@ export interface IPageable {
   pageSize: number
 }
 
-export interface ISortable {
-  orderBy: string
-  orderDirection: 'desc' | 'asc'
+export interface ISortable<T extends string | number | symbol> {
+  sortBy: T
+  sortDirection: 'desc' | 'asc'
 }
 
 export interface IPagableResponse<T> extends IPageable {
   page: T[]
 }
 
-export interface IPageChainlinkPricefeed extends Partial<IPageable>, Partial<ISortable>, ITimerange {
+export interface IPageChainlinkPricefeed extends Partial<IPageable>, Partial<any>, ITimerange {
   feedAddress: string
 }
 
-export interface ILeaderboardRequest extends IPageable {
+export interface ILeaderboardRequest extends IPageable, ISortable<keyof IAggregatedAccountSummary> {
   timeInterval: intervalInMsMap.HR24 | intervalInMsMap.DAY7 | intervalInMsMap.MONTH
 }
 export interface AccountHistoricalDataApi extends IAccountQueryParamApi {
@@ -173,6 +173,7 @@ export interface IAggregatedTradeSummary extends IAbstractPosition {
 
 export interface IAggregatedSettledTradeSummary extends IAggregatedTradeSummary {
   pnl: bigint
+  realisedPnl: bigint
 }
 
 

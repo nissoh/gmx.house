@@ -26,7 +26,7 @@ export const $ButtonPrimary = (config: IButton) => {
 export const $ButtonSecondary = (config: IButton) => {
   return $Button({
     ...config,
-    buttonOp: O(secondaryButtonStyle, style({ fontSize: '.85em' }), config.buttonOp || O())
+    buttonOp: O(secondaryButtonStyle, stylePseudo(':hover', { boxShadow: 'none', borderColor: 'transparent' }), style({ fontSize: '.85em' }), config.buttonOp || O())
   })
 }
 

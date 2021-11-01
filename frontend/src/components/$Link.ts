@@ -1,5 +1,5 @@
 import { Behavior, combineArray, O } from "@aelea/core"
-import { $Branch, $element, component, style, styleBehavior, StyleCSS } from "@aelea/dom"
+import { $Branch, $element, component, style, styleBehavior, StyleCSS, stylePseudo } from "@aelea/dom"
 import { $RouterAnchor, IAnchor } from "@aelea/router"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map } from "@most/core"
@@ -43,3 +43,11 @@ export const $Link = ({ url, route, $content, anchorOp, disabled = empty() }: IL
     { click, active, focus }
   ]
 })
+
+
+export const $AnchorLink = (config: ILink) => {
+  return $Link({
+    ...config,
+    anchorOp: O(config.anchorOp || O(), style({ textDecoration: 'underline', textDecorationColor: pallete.primary })),
+  })
+}
