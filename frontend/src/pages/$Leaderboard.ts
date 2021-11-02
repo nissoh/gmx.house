@@ -149,7 +149,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       $AnchorLink({
         anchorOp: style({ position: 'relative' }),
         $content: $text('Competition Page'),
-        url: `/p/competition`,
+        url: `/p/redvsgreen-nov2021-percentage`,
         route: config.parentRoute.create({ fragment: '2121212' })
       })({ click: routeChangeTether() }),
     ),

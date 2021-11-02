@@ -8,8 +8,8 @@ import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
-  IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IAggregatedTradeSettledAll, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
-  IPageable, IPageChainlinkPricefeed, toAggregatedTradeSettledSummary, TradeType, TX_HASH_REGEX
+  IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
+  IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX
 } from 'gambit-middleware'
 import { initWalletLink } from "wallet-link"
 import { $logo } from '../common/$icons'
@@ -67,7 +67,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
-  const competitionRoute = pagesRoute.create({ fragment: 'competition', title: 'Red vs. Green November competition' })
+  const competitionRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-percentage', title: 'Red vs. Green November competition' })
 
   const cardRoute = rootRoute
     .create({ fragment: 'card' })
