@@ -111,7 +111,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   // Set the date we're counting down to
   const competitionStartDate = Date.UTC(2021, 10, 3, 12, 0, 0)
-  const competitionEndDate = Date.UTC(2021, 10, 28, 12, 0, 0)
+  const competitionEndDate = Date.UTC(2021, 10, 30, 12, 0, 0)
 
   const secondsCountdown = map(Date.now, periodic(1000))
 

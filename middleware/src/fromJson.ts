@@ -126,24 +126,21 @@ function toAggregatedPositionSummary<T extends IAggregatedOpenPositionSummary>(j
 
 function toAggregatedPositionSettledSummary<T extends IAggregatedPositionSettledSummary<IAggregatedTradeSettledAll>>(json: T): T {
   const averagePrice = BigInt(json.averagePrice)
+  const pnl = BigInt(json.pnl)
+  const realisedPnl = BigInt(json.realisedPnl)
+
+  const jsonTrade = json.trade
+  const settledPosition = jsonTrade.settledPosition
 
   // @ts-ignore
-  const trade =  'markPrice' in json.trade.settledPosition ? toAggregatedTradeClosedJson(json.trade) : toAggregatedTradeLiquidatedJson(json.trade)
+  const trade =  'markPrice' in settledPosition ? toAggregatedTradeLiquidatedJson(json.trade) : toAggregatedTradeClosedJson(json.trade)
 
-  return { ...toAggregatedTradeSummary(json), trade, averagePrice  }
+  return { ...toAggregatedTradeSummary(json), trade, averagePrice, pnl, realisedPnl  }
 }
 
 function toAggregatedSettledTrade<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(json: T): T {
-  if ('markPrice' in json.settledPosition) {
-    // @ts-ignore
-    return toAggregatedTradeLiquidatedJson(json)
-  } else {
-    // @ts-ignore
-    return toAggregatedTradeClosedJson(json)
-  }
-
   // @ts-ignore
-  return trade
+  return 'markPrice' in json.settledPosition ? toAggregatedTradeLiquidatedJson(json) : toAggregatedTradeClosedJson(json)
 }
 
 function toAggregatedTradeAllSummary<T extends IAggregatedTradeAll>(json: T): IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary {

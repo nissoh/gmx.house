@@ -271,17 +271,23 @@ export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
 
 
 
-export async function pagingQuery<T, ReqParams extends IPageable & (ISortable<keyof T> | {})>(queryParams: ReqParams, query: Promise<T[]>): Promise<IPagableResponse<T>> {
+export async function pagingQuery<T, ReqParams extends IPageable & (ISortable<keyof T> | {})>(
+  queryParams: ReqParams,
+  query: Promise<T[]>,
+  customComperator?: (a: T, b: T) => number
+): Promise<IPagableResponse<T>> {
   const res = await query
   let list = res
   if ('sortBy' in queryParams) {
     const sortBy = queryParams.sortBy
 
-    list = res.sort((a, b) =>
+    const comperator = typeof customComperator === 'function' ? customComperator : (a: T, b: T) =>
       queryParams.sortDirection === 'asc'
         ? Number(b[sortBy]) - Number(a[sortBy])
         : Number(a[sortBy]) - Number(b[sortBy])
-    )
+    
+
+    list = res.sort(comperator)
   }
 
   const { pageSize, offset } = queryParams

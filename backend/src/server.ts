@@ -5,8 +5,9 @@ import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
 import ws from 'ws'
-import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedClosedTrade, requestAggregatedSettledTradeList, requestAggregatedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
+import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTrade, requestAggregatedSettledTradeList, requestAggregatedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { api } from './logic/api'
+import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
@@ -77,8 +78,10 @@ const apiComponent = helloFrontend(wss, {
   requestAccountListAggregation,
   requestLeaderboardTopList,
   requestChainlinkPricefeed,
-  requestAggregatedClosedTrade,
+  requestAggregatedSettledTrade,
   requestAggregatedTrade,
+  competitionNov2021HighestPercentage,
+  competitionNov2021LowestPercentage,
 })
 
 

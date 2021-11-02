@@ -55,7 +55,7 @@ function connectWallet<T extends IEthereumProvider = IEthereumProvider>(wallet: 
   const currentAccount = awaitPromises(map(async () => (await provider.listAccounts())[0], now(null)))
 
   const network = merge(networkChange, currentNetwork)
-  const account = tap(console.log, merge(accountChange, currentAccount))
+  const account = merge(accountChange, currentAccount)
 
   return { account, network, provider, wallet, disconnect, connect }
 }

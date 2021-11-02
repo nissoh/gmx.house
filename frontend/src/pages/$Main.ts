@@ -8,8 +8,8 @@ import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
-  IAggregatedOpenPositionSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
-  IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX
+  IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IAggregatedTradeSettledAll, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
+  IPageable, IPageChainlinkPricefeed, toAggregatedTradeSettledSummary, TradeType, TX_HASH_REGEX
 } from 'gambit-middleware'
 import { initWalletLink } from "wallet-link"
 import { $logo } from '../common/$icons'
@@ -23,6 +23,7 @@ import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
 import { $Leaderboard } from './$Leaderboard'
 import { $Account } from './account/$Account'
+import { $Competition } from "./competition/$competition"
 
 
 
@@ -46,6 +47,8 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
+  [competitionNov2021HighestPercentage, competitionNov2021HighestPercentageTether]: Behavior<IPageable, IPageable>,
+  [competitionNov2021LowestPercentage, competitionNov2021LowestPercentageTether]: Behavior<IPageable, IPageable>,
   [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
@@ -87,6 +90,8 @@ export default ({ baseRoute = '' }: Website) => component((
     requestOpenAggregatedTrades,
     requestChainlinkPricefeed,
     requestAggregatedTrade,
+    competitionNov2021HighestPercentage,
+    competitionNov2021LowestPercentage,
   })
 
   const walletLink = initWalletLink({
@@ -170,23 +175,21 @@ export default ({ baseRoute = '' }: Website) => component((
                 routeChange: linkClickTether()
               })
             ),
-            // router.match(competitionRoute)(
-            //   $Competition({
-            //     claimMap,
-            //     parentRoute: rootRoute,
-            //     parentStore: rootStore,
-            //     openAggregatedTrades: map((x: IPagableResponse<IAggregatedOpenPositionSummary>) => ({ ...x, page: x.page.map(fromJson.toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
-            //     requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
-            //       page: data.page.map(fromJson.accountSummaryJson),
-            //       offset: data.offset,
-            //       pageSize: data.pageSize
-            //     }), clientApi.requestLeaderboardTopList),
-            //   })({
-            //     requestLeaderboardTopList: requestLeaderboardTopListTether(),
-            //     requestOpenAggregatedTrades: requestOpenAggregatedTradesTether(),
-            //     routeChange: linkClickTether()
-            //   })
-            // ),
+            router.match(competitionRoute)(
+              $Competition({
+                claimMap,
+                parentRoute: rootRoute,
+                parentStore: rootStore,
+                competitionNov2021HighestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
+                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
+                competitionNov2021LowestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
+                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
+              })({
+                competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(),
+                competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(),
+                routeChange: linkClickTether()
+              })
+            ),
             router.contains(accountRoute)(
               $Account({
                 claimMap,
@@ -223,6 +226,5 @@ export default ({ baseRoute = '' }: Website) => component((
     ])
   ]
 })
-
 
 
