@@ -3,7 +3,7 @@ import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
-import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource } from "./types"
+import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource, IPositionClose, IPositionLiquidated } from "./types"
 import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
 
 
@@ -70,11 +70,19 @@ export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { s
 
 export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll): IPositionDelta {
   const settlement = trade.settledPosition
-  const isLiquidated = 'markPrice' in settlement
-  const delta = isLiquidated ? -settlement.collateral : trade.settledPosition.realisedPnl
+  const isLiq = isLiquidated(settlement)
+
+  if (isLiq) {
+    const { size, collateral } = settlement
+    const averagePrice = settlement.markPrice
+
+    return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
+  }
 
 
-  const collateral = isLiquidated ? settlement.collateral : trade.updateList[trade.updateList.length - 1].collateral
+  const delta = trade.settledPosition.realisedPnl
+  const collateral = trade.updateList[trade.updateList.length - 1].collateral
+
 
   return {
     delta,
@@ -87,9 +95,12 @@ export function isTradeSettled(trade: IAggregatedTradeAll): trade is IAggregated
   return 'settledPosition' in trade
 }
 
+export function isLiquidated(trade: IPositionClose | IPositionLiquidated): trade is IPositionLiquidated  {
+  return 'markPrice' in trade
+}
+
 
 export function getLiquidationPriceFromDelta(collateral: bigint, size: bigint, averagePrice: bigint, isLong: boolean) {
-
   const liquidationAmount = size * BASIS_POINTS_DIVISOR / MAX_LEVERAGE
 
   const liquidationDelta = collateral - liquidationAmount
@@ -129,14 +140,14 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
 }
 
 export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(trade: T): IAggregatedPositionSettledSummary<T> {
-  const isLiquidated = 'markPrice' in trade.settledPosition
+  const isLiq = isLiquidated(trade.settledPosition)
   const parsedAgg = toAggregatedOpenTradeSummary<T>(trade)
 
-  const pnl = isLiquidated ? -BigInt(trade.settledPosition.collateral) : BigInt(trade.settledPosition.realisedPnl)
+  const pnl = isLiq ? -BigInt(trade.settledPosition.collateral) : BigInt(trade.settledPosition.realisedPnl)
   
   const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
     ...parsedAgg, pnl,
-    fee: isLiquidated ? 0n : parsedAgg.fee,
+    fee: isLiq ? 0n : parsedAgg.fee,
     realisedPnl: pnl - parsedAgg.fee,
     settledTimestamp: trade.indexedAt,
   }
@@ -161,9 +172,19 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
       return seed + pos.pnl
     }, 0n)
 
+    const delta = tradeSummaries.reduce((seed, pos) => {
+
+      const { delta, deltaPercentage } = calculateSettledPositionDelta(pos.trade)
+
+      seed.delta += delta
+      seed.deltaPercentage += deltaPercentage
+
+      return seed
+    }, <IPositionDelta>{ delta: 0n, deltaPercentage: 0n })
+
 
     const summary: IAggregatedAccountSummary = {
-      account, fee, profitablePositionsCount,
+      account, fee, profitablePositionsCount, delta,
       settledPositionCount: allSettled.length,
       leverage: tradeSummaries.reduce((seed, pos) => seed + pos.leverage, 0) / tradeSummaries.length,
       claim: null,

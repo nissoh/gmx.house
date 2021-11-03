@@ -6,7 +6,7 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, TradeType } from 'gambit-middleware'
+import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, isLiquidated, TradeType } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
@@ -87,7 +87,7 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
       
 
       $row(style({ marginBottom: '16px', placeContent: 'center' }))(
-        $text('+$100 Trades of Nov 3-16'),
+        $text('+$100 Trades settled during Nov 3-16'),
       ),
 
 
@@ -161,7 +161,7 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
                   $body: map((pos) => {
                     const settlement = pos.trade.settledPosition
-                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+                    const type = isLiquidated(settlement) ? TradeType.LIQUIDATED : TradeType.CLOSED
 
                     return $Link({
                       anchorOp: style({ position: 'relative' }),
@@ -249,7 +249,7 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
                   $body: map((pos) => {
                     const settlement = pos.trade.settledPosition
-                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+                    const type = isLiquidated(settlement) ? TradeType.LIQUIDATED : TradeType.CLOSED
 
                     return $Link({
                       anchorOp: style({ position: 'relative' }),

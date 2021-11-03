@@ -53,7 +53,7 @@ export function $CompeititonInfo(title:string, parentRoute: Route, routeChangeTe
       $text(style({}))(`Starting in ${new Date(competitionStartDate).toLocaleString()}... `),
       $competitionTimer
     ),
-    [CompetitionDisplay.COMPETITION_DETAILS]: $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+    [CompetitionDisplay.COMPETITION_DETAILS]: $column(layoutSheet.spacing, style({ alignItems: 'center' }))(
       $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
         $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
         $AnchorLink({
@@ -82,9 +82,9 @@ export function $CompeititonInfo(title:string, parentRoute: Route, routeChangeTe
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
     $text(style({ fontSize: '.85em' }))(title),
     $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-      $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
+      $text(style({ fontSize: '3.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
       $text(style({}))('vs.'),
-      $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN')
+      $text(style({ fontSize: '3.5em', fontWeight: 'bold', color: pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN')
     ),
     $details
   )

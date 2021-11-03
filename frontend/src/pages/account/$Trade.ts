@@ -5,7 +5,7 @@ import { $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, isTradeSettled, TradeType } from "gambit-middleware"
 import * as wallet from "wallet-link"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"
@@ -70,7 +70,7 @@ export const $Trade = (config: ITrade) => component((
             }
 
             const trade = summary.trade
-            const isSettled = 'settledPosition' in trade
+            const isSettled = isTradeSettled(trade)
 
             const txHash = (isSettled ? summary.trade.id : summary.trade.initialPosition.id).split('-')[1]
             
@@ -121,7 +121,7 @@ export const $Trade = (config: ITrade) => component((
             }
 
             const trade = summary.trade
-            const isSettled = 'settledPosition' in trade
+            const isSettled = isTradeSettled(trade)
             const maybeSettled = isSettled ? [trade.settledPosition] : []
 
             return $column(layoutSheet.spacingBig, style({ padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(

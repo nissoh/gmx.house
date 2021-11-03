@@ -198,6 +198,7 @@ export interface IAggregatedAccountSummary extends IAggregatedSettledTradeSummar
   profitablePositionsCount: number
   claim: IClaim | null,
   collateral: bigint
+  delta: IPositionDelta
 }
 
 export interface IChainlinkPrice {

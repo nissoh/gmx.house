@@ -41,10 +41,6 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
     console.log(settledList.length)
 
     const formattedList = toAggregatedAccountSummary(settledList)
-      .map(summary => {
-        const newLocal = summary.pnl * BASIS_POINTS_DIVISOR / summary.collateral
-        return { ...summary, delta: summary.pnl - summary.fee, deltaPercentage: newLocal }
-      })
     
     const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 
@@ -53,6 +49,9 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
  
   return { query, queryParams }
 })
+
+const bigNumberForPriority = 1000000n
+
     
 export const competitionNov2021HighestCumulative = O(
   fetchCompeitionResults,
@@ -61,8 +60,8 @@ export const competitionNov2021HighestCumulative = O(
     const claimPriority = query.then(res => 
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage + parseFixed(100000000) : a.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage + parseFixed(100000000) : b.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
+        const bN = res.claimMap.get(b.account) ? bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
 
         return Number(bN) - Number(aN)
       })
@@ -81,8 +80,8 @@ export const competitionNov2021LowestCumulative = O(
     const claimPriority = query.then(res =>
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage : a.deltaPercentage + parseFixed(100000000)
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage : b.deltaPercentage + parseFixed(100000000)
+        const aN = res.claimMap.get(a.account) ? bigNumberForPriority - a.delta.deltaPercentage : a.delta.deltaPercentage
+        const bN = res.claimMap.get(b.account) ? bigNumberForPriority - b.delta.deltaPercentage : b.delta.deltaPercentage
 
 
         return Number(aN) - Number(bN)

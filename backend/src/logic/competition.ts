@@ -49,6 +49,9 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
   return { query, queryParams }
 })
     
+
+const bigNumberForPriority = 1000000n
+
 export const competitionNov2021HighestPercentage = O(
   fetchCompeitionResults,
   map(async ({ query, queryParams }) => {
@@ -56,8 +59,8 @@ export const competitionNov2021HighestPercentage = O(
     const claimPriority = query.then(res => 
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage + 100000n : a.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage + 100000n : b.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? bigNumberForPriority + a.deltaPercentage : a.deltaPercentage
+        const bN = res.claimMap.get(b.account) ? bigNumberForPriority + b.deltaPercentage : b.deltaPercentage
 
         return Number(bN) - Number(aN)
       })
@@ -76,8 +79,8 @@ export const competitionNov2021LowestPercentage = O(
     const claimPriority = query.then(res =>
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage : a.deltaPercentage + 100000n
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage : b.deltaPercentage + 100000n
+        const aN = res.claimMap.get(a.account) ? bigNumberForPriority - a.deltaPercentage : a.deltaPercentage
+        const bN = res.claimMap.get(b.account) ? bigNumberForPriority - b.deltaPercentage : b.deltaPercentage
 
         return Number(aN) - Number(bN)
       })

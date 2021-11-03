@@ -1,6 +1,6 @@
 import { O } from "@aelea/core"
 import { IAggregatedTradeAll } from "."
-import { toAggregatedOpenTradeSummary, toAggregatedTradeSettledSummary } from "./gambit"
+import { isLiquidated, toAggregatedOpenTradeSummary, toAggregatedTradeSettledSummary } from "./gambit"
 import {
   IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed,
   IAggregatedTradeLiquidated, IAggregatedTradeOpen, IAggregatedTradeSettledAll, IAggregatedTradeSettledListMap,
@@ -133,20 +133,20 @@ function toAggregatedPositionSettledSummary<T extends IAggregatedPositionSettled
   const settledPosition = jsonTrade.settledPosition
 
   // @ts-ignore
-  const trade =  'markPrice' in settledPosition ? toAggregatedTradeLiquidatedJson(json.trade) : toAggregatedTradeClosedJson(json.trade)
+  const trade =  isLiquidated(settledPosition) ? toAggregatedTradeLiquidatedJson(json.trade) : toAggregatedTradeClosedJson(json.trade)
 
   return { ...toAggregatedTradeSummary(json), trade, averagePrice, pnl, realisedPnl  }
 }
 
 function toAggregatedSettledTrade<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(json: T): T {
   // @ts-ignore
-  return 'markPrice' in json.settledPosition ? toAggregatedTradeLiquidatedJson(json) : toAggregatedTradeClosedJson(json)
+  return isLiquidated(json.settledPosition) ? toAggregatedTradeLiquidatedJson(json) : toAggregatedTradeClosedJson(json)
 }
 
 function toAggregatedTradeAllSummary<T extends IAggregatedTradeAll>(json: T): IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary {
   // @ts-ignore
   if (json.settledPosition) {  // @ts-ignore
-    if ('markPrice' in json.settledPosition) {
+    if (isLiquidated(json.settledPosition)) {
       // @ts-ignore
       return toAggregatedTradeSettledSummary(toAggregatedTradeLiquidatedJson(json))
     } else {

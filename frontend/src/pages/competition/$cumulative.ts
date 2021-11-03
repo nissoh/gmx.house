@@ -81,7 +81,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
       $CompeititonInfo('Highest or Lowest Cumulative Percentage PnL', config.parentRoute, routeChangeTether),
 
       $row(style({ marginBottom: '16px', placeContent: 'center' }))(
-        $text('+$1000 Trades of Nov 3-16'),
+        $text('+$1000 trades aggregated per account during Nov 3-16'),
       ),
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(

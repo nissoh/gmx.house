@@ -7,7 +7,7 @@ import { Stream } from "@most/types"
 import {
   calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
   getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
-  IChainlinkPrice, IClaim, IPositionDelta, isTradeSettled, parseFixed, readableNumber,
+  IChainlinkPrice, IClaim, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
   unixTimeTzOffset
 } from "gambit-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
@@ -187,7 +187,7 @@ export const $TradeCardPreview = ({
 
     if (isSettled) {
       const settledPos = trade.settledPosition
-      return isSettled ? 'markPrice' in settledPos ? 'LIQUIDATED' : 'CLOSED' : ''
+      return isSettled ? isLiquidated(settledPos) ? 'LIQUIDATED' : 'CLOSED' : ''
     }
     
     return 'OPEN'

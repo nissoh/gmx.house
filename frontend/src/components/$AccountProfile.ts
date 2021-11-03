@@ -46,7 +46,7 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
 
     if (isTwitter) {
       return $photoContainer(
-        style({ width: size, height: size }),
+        style({ width: size, height: size, minWidth: size }),
         attr({ src: `https://unavatar.vercel.app/twitter/${claim.name}` })
       )()
     } else {
@@ -276,7 +276,9 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
 
                     // https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc
                     $text(style({ color: pallete.foreground }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
-                    $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))($text('Guide on setting ens profile avatar')),
+                    $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))(
+                      $text('Guide on setting ENS profile avatar')
+                    ),
                     // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
                     $row(style({ justifyContent: 'center' }))(
                       $ButtonPrimary({

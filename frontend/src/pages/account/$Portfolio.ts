@@ -6,7 +6,7 @@ import { pallete } from "@aelea/ui-components-theme"
 import { at, constant, empty, filter, fromPromise, map, mergeArray, multicast, now, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "gambit-middleware"
+import { AccountHistoricalDataApi, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { IWalletLink } from "wallet-link"
 import { fetchHistoricKline } from "../../binance-api"
@@ -403,7 +403,7 @@ export const $Portfolio = (config: IAccount) => component((
 
                   $body: map((pos: IAggregatedPositionSettledSummary) => {
                     const settlement = pos.trade.settledPosition
-                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+                    const type = isLiquidated(settlement) ? TradeType.LIQUIDATED : TradeType.CLOSED
 
                     return $Link({
                       anchorOp: style({ position: 'relative' }),
@@ -489,7 +489,7 @@ export const $Portfolio = (config: IAccount) => component((
                       }
                     })
                   const closePosMarkers = closedTradeList
-                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !('markPrice' in pos.settledPosition))
+                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !(isLiquidated(pos.settledPosition)))
                     .map((pos): SeriesMarker<Time> => {
 
                       return {
@@ -501,7 +501,7 @@ export const $Portfolio = (config: IAccount) => component((
                       }
                     })
                   const liquidatedPosMarkers = liquidatedTradeList
-                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && 'markPrice' in pos.settledPosition)
+                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && isLiquidated(pos.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pallete.negative,
