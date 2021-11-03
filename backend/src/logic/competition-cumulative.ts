@@ -9,7 +9,7 @@ import { Claim } from "./dto"
 
 const leaderboardCacheMap = cacheMap({})
 
-const from = Math.floor(Date.UTC(2021, 10, 1, 13, 0, 0) / 1000)
+const from = Math.floor(Date.UTC(2021, 10, 3, 13, 0, 0) / 1000)
 const to = Math.floor(Date.UTC(2021, 10, 16, 13, 0, 0) / 1000)
 
 const fetchCompeitionResults = map((queryParams: IPageable) => {
@@ -28,15 +28,18 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
   const query = leaderboardCacheMap('HIGH', intervalInMsMap.MIN5, async () => {
     const list = await fethPage(0)
     const claimList = await EM.find(Claim, {})
-    const minWithThreshold = parseFixed(50, 30)
+    const minWithThreshold = parseFixed(950, 30)
+
     
     const settledList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
-      .map(fromJson.toAggregatedSettledTrade)
-      // .filter(trade =>
-      //   BigInt(trade.settledPosition.collateral) >= minWithThreshold
-      // )
+      .map(fromJson.toAggregatedTradeSettledSummary)
+      .filter(trade =>
+        BigInt(trade.collateral) >= minWithThreshold
+      ).map(s => s.trade)
+
     
-    
+    console.log(settledList.length)
+
     const formattedList = toAggregatedAccountSummary(settledList)
       .map(summary => {
         const newLocal = summary.pnl * BASIS_POINTS_DIVISOR / summary.collateral
@@ -80,6 +83,7 @@ export const competitionNov2021LowestCumulative = O(
 
         const aN = res.claimMap.get(a.account) ? a.deltaPercentage : a.deltaPercentage + parseFixed(100000000)
         const bN = res.claimMap.get(b.account) ? b.deltaPercentage : b.deltaPercentage + parseFixed(100000000)
+
 
         return Number(aN) - Number(bN)
       })
