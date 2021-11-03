@@ -1,5 +1,5 @@
 import { Behavior, combineArray, combineObject, O, replayLatest } from '@aelea/core'
-import { $node, $text, component, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
+import { $node, $text, attr, component, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
@@ -144,21 +144,26 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       $text(style({}))(`Starting in ${new Date(competitionStartDate).toLocaleString()}... `),
       $competitionTimer
     ),
-    [CompetitionDisplay.COMPETITION_DETAILS]: $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
-      $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
-      $AnchorLink({
-        anchorOp: style({ position: 'relative' }),
-        $content: $text('Top Singles'),
-        url: `/p/redvsgreen-nov2021-single-1`,
-        route: config.parentRoute.create({ fragment: '2121212' })
-      })({ click: routeChangeTether() }),
-      $row(style({ color: pallete.foreground }))($text('|')),
-      $AnchorLink({
-        anchorOp: style({ position: 'relative' }),
-        $content: $text('Top Cumulative'),
-        url: `/p/redvsgreen-nov2021-cumulative-1`,
-        route: config.parentRoute.create({ fragment: '2121212' })
-      })({ click: routeChangeTether() }),
+    [CompetitionDisplay.COMPETITION_DETAILS]: $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+      $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
+        $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
+        $AnchorLink({
+          anchorOp: style({ position: 'relative' }),
+          $content: $text('Top Singles'),
+          url: `/p/redvsgreen-nov2021-single-1`,
+          route: config.parentRoute.create({ fragment: '2121212' })
+        })({ click: routeChangeTether() }),
+        $row(style({ color: pallete.foreground }))($text('|')),
+        $AnchorLink({
+          anchorOp: style({ position: 'relative' }),
+          $content: $text('Top Cumulative'),
+          url: `/p/redvsgreen-nov2021-cumulative-1`,
+          route: config.parentRoute.create({ fragment: '2121212' })
+        })({ click: routeChangeTether() }),
+      ),
+      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/gmx-trading-competition-win-250-000-usd-in-prizes-1346504b96f6' }))(
+        $text('medium.com - GMX Trading Competition — Win $250,000 USD in Prizes')
+      ),
     ),
     [CompetitionDisplay.COMPETITION_RESULTS]: $text('RESULTS'),
   }
