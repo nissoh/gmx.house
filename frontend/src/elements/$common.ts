@@ -57,7 +57,7 @@ export const $tokenLabelFromSummary = (trade: IAggregatedTradeOpen, $label?: $No
   const $iconG = $tokenIconMap[indextoken]
   const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, indextoken)
 
-  return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center' }))(
+  return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center', }))(
     $icon({ $content: $iconG, width: '34px', viewBox: '0 0 32 32' }),
     $column(layoutSheet.flex)(
       $text(style({ fontWeight: 'bold' }))(token.symbol),

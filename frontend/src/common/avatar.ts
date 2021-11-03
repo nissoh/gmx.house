@@ -19,6 +19,6 @@ export function $jazzicon(address: string, size = '24px') {
       el.style.borderRadius = '50%'
     }
     return node
-  }), style({ width: size, height: size, display: 'flex', position: 'relative' }))()
+  }), style({ width: size, minWidth: size, height: size, display: 'flex', position: 'relative' }))()
 }
 

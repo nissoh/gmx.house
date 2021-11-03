@@ -1,10 +1,10 @@
-import { Behavior, combineArray, O } from '@aelea/core'
-import { $element, $node, $text, attr, component, style } from "@aelea/dom"
+import { Behavior, combineArray, O, Op } from '@aelea/core'
+import { $element, $node, $text, attr, component, INode, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { map, switchLatest } from '@most/core'
+import { empty, map, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
 import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, readableNumber, TradeType } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
@@ -41,7 +41,19 @@ export const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
   )
 }
 
+const $nftPrice = (rank: number, imgOp: Op<INode, INode>) => {
+  const block = style({ width: '34px', height: '34px' })
+  const $img = $element('img')(block)
 
+  if (rank > 1) {
+    return $row(style({ position: 'relative' }))(
+      $text(style({ width: '34px', textAlign: 'center', lineHeight: '34px', color: pallete.foreground, fontWeight: 'bold' }), block)('?'),
+      $img(style({ opacity: '.15', position: 'absolute', offset: '0' }), imgOp)()
+    )
+  }
+  
+  return $img(imgOp)()
+}
 
 export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPercentage<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
@@ -68,9 +80,9 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
       $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
         $text(style({ fontSize: '.85em' }))('Highest Percentage PnL for a single trade'),
         $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('%HIGH'),
+          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
           $text(style({}))('vs.'),
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('%LOW'),
+          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
         ),
         
         $text(style({ fontSize: '.85em' }))('+$100 Trades of Nov 2-16'),
@@ -98,7 +110,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
               columns: [
                 {
                   $head: $text('Rank'),
-                  columnOp: style({ alignItems: 'center', placeContent: 'center' }),
+                  columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
                     const rank = pos.index + 1
 
@@ -109,7 +121,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                             $text(style({ fontSize: '1em', color: pallete.foreground }))(`#`),
                             $text(style({ fontSize: '1.5em', lineHeight: 1 }))(`${rank}`),
                           ),
-                          $element('img')(attr({ src: '/assets/blueberriesNFT/high.jpg' }), style({ width: '34px', height: '34px' }))(),
+                          rank < 6 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/high.jpg' })): empty(),
                         ),
                         // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
                         //   `$${readableNumber(getPrizePoolByRank(rank))}`
@@ -145,7 +157,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                   )
                 },
                 {
-                  $head: $text('PnL $'),
+                  $head: $text('Profit-%'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos) => {
                     return $settledPercentage(pos)
@@ -174,7 +186,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
               columns: [
                 {
                   $head: $text('Rank'),
-                  columnOp: style({ alignItems: 'center', placeContent: 'center' }),
+                  columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
                     const rank = pos.index + 1
 
@@ -185,7 +197,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                             $text(style({ fontSize: '1em', color: pallete.foreground }))(`#`),
                             $text(style({ fontSize: '1.5em', lineHeight: 1 }))(`${rank}`),
                           ),
-                          $element('img')(attr({ src: '/assets/blueberriesNFT/low.jpg' }), style({ width: '34px', height: '34px' }))(),
+                          rank < 6 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/low.jpg' })): empty(),
                         ),
                         // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
                         //   `$${readableNumber(getPrizePoolByRank(rank))}`
@@ -221,7 +233,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                   )
                 },
                 {
-                  $head: $text('PnL $'),
+                  $head: $text('Profit-%'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos) => {
                     return $settledPercentage(pos)

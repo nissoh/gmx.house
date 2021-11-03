@@ -364,7 +364,7 @@ export const $Portfolio = (config: IAccount) => component((
               })
             
 
-              return $row(
+              return $row(style({ maxWidth: '412px' }))(
                 ...$tokenChooser
               )
             }, accountHistoryPnL, selectedToken)
