@@ -3,7 +3,7 @@ import { awaitPromises, map } from "@most/core"
 import { IAggregatedTradeSettledListMap, fromJson, pagingQuery, intervalInMsMap, IPageable, calculateSettledPositionDelta, groupByMap, parseFixed } from "gambit-middleware"
 import { cacheMap } from "../utils"
 import { vaultClient } from "./api"
-import { aggregatedSettledTradesMapQuery } from "./queries"
+import { aggregatedSettledTradesMapQuery2 } from "./queries"
 import { EM } from '../server'
 import { Claim } from "./dto"
 
@@ -14,7 +14,7 @@ const to = Math.floor(Date.UTC(2021, 10, 16, 13, 0, 0) / 1000)
 
 const fetchCompeitionResults = map((queryParams: IPageable) => {
   const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
-    const list = await vaultClient(aggregatedSettledTradesMapQuery, { from, to, pageSize: 1000, offset })
+    const list = await vaultClient(aggregatedSettledTradesMapQuery2, { from, to, pageSize: 1000, offset })
 
     if (list.aggregatedTradeCloseds.length === 1000) {
       const newPage = await fethPage(offset + 1000)

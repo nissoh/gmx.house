@@ -190,6 +190,18 @@ query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
   }
 }
 `
+export const aggregatedSettledTradesMapQuery2: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
+${schemaFragments}
+
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
+  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {initialPositionBlockTimestamp_gt: $from, indexedAt_lt: $to}) {
+      ...aggregatedTradeClosedFields
+  }
+  aggregatedTradeLiquidateds(first: 1000, where: {initialPositionBlockTimestamp_gt: $from, indexedAt_lt: $to}) {
+    ...aggregatedTradeLiquidatedFields
+  }
+}
+`
 
 export const openAggregateLiquidatedTradeQuery: TypedDocumentNode<{aggregatedTradeLiquidated: IAggregatedTradeLiquidated}, IIdentifiableEntity> = gql`
 ${schemaFragments}
