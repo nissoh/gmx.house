@@ -147,14 +147,17 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                 {
                   $head: $text('Entry'),
                   columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                  $body: map((pos) =>
-                    $Link({
+                  $body: map((pos) => {
+                    const settlement = pos.trade.settledPosition
+                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+
+                    return $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
+                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({ click: routeChangeTether() })
-                  )
+                  })
                 },
                 {
                   $head: $text('Profit-%'),
@@ -197,7 +200,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                             $text(style({ fontSize: '1em', color: pallete.foreground }))(`#`),
                             $text(style({ fontSize: '1.5em', lineHeight: 1 }))(`${rank}`),
                           ),
-                          rank < 6 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/low.jpg' })): empty(),
+                          rank < 2 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/low.jpg' })): empty(),
                         ),
                         // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
                         //   `$${readableNumber(getPrizePoolByRank(rank))}`
@@ -223,14 +226,17 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                 {
                   $head: $text('Entry'),
                   columnOp: O(style({ maxWidth: '58px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                  $body: map((pos) =>
-                    $Link({
+                  $body: map((pos) => {
+                    const settlement = pos.trade.settledPosition
+                    const type = 'markPrice' in settlement ? TradeType.LIQUIDATED : TradeType.CLOSED
+
+                    return $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
+                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({ click: routeChangeTether() })
-                  )
+                  })
                 },
                 {
                   $head: $text('Profit-%'),
