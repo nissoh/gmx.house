@@ -80,8 +80,8 @@ export const competitionNov2021LowestCumulative = O(
     const claimPriority = query.then(res =>
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? bigNumberForPriority - a.delta.deltaPercentage : a.delta.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? bigNumberForPriority - b.delta.deltaPercentage : b.delta.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? -bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
+        const bN = res.claimMap.get(b.account) ? -bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
 
 
         return Number(aN) - Number(bN)
