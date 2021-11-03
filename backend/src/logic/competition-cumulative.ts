@@ -28,7 +28,7 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
   const query = leaderboardCacheMap('HIGH', intervalInMsMap.MIN5, async () => {
     const list = await fethPage(0)
     const claimList = await EM.find(Claim, {})
-    const hunderedBucks = parseFixed(100, 30)
+    const hunderedBucks = parseFixed(950, 30)
     
     const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
       .map(fromJson.toAggregatedTradeSettledSummary)
