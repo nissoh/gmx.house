@@ -70,8 +70,8 @@ export default ({ baseRoute = '' }: Website) => component((
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
-  const competitionTopSingleRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single', title: 'Red vs. Green November competition' })
-  const competitionTopCumulativeRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-cumulative', title: 'Red vs. Green November competition' })
+  const competitionTopSingleRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single-1', title: 'Red vs. Green November competition' })
+  const competitionTopCumulativeRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-1', title: 'Red vs. Green November competition' })
 
   const cardRoute = rootRoute
     .create({ fragment: 'card' })

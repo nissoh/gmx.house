@@ -110,7 +110,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   // Set the date we're counting down to
-  const competitionStartDate = Date.UTC(2021, 10, 3, 13, 0, 0)
+  const competitionStartDate = Date.UTC(2021, 10, 2, 13, 0, 0)
   const competitionEndDate = Date.UTC(2021, 10, 30, 13, 0, 0)
 
   const secondsCountdown = map(Date.now, periodic(1000))
@@ -149,14 +149,14 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       $AnchorLink({
         anchorOp: style({ position: 'relative' }),
         $content: $text('Top Singles'),
-        url: `/p/redvsgreen-nov2021-single`,
+        url: `/p/redvsgreen-nov2021-single-1`,
         route: config.parentRoute.create({ fragment: '2121212' })
       })({ click: routeChangeTether() }),
       $row(style({ color: pallete.foreground }))($text('|')),
       $AnchorLink({
         anchorOp: style({ position: 'relative' }),
         $content: $text('Top Cumulative'),
-        url: `/p/redvsgreen-nov2021-cumulative`,
+        url: `/p/redvsgreen-nov2021-cumulative-1`,
         route: config.parentRoute.create({ fragment: '2121212' })
       })({ click: routeChangeTether() }),
     ),
