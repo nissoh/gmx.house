@@ -1,10 +1,10 @@
 import { Behavior, combineArray, O, Op } from '@aelea/core'
-import { $element, $node, $text, attr, component, INode, style } from "@aelea/dom"
+import { $element, $node, $text, attr, attrBehavior, component, INode, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { empty, map, switchLatest } from '@most/core'
+import { constant, empty, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
 import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, readableNumber, TradeType } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
@@ -42,18 +42,22 @@ export const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
 }
 
 const $nftPrice = (rank: number, imgOp: Op<INode, INode>) => {
-  const block = style({ width: '34px', height: '34px' })
+  const size = '54px'
+  const block = style({ width: size, height: size, position: 'absolute', offset: 0 })
   const $img = $element('img')(block)
-
-  if (rank > 1) {
-    return $row(style({ position: 'relative' }))(
-      $text(style({ width: '34px', textAlign: 'center', lineHeight: '34px', color: pallete.foreground, fontWeight: 'bold' }), block)('?'),
-      $img(style({ opacity: '.15', position: 'absolute', offset: '0' }), imgOp)()
-    )
-  }
   
-  return $img(imgOp)()
+  return $row(style({ position: 'relative', width: size }))(
+    $img(imgOp)(),
+    $row(style({ alignItems: 'baseline', width: size, zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+      $text(style({ fontSize: '1em', textShadow: `rgb(0 0 0 / 61%) 1px 1px 0px` }))(`#`),
+      $text(style({ fontSize: '1.5em', lineHeight: size, textShadow: `rgb(0 0 0 / 61%) 1px 1px 0px` }))(`${rank}`),
+    )
+  )
 }
+
+const counter = scan((seed, n: number) => seed + n, 0, constant(1, periodic(2000)))
+
+const blueberriesPreviewList = ['/assets/blueberriesNFT/Green.png', '/assets/blueberriesNFT/Orange.png', '/assets/blueberriesNFT/Purple.png', '/assets/blueberriesNFT/Yellow.png']
 
 export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPercentage<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
@@ -114,15 +118,24 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                   $body: map((pos) => {
                     const rank = pos.index + 1
 
+                    let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                      $text(style({ fontSize: '1em' }))(`#`),
+                      $text(style({ fontSize: '1.5em' }))(`${rank}`),
+                    )
+
+                    if (rank < 6) {
+                      $nftPLaceholder = rank > 1
+                        ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                        : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Winner.png' })) 
+                    }
+
                     if (rank < 21) {
+
                       return $column(layoutSheet.spacingSmall)(
                         $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                          $row(style({ alignItems: 'baseline' }))(
-                            $text(style({ fontSize: '1em', color: pallete.foreground }))(`#`),
-                            $text(style({ fontSize: '1.5em', lineHeight: 1 }))(`${rank}`),
-                          ),
-                          rank < 6 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/high.jpg' })): empty(),
+                          $nftPLaceholder
                         ),
+                        
                         // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
                         //   `$${readableNumber(getPrizePoolByRank(rank))}`
                         // )
@@ -193,15 +206,24 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                   $body: map((pos) => {
                     const rank = pos.index + 1
 
+                    let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                      $text(style({ fontSize: '1em' }))(`#`),
+                      $text(style({ fontSize: '1.5em' }))(`${rank}`),
+                    )
+
+                    if (rank < 6) {
+                      $nftPLaceholder = rank > 1
+                        ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                        : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Looser.png' })) 
+                    }
+
                     if (rank < 21) {
+
                       return $column(layoutSheet.spacingSmall)(
                         $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                          $row(style({ alignItems: 'baseline' }))(
-                            $text(style({ fontSize: '1em', color: pallete.foreground }))(`#`),
-                            $text(style({ fontSize: '1.5em', lineHeight: 1 }))(`${rank}`),
-                          ),
-                          rank < 2 ? $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/low.jpg' })): empty(),
+                          $nftPLaceholder
                         ),
+                        
                         // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
                         //   `$${readableNumber(getPrizePoolByRank(rank))}`
                         // )
