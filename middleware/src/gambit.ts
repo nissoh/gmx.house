@@ -144,9 +144,10 @@ export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed
   const parsedAgg = toAggregatedOpenTradeSummary<T>(trade)
 
   const pnl = isLiq ? -BigInt(trade.settledPosition.collateral) : BigInt(trade.settledPosition.realisedPnl)
-  
+  const delta = calculateSettledPositionDelta(trade)
+
   const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
-    ...parsedAgg, pnl,
+    ...parsedAgg, pnl, delta,
     fee: isLiq ? 0n : parsedAgg.fee,
     realisedPnl: pnl - parsedAgg.fee,
     settledTimestamp: trade.indexedAt,
@@ -173,11 +174,8 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
     }, 0n)
 
     const delta = tradeSummaries.reduce((seed, pos) => {
-
-      const { delta, deltaPercentage } = calculateSettledPositionDelta(pos.trade)
-
-      seed.delta += delta
-      seed.deltaPercentage += deltaPercentage
+      seed.delta += pos.delta.delta
+      seed.deltaPercentage += pos.delta.deltaPercentage
 
       return seed
     }, <IPositionDelta>{ delta: 0n, deltaPercentage: 0n })

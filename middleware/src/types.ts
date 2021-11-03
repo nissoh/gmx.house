@@ -189,6 +189,8 @@ export interface IAggregatedOpenPositionSummary<A extends IAggregatedTradeOpen =
 
 export interface IAggregatedPositionSettledSummary<A extends IAggregatedTradeSettledAll = IAggregatedTradeSettledAll> extends IAggregatedOpenPositionSummary<A>, IAggregatedSettledTradeSummary {
   settledTimestamp: number
+
+  delta: IPositionDelta
 }
 
 

@@ -6,7 +6,7 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { BASIS_POINTS_DIVISOR, formatFixed, IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
+import { formatFixed, IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $CompeititonInfo } from './$rules'
@@ -26,14 +26,12 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> {
 
 
 const $settledPercentage = (pos: IAggregatedAccountSummary) => {
-  const delta = pos.pnl * BASIS_POINTS_DIVISOR / pos.collateral
-
-  const perc = formatFixed(delta, 2)
-  const isNeg = delta < 0n
+  const delta = formatFixed(pos.delta.deltaPercentage, 2)
+  const isNeg = delta< 0n
 
   return $row(
     $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-      `${isNeg ? '' : '+'}${perc}%`
+      `${isNeg ? '' : '+'}${delta}%`
     )
   )
 }

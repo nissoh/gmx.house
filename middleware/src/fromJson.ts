@@ -1,5 +1,5 @@
 import { O } from "@aelea/core"
-import { IAggregatedTradeAll } from "."
+import { IAggregatedTradeAll, IPositionDelta } from "."
 import { isLiquidated, toAggregatedOpenTradeSummary, toAggregatedTradeSettledSummary } from "./gambit"
 import {
   IAccountAggregationMap, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeClosed,
@@ -70,8 +70,12 @@ function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccount
   const fee = BigInt(json?.fee)
   const collateral = BigInt(json?.collateral)
   const size = BigInt(json?.size)
+  const delta: IPositionDelta = {
+    delta: BigInt(json.delta?.delta),
+    deltaPercentage: BigInt(json.delta?.deltaPercentage)
+  }
 
-  return { ...json, collateral, pnl, fee, size, }
+  return { ...json, collateral, pnl, fee, size, delta }
 }
 
 
