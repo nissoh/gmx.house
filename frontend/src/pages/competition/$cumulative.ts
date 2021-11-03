@@ -6,10 +6,10 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
+import { BASIS_POINTS_DIVISOR, formatFixed, IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
-import { $ProfitLossText } from "../common"
+import { $CompeititonInfo } from './$rules'
 
 
 
@@ -18,18 +18,18 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> {
   provider?: Stream<T>
   claimMap: Stream<Map<string, IClaim>>
 
-  competitionNov2021HighestCumulative: Stream<IPagableResponse<IAggregatedPositionSettledSummary>>
-  competitionNov2021LowestCumulative: Stream<IPagableResponse<IAggregatedPositionSettledSummary>>
+  competitionNov2021HighestCumulative: Stream<IPagableResponse<IAggregatedAccountSummary>>
+  competitionNov2021LowestCumulative: Stream<IPagableResponse<IAggregatedAccountSummary>>
 
   parentStore: <T, TK extends string = string>(key: TK, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
 
-export const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
-  const delta = calculateSettledPositionDelta(pos.trade)
+const $settledPercentage = (pos: IAggregatedAccountSummary) => {
+  const delta = pos.pnl * BASIS_POINTS_DIVISOR / pos.collateral
 
-  const perc = formatFixed(delta.deltaPercentage, 2)
-  const isNeg = delta.deltaPercentage < 0n
+  const perc = formatFixed(delta, 2)
+  const isNeg = delta < 0n
 
   return $row(
     $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
@@ -77,25 +77,18 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
   return [
 
     $column(
-      
-      $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
-        $text(style({ fontSize: '.85em' }))('Highest or Lowest Cumulative Percentage PnL'),
-        $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
-          $text(style({}))('vs.'),
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
-        ),
-        
-        $text(style({ fontSize: '.85em' }))('+$1000 Trades of Nov 3-16'),
+
+      $CompeititonInfo('Highest or Lowest Cumulative Percentage PnL', config.parentRoute, routeChangeTether),
+
+      $row(style({ marginBottom: '16px', placeContent: 'center' }))(
+        $text('+$1000 Trades of Nov 3-16'),
       ),
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-
-
         
         $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
           $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-            $Table2<IAggregatedPositionSettledSummary & {claimMap: Map<string, IClaim>, index: number}>({
+            $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
               bodyContainerOp: layoutSheet.spacing,
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
@@ -144,6 +137,15 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   })
                 },
                 {
+                  $head: $text('Win/Loss'),
+                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  $body: map((pos: IAggregatedAccountSummary) => {
+                    return $row(
+                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                    )
+                  })
+                },
+                {
                   $head: $text('Account'),
                   columnOp: style({ minWidth: '120px', flex: 1.2 }),
                   $body: map(({ account }: IAggregatedTradeSummary) => {
@@ -159,9 +161,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   $head: $text('Profit-%'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos) => {
-                    return $row(
-                      $ProfitLossText(pos.pnl)
-                    )
+                    return $settledPercentage(pos)
                   })
                 }
               ],
@@ -170,7 +170,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
         ),
         $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
           $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 0% 100px, ${colorAlpha(pallete.negative, .1)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-            $Table2<IAggregatedPositionSettledSummary & {claimMap: Map<string, IClaim>, index: number}>({
+            $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
               bodyContainerOp: layoutSheet.spacing,
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
@@ -219,6 +219,15 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   })
                 },
                 {
+                  $head: $text('Win/Loss'),
+                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  $body: map((pos: IAggregatedAccountSummary) => {
+                    return $row(
+                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                    )
+                  })
+                },
+                {
                   $head: $text('Account'),
                   columnOp: style({ minWidth: '120px', flex: 1.2 }),
                   $body: map(({ account }: IAggregatedTradeSummary) => {
@@ -234,9 +243,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   $head: $text('Profit-%'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos) => {
-                    return $row(
-                      $ProfitLossText(pos.pnl - pos.fee)
-                    )
+                    return $settledPercentage(pos)
                   })
                 }
               ],

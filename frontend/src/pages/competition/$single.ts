@@ -11,6 +11,7 @@ import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
 import { $Entry } from "../common"
+import { $CompeititonInfo } from './$rules'
 
 
 
@@ -28,7 +29,7 @@ export interface ICompetitonTopPercentage<T extends BaseProvider> {
 }
 
 
-export const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
+const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
   const delta = calculateSettledPositionDelta(pos.trade)
 
   const perc = formatFixed(delta.deltaPercentage, 2)
@@ -81,16 +82,14 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
 
     $column(
       
-      $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
-        $text(style({ fontSize: '.85em' }))('Highest or Lowest Percentage PnL for a single trade'),
-        $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
-          $text(style({}))('vs.'),
-          $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
-        ),
-        
-        $text(style({ fontSize: '.85em' }))('+$100 Trades of Nov 3-16'),
+
+      $CompeititonInfo('Highest or Lowest Percentage PnL for a single trade', config.parentRoute, routeChangeTether),
+      
+
+      $row(style({ marginBottom: '16px', placeContent: 'center' }))(
+        $text('+$100 Trades of Nov 3-16'),
       ),
+
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
 

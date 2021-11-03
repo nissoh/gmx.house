@@ -201,10 +201,10 @@ export default ({ baseRoute = '' }: Website) => component((
                 claimMap,
                 parentRoute: rootRoute,
                 parentStore: rootStore,
-                competitionNov2021HighestCumulative: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021HighestCumulative),
-                competitionNov2021LowestCumulative: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021LowestCumulative),
+                competitionNov2021HighestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
+                  ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
+                competitionNov2021LowestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
+                  ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
               })({
                 competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(),
                 competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(),

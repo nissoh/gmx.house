@@ -76,8 +76,8 @@ export const competitionNov2021LowestPercentage = O(
     const claimPriority = query.then(res =>
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage + 100000n : a.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage + 100000n : b.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? a.deltaPercentage : a.deltaPercentage + 100000n
+        const bN = res.claimMap.get(b.account) ? b.deltaPercentage : b.deltaPercentage + 100000n
 
         return Number(aN) - Number(bN)
       })
