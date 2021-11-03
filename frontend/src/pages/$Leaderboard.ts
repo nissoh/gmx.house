@@ -110,7 +110,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   // Set the date we're counting down to
-  const competitionStartDate = Date.UTC(2021, 10, 2, 13, 0, 0)
+  const competitionStartDate = Date.UTC(2021, 10, 3, 13, 0, 0)
   const competitionEndDate = Date.UTC(2021, 10, 30, 13, 0, 0)
 
   const secondsCountdown = map(Date.now, periodic(1000))
@@ -141,7 +141,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const stateMap = {
     [CompetitionDisplay.CONUTER]: $row(layoutSheet.spacingSmall)(
-      $text(style({}))(`Starting in ${new Date(Date.UTC(2021, 10, 3, 13, 0, 0)).toLocaleString()}... `),
+      $text(style({}))(`Starting in ${new Date(competitionStartDate).toLocaleString()}... `),
       $competitionTimer
     ),
     [CompetitionDisplay.COMPETITION_DETAILS]: $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
