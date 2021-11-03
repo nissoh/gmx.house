@@ -23,7 +23,8 @@ import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
 import { $Leaderboard } from './$Leaderboard'
 import { $Account } from './account/$Account'
-import { $Competition } from "./competition/$competition"
+import { $CompetitionCumulative } from "./competition/$cumulative"
+import { $CompetitionSingle } from "./competition/$single"
 
 
 
@@ -48,6 +49,8 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
   [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
   [competitionNov2021HighestPercentage, competitionNov2021HighestPercentageTether]: Behavior<IPageable, IPageable>,
+  [competitionNov2021HighestCumulative, competitionNov2021HighestCumulativeTether]: Behavior<IPageable, IPageable>,
+  [competitionNov2021LowestCumulative, competitionNov2021LowestCumulativeTether]: Behavior<IPageable, IPageable>,
   [competitionNov2021LowestPercentage, competitionNov2021LowestPercentageTether]: Behavior<IPageable, IPageable>,
   [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
@@ -67,7 +70,8 @@ export default ({ baseRoute = '' }: Website) => component((
   const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
   const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
-  const competitionRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single', title: 'Red vs. Green November competition' })
+  const competitionTopSingleRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single', title: 'Red vs. Green November competition' })
+  const competitionTopCumulativeRoute = pagesRoute.create({ fragment: 'redvsgreen-nov2021-cumulative', title: 'Red vs. Green November competition' })
 
   const cardRoute = rootRoute
     .create({ fragment: 'card' })
@@ -92,6 +96,8 @@ export default ({ baseRoute = '' }: Website) => component((
     requestAggregatedTrade,
     competitionNov2021HighestPercentage,
     competitionNov2021LowestPercentage,
+    competitionNov2021HighestCumulative,
+    competitionNov2021LowestCumulative,
   })
 
   const walletLink = initWalletLink({
@@ -175,8 +181,8 @@ export default ({ baseRoute = '' }: Website) => component((
                 routeChange: linkClickTether()
               })
             ),
-            router.match(competitionRoute)(
-              $Competition({
+            router.match(competitionTopSingleRoute)(
+              $CompetitionSingle({
                 claimMap,
                 parentRoute: rootRoute,
                 parentStore: rootStore,
@@ -187,6 +193,21 @@ export default ({ baseRoute = '' }: Website) => component((
               })({
                 competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(),
                 competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(),
+                routeChange: linkClickTether()
+              })
+            ),
+            router.match(competitionTopCumulativeRoute)(
+              $CompetitionCumulative({
+                claimMap,
+                parentRoute: rootRoute,
+                parentStore: rootStore,
+                competitionNov2021HighestCumulative: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
+                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021HighestCumulative),
+                competitionNov2021LowestCumulative: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
+                  ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021LowestCumulative),
+              })({
+                competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(),
+                competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(),
                 routeChange: linkClickTether()
               })
             ),

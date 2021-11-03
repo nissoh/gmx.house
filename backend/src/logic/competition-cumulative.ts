@@ -49,15 +49,15 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
   return { query, queryParams }
 })
     
-export const competitionNov2021HighestPercentage = O(
+export const competitionNov2021HighestCumulative = O(
   fetchCompeitionResults,
   map(async ({ query, queryParams }) => {
 
     const claimPriority = query.then(res => 
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage + 100000n : a.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage + 100000n : b.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? a.delta + parseFixed(100000000) : a.delta
+        const bN = res.claimMap.get(b.account) ? b.delta + parseFixed(100000000) : b.delta
 
         return Number(bN) - Number(aN)
       })
@@ -69,15 +69,15 @@ export const competitionNov2021HighestPercentage = O(
   awaitPromises
 )
 
-export const competitionNov2021LowestPercentage = O(
+export const competitionNov2021LowestCumulative = O(
   fetchCompeitionResults,
   map(async ({ query, queryParams }) => {
 
     const claimPriority = query.then(res =>
       [...res.formattedList].sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? a.deltaPercentage + 100000n : a.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? b.deltaPercentage + 100000n : b.deltaPercentage
+        const aN = res.claimMap.get(a.account) ? a.delta + parseFixed(100000000) : a.delta
+        const bN = res.claimMap.get(b.account) ? b.delta + parseFixed(100000000) : b.delta
 
         return Number(aN) - Number(bN)
       })

@@ -8,6 +8,7 @@ import ws from 'ws'
 import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTrade, requestAggregatedSettledTradeList, requestAggregatedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { api } from './logic/api'
 import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
+import { competitionNov2021HighestCumulative, competitionNov2021LowestCumulative } from './logic/competition-cumulative'
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
@@ -82,6 +83,8 @@ const apiComponent = helloFrontend(wss, {
   requestAggregatedTrade,
   competitionNov2021HighestPercentage,
   competitionNov2021LowestPercentage,
+  competitionNov2021HighestCumulative,
+  competitionNov2021LowestCumulative,
 })
 
 

@@ -59,7 +59,7 @@ const counter = scan((seed, n: number) => seed + n, 0, constant(1, periodic(2000
 
 const blueberriesPreviewList = ['/assets/blueberriesNFT/Green.png', '/assets/blueberriesNFT/Orange.png', '/assets/blueberriesNFT/Purple.png', '/assets/blueberriesNFT/Yellow.png']
 
-export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPercentage<T>) => component((
+export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTopPercentage<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
   [lowTableRequestIndex, lowTableRequestIndexTether]: Behavior<number, number>,
@@ -82,7 +82,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
     $column(
       
       $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
-        $text(style({ fontSize: '.85em' }))('Highest Percentage PnL for a single trade'),
+        $text(style({ fontSize: '.85em' }))('Highest or Lowest Percentage PnL for a single trade'),
         $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
           $text(style({ fontSize: '2.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
           $text(style({}))('vs.'),

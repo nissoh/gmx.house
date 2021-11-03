@@ -110,8 +110,8 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   // Set the date we're counting down to
-  const competitionStartDate = Date.UTC(2021, 10, 3, 12, 0, 0)
-  const competitionEndDate = Date.UTC(2021, 10, 30, 12, 0, 0)
+  const competitionStartDate = Date.UTC(2021, 10, 3, 13, 0, 0)
+  const competitionEndDate = Date.UTC(2021, 10, 30, 13, 0, 0)
 
   const secondsCountdown = map(Date.now, periodic(1000))
 
@@ -141,15 +141,22 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const stateMap = {
     [CompetitionDisplay.CONUTER]: $row(layoutSheet.spacingSmall)(
-      $text(style({}))(`Starting in ${new Date(Date.UTC(2021, 10, 3, 12, 0, 0)).toLocaleString()}... `),
+      $text(style({}))(`Starting in ${new Date(Date.UTC(2021, 10, 3, 13, 0, 0)).toLocaleString()}... `),
       $competitionTimer
     ),
     [CompetitionDisplay.COMPETITION_DETAILS]: $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
       $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
       $AnchorLink({
         anchorOp: style({ position: 'relative' }),
-        $content: $text('Competition Page'),
+        $content: $text('Top Singles'),
         url: `/p/redvsgreen-nov2021-single`,
+        route: config.parentRoute.create({ fragment: '2121212' })
+      })({ click: routeChangeTether() }),
+      $row(style({ color: pallete.foreground }))($text('|')),
+      $AnchorLink({
+        anchorOp: style({ position: 'relative' }),
+        $content: $text('Top Cumulative'),
+        url: `/p/redvsgreen-nov2021-cumulative`,
         route: config.parentRoute.create({ fragment: '2121212' })
       })({ click: routeChangeTether() }),
     ),
@@ -265,7 +272,6 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               },
               sortChange: now(tableTopOpenSortByStore.state),
               dataSource: openPositions,
-              filterChange: topPnlTimeframeChange,
               columns: [
                 accountTableColumn,
                 {
