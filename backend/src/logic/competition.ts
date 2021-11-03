@@ -9,7 +9,7 @@ import { Claim } from "./dto"
 
 const leaderboardCacheMap = cacheMap({})
 
-const from = Math.floor(Date.UTC(2021, 10, 2, 12, 0, 0) / 1000)
+const from = Math.floor(Date.UTC(2021, 10, 3, 12, 0, 0) / 1000)
 const to = Math.floor(Date.UTC(2021, 10, 16, 12, 0, 0) / 1000)
 
 const fetchCompeitionResults = map((queryParams: IPageable) => {

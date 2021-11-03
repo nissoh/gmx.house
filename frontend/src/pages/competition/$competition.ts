@@ -4,9 +4,9 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, empty, map, periodic, scan, switchLatest } from '@most/core'
+import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, readableNumber, TradeType } from 'gambit-middleware'
+import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, TradeType } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
@@ -89,7 +89,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
           $text(style({ fontSize: '2.5em', fontWeight: 'bold', color:pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN'),
         ),
         
-        $text(style({ fontSize: '.85em' }))('+$100 Trades of Nov 2-16'),
+        $text(style({ fontSize: '.85em' }))('+$100 Trades of Nov 3-16'),
       ),
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
@@ -235,7 +235,7 @@ export const $Competition = <T extends BaseProvider>(config: ICompetitonTopPerce
                 },
                 {
                   $head: $text('Account'),
-                  columnOp: style({ minWidth: '120px' }),
+                  columnOp: style({ minWidth: '120px', flex: 1.2 }),
                   $body: map(({ account }: IAggregatedTradeSummary) => {
 
                     return switchLatest(map(map => {
