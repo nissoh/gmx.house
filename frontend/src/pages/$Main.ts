@@ -4,7 +4,7 @@ import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-import { empty, map, merge, mergeArray, multicast, now } from '@most/core'
+import { constant, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
@@ -44,6 +44,10 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
+
+  // websocket communication
+  [spaceOddity, spaceOddityTether]: Behavior<string, string>,
+
   [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
   [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
@@ -98,15 +102,23 @@ export default ({ baseRoute = '' }: Website) => component((
     competitionNov2021LowestPercentage,
     competitionNov2021HighestCumulative,
     competitionNov2021LowestCumulative,
+
+    spaceOddity
   })
 
   const walletLink = initWalletLink({
     walletProviders: [wallet.metamask, wallet.walletConnect]
   }, walletChange)
 
+
+  const majorTom = merge(now('major tom to ground control'), map(msg => 'major tom to ground control', clientApi.spaceOddity))
+
+  
+
   return [
 
     mergeArray([
+      switchLatest(map(xxx => empty(), spaceOddityTether()(majorTom))),
       $node(designSheet.main, style({ backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
         router.match(rootRoute)(
           $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(

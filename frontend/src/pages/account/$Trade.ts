@@ -1,5 +1,5 @@
 import { Behavior, O } from "@aelea/core"
-import { $text, attr, component, style } from "@aelea/dom"
+import { $node, $text, attr, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
@@ -50,10 +50,15 @@ export const $Trade = (config: ITrade) => component((
     : $column
   
   
-  const $label = (label: string, value: string) => $column(
-    $text(style({ color: pallete.foreground }))(label),
-    $text(style({  }))(value)
-  )
+  const $label = (label: string, value: string) => {
+
+    const $container = screenUtils.isDesktopScreen ? $row(layoutSheet.spacingSmall) : $column(layoutSheet.spacingTiny)
+
+    return $container(
+      $text(style({ color: pallete.foreground }))(label),
+      $text(style({  }))(value)
+    )
+  }
 
   // const $labelNumber = (label: string, value: bigint) => $label(label, value)
   const $labelUSD = (label: string, value: bigint) => $label(label, '$' + formatReadableUSD(value))
@@ -76,20 +81,16 @@ export const $Trade = (config: ITrade) => component((
             
             return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center', alignItems: 'center', }))(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
-                O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
-                  isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
-                ),
+                isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
 
                 $explorer(txHash),
               ),
 
-              O(style({ flexDirection: 'row' }), layoutSheet.spacingSmall)(
-                $labelUSD('Collateral', summary.collateral),
-              ),
+              $labelUSD('Collateral', summary.collateral),
 
               $buttonAnchor(attr({
                 href: `https://twitter.com/intent/tweet?text=\n${document.location.href}`
-              }))(
+              }))(  
                 $icon({
                   $content: $twitter,
                   width: '14px',
@@ -97,9 +98,6 @@ export const $Trade = (config: ITrade) => component((
                 }),
                 $text('share'),
               )
-              
-
-              // $labelUSD('Collateral', summary.collateral),
             )
           }, tradeSummary)
         ),

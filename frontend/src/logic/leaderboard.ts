@@ -17,7 +17,7 @@ export const helloBackend = <IN extends ILoopMap<IN>, OUT>(inMap: IN): {[k: stri
     return map(body => ({ topic, body }), source)
   }, {} as ILoopMap<OUT>)
   
-  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`wss://${location.host}/api-ws`, multicast(mergeArray(outMapEntries)))
+  const wss = http.fromWebsocket<ICommunicationMessage<string, OUT>, ICommunicationMessage<string, IN[keyof IN]>>(`wss://${location.host}/api-ws`, mergeArray(outMapEntries))
   const multicastConnection = multicast(wss)
 
   const outMap = entriesInMap.reduce((seed, [topic, source]) => {
@@ -37,26 +37,6 @@ export const helloBackend = <IN extends ILoopMap<IN>, OUT>(inMap: IN): {[k: stri
 }
 
 
-
-
-
-// export const leaderBoardQuery = (params: LeaderboardApi) => fromPromise(
-//   http.fetchJson<ISettledPosition[]>(`/api/leaderboard`,
-//     {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/json'
-//       },
-//       parseJson: jsonList => {
-//         return jsonList.map(positonCloseJson)
-//       },
-//       body: JSON.stringify(params)
-//     }
-//   )
-// )
-
-
-
 export const liquidationsQuery = (params: ILeaderboardRequest) => fromPromise(
   http.fetchJson<IPositionLiquidated[]>(`/api/liquidations`,
     {
@@ -72,14 +52,4 @@ export const liquidationsQuery = (params: ILeaderboardRequest) => fromPromise(
   )
 )
 
-
-// export const tournamentOp = O(
-//   context<Account[]>('tournament'),
-//   map((jsonList) => {
-//     const closedPositions = jsonList.map(acc => {
-//       return { ...acc, realisedPnl: BigInt(acc.realisedPnl) }
-//     })
-//     return closedPositions
-//   })
-// )
 

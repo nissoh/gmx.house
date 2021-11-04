@@ -1,4 +1,5 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
+import { map } from '@most/core'
 import cors from 'cors'
 import express from 'express'
 import { readFileSync } from 'fs'
@@ -13,6 +14,7 @@ import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
 
+require('events').EventEmitter.prototype._maxListeners = 100
 
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
@@ -34,6 +36,8 @@ wss.on('connection', function connection(ws) {
 
   if (client) {
     client.isAlive = true
+  } else {
+    liveClients.set(ws, { isAlive: true, ws })
   }
 
   ws.on('pong', heartbeat)
@@ -85,6 +89,8 @@ const apiComponent = helloFrontend(wss, {
   competitionNov2021LowestPercentage,
   competitionNov2021HighestCumulative,
   competitionNov2021LowestCumulative,
+
+  spaceOddity: map(msg => 'Can you hear me major tom?')
 })
 
 
