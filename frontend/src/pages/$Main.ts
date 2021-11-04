@@ -4,7 +4,7 @@ import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-import { constant, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
+import { at, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
@@ -111,7 +111,11 @@ export default ({ baseRoute = '' }: Website) => component((
   }, walletChange)
 
 
-  const majorTom = merge(now('major tom to ground control'), map(msg => 'major tom to ground control', clientApi.spaceOddity))
+  const msgToGc = 'major tom to ground control'
+  const majorTom = merge(
+    now(msgToGc),
+    switchLatest(map(msg => at(10000, msgToGc), clientApi.spaceOddity))
+  )
 
   
 

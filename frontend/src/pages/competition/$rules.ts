@@ -58,7 +58,7 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
         $text('medium.com - GMX Trading Competition — Win $250,000 USD in Prizes')
       ),
       $row(layoutSheet.spacingSmall, style({ fontSize: '.85em', alignItems: 'center', placeContent: 'center' }))(
-        $text(style({ color: pallete.indeterminate }))('Competition is Live! '),
+        $text(style({ color: pallete.indeterminate }))('(1/2) Competition is Live! '),
         $AnchorLink({
           anchorOp: style({ position: 'relative' }),
           $content: $text('Top Single %'),
