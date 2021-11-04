@@ -46,15 +46,18 @@ const competitionTypeChange = skipRepeats(map(now => {
   return now > competitionEndDate ? CompetitionDisplay.COMPETITION_RESULTS : CompetitionDisplay.COMPETITION_DETAILS
 }, secondsCountdown))
 
-export function $CompeititonInfo(title:string, parentRoute: Route, routeChangeTether: () => Op<string, string>) {
+export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op<string, string>) {
 
   const stateMap = {
     [CompetitionDisplay.CONUTER]: $row(layoutSheet.spacingSmall)(
       $text(style({}))(`Starting in ${new Date(competitionStartDate).toLocaleString()}... `),
       $competitionTimer
     ),
-    [CompetitionDisplay.COMPETITION_DETAILS]: $column(layoutSheet.spacing, style({ alignItems: 'center' }))(
-      $row(layoutSheet.spacingSmall, style({ alignItems: 'center', placeContent: 'center' }))(
+    [CompetitionDisplay.COMPETITION_DETAILS]: $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
+      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/gmx-trading-competition-win-250-000-usd-in-prizes-1346504b96f6' }))(
+        $text('medium.com - GMX Trading Competition — Win $250,000 USD in Prizes')
+      ),
+      $row(layoutSheet.spacingSmall, style({ fontSize: '.85em', alignItems: 'center', placeContent: 'center' }))(
         $text(style({ color: pallete.indeterminate }))('Competiton is Live! '),
         $AnchorLink({
           anchorOp: style({ position: 'relative' }),
@@ -70,9 +73,7 @@ export function $CompeititonInfo(title:string, parentRoute: Route, routeChangeTe
           route: parentRoute.create({ fragment: '2121212' })
         })({ click: routeChangeTether() }),
       ),
-      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/gmx-trading-competition-win-250-000-usd-in-prizes-1346504b96f6' }))(
-        $text('medium.com - GMX Trading Competition — Win $250,000 USD in Prizes')
-      ),
+
     ),
     [CompetitionDisplay.COMPETITION_RESULTS]: $text('RESULTS'),
   }
@@ -80,11 +81,10 @@ export function $CompeititonInfo(title:string, parentRoute: Route, routeChangeTe
   const $details = switchLatest(map(state => stateMap[state], competitionTypeChange))
 
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
-    $text(style({ fontSize: '.85em' }))(title),
     $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-      $text(style({ fontSize: '3.5em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
+      $text(style({ fontSize: '2.8em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('RED'),
       $text(style({}))('vs.'),
-      $text(style({ fontSize: '3.5em', fontWeight: 'bold', color: pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN')
+      $text(style({ fontSize: '2.8em', fontWeight: 'bold', color: pallete.positive, textShadow: `1px 1px 50px ${pallete.positive}` }))('GREEN')
     ),
     $details
   )

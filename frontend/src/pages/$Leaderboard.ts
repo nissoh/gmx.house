@@ -107,7 +107,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
     $column(
       
-      $CompeititonInfo('November Competition Kickoff', config.parentRoute, routeChangeTether),
+      $CompeititonInfo(config.parentRoute, routeChangeTether),
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
 

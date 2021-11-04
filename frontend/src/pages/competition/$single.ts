@@ -83,11 +83,14 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
     $column(
       
 
-      $CompeititonInfo('Highest or Lowest Percentage PnL for a single trade', config.parentRoute, routeChangeTether),
-      
+      $column(style({ padding: '0 10px' }))(
+        $CompeititonInfo(config.parentRoute, routeChangeTether),
 
-      $row(style({ marginBottom: '16px', placeContent: 'center' }))(
-        $text('+$100 Trades settled during Nov 3-16'),
+
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', placeContent: 'center', alignItems: 'center' }))(
+          $text('Highest or Lowest Percentage PnL for a single trade'),
+          $text(style({ fontSize: '.65em' }))('+$100 Trades settled during Nov 3-16'),
+        ),
       ),
 
 

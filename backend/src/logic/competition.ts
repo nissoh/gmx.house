@@ -52,13 +52,15 @@ export const competitionNov2021HighestPercentage = O(
   map(async ({ query, queryParams }) => {
 
     const claimPriority = query.then(res => 
-      [...res.formattedList].sort((a, b) => {
+      res.formattedList
+        .filter(trade => trade.delta.deltaPercentage > 0n)
+        .sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
+          const aN = res.claimMap.get(a.account) ? bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
+          const bN = res.claimMap.get(b.account) ? bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
 
-        return Number(bN) - Number(aN)
-      })
+          return Number(bN) - Number(aN)
+        })
     )
 
 
@@ -72,13 +74,15 @@ export const competitionNov2021LowestPercentage = O(
   map(async ({ query, queryParams }) => {
 
     const claimPriority = query.then(res =>
-      [...res.formattedList].sort((a, b) => {
+      res.formattedList
+        .filter(trade => trade.delta.deltaPercentage < 0n)
+        .sort((a, b) => {
 
-        const aN = res.claimMap.get(a.account) ? -bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
-        const bN = res.claimMap.get(b.account) ? -bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
+          const aN = res.claimMap.get(a.account) ? -bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
+          const bN = res.claimMap.get(b.account) ? -bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
 
-        return Number(aN) - Number(bN)
-      })
+          return Number(aN) - Number(bN)
+        })
     )
 
 

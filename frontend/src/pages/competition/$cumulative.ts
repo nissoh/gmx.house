@@ -76,11 +76,16 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
 
     $column(
 
-      $CompeititonInfo('Highest or Lowest Cumulative Percentage PnL', config.parentRoute, routeChangeTether),
+      $column(style({ padding: '0 10px' }))(
+        $CompeititonInfo(config.parentRoute, routeChangeTether),
 
-      $row(style({ marginBottom: '16px', placeContent: 'center' }))(
-        $text('+$1000 trades aggregated per account during Nov 3-16'),
+
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', placeContent: 'center', alignItems: 'center' }))(
+          $text('Highest or Lowest Cumulative Percentage PnL'),
+          $text(style({ fontSize: '.65em' }))('+$1000 trades aggregated per account during Nov 3-16'),
+        ),
       ),
+
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
         
@@ -135,15 +140,6 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   })
                 },
                 {
-                  $head: $text('Win/Loss'),
-                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos: IAggregatedAccountSummary) => {
-                    return $row(
-                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
-                    )
-                  })
-                },
-                {
                   $head: $text('Account'),
                   columnOp: style({ minWidth: '120px', flex: 1.2 }),
                   $body: map(({ account }: IAggregatedTradeSummary) => {
@@ -153,6 +149,15 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                         profileClick: routeChangeTether()
                       })
                     }, config.claimMap))
+                  })
+                },
+                {
+                  $head: $text('Win/Loss'),
+                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  $body: map((pos: IAggregatedAccountSummary) => {
+                    return $row(
+                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                    )
                   })
                 },
                 {
@@ -217,15 +222,6 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   })
                 },
                 {
-                  $head: $text('Win/Loss'),
-                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos: IAggregatedAccountSummary) => {
-                    return $row(
-                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
-                    )
-                  })
-                },
-                {
                   $head: $text('Account'),
                   columnOp: style({ minWidth: '120px', flex: 1.2 }),
                   $body: map(({ account }: IAggregatedTradeSummary) => {
@@ -235,6 +231,15 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                         profileClick: routeChangeTether()
                       })
                     }, config.claimMap))
+                  })
+                },
+                {
+                  $head: $text('Win/Loss'),
+                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  $body: map((pos: IAggregatedAccountSummary) => {
+                    return $row(
+                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                    )
                   })
                 },
                 {
