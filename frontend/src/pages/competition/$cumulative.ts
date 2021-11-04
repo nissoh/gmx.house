@@ -9,6 +9,7 @@ import { Stream } from '@most/types'
 import { formatFixed, IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
+import { $alert } from '../../elements/$common'
 import { $CompeititonInfo } from './$rules'
 
 
@@ -110,6 +111,17 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   $head: $text('Rank'),
                   columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
+
+                    const claim = pos.claimMap.get(pos.account)
+
+                    if (!claim) {
+                      return $row(
+                        style({ zoom: '0.7' })(
+                          $alert($text('Unclaimed'))
+                        )
+                      )
+                    }
+
                     const rank = pos.index + 1
 
                     let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
@@ -192,6 +204,17 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   $head: $text('Rank'),
                   columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
+
+                    const claim = pos.claimMap.get(pos.account)
+
+                    if (!claim) {
+                      return $row(
+                        style({ zoom: '0.7' })(
+                          $alert($text('Unclaimed'))
+                        )
+                      )
+                    }
+
                     const rank = pos.index + 1
 
                     let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(

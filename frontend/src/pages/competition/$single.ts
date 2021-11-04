@@ -10,6 +10,7 @@ import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledS
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
+import { $alert } from '../../elements/$common'
 import { $Entry } from "../common"
 import { $CompeititonInfo } from './$rules'
 
@@ -118,6 +119,17 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   $head: $text('Rank'),
                   columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
+
+                    const claim = pos.claimMap.get(pos.account)
+
+                    if (!claim) {
+                      return $row(
+                        style({ zoom: '0.7' })(
+                          $alert($text('Unclaimed'))
+                        )
+                      )
+                    }
+
                     const rank = pos.index + 1
 
                     let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
@@ -206,6 +218,17 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   $head: $text('Rank'),
                   columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos) => {
+
+                    const claim = pos.claimMap.get(pos.account)
+
+                    if (!claim) {
+                      return $row(
+                        style({ zoom: '0.7' })(
+                          $alert($text('Unclaimed'))
+                        )
+                      )
+                    }
+
                     const rank = pos.index + 1
 
                     let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
