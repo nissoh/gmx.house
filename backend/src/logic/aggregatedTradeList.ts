@@ -74,8 +74,8 @@ export const requestAggregatedSettledTradeList = O(
 )
 
 const cacheLifeMap = {
-  [intervalInMsMap.HR24]: intervalInMsMap.SEC60,
-  [intervalInMsMap.DAY7]: intervalInMsMap.MIN15,
+  [intervalInMsMap.HR24]: intervalInMsMap.MIN5,
+  [intervalInMsMap.DAY7]: intervalInMsMap.MIN30,
   [intervalInMsMap.MONTH]: intervalInMsMap.MIN60,
 }
 const leaderboardCacheMap = cacheMap({})

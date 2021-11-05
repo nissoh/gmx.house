@@ -14,6 +14,7 @@ export enum intervalInMsMap {
   SEC60 = 60000,
   MIN5 = 300000,
   MIN15 = 900000,
+  MIN30 = 1800000,
   MIN60 = 3600000,
   HR2 = 7200000,
   HR4 = 14400000,
