@@ -23,11 +23,10 @@ export const cacheMap = (cacheMap: any) => async <T>(key: string, lifespan: numb
   if (cacheEntry && !cacheMap[key].lifespanFn()) {
     return cacheEntry.item
   } else {
-    const item = cacheFn()
     const lifespanFn = cacheMap[key]?.lifespanFn ?? timespanPassedSinceInvoke(lifespan)
     lifespanFn()
-    cacheMap[key] = { item, lifespanFn }
-    return item
+    cacheMap[key] = { item: cacheFn(), lifespanFn }
+    return cacheMap[key].item
   }
 
 }

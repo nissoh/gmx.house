@@ -165,7 +165,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                 },
                 {
                   $head: $text('Win/Loss'),
-                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos: IAggregatedAccountSummary) => {
                     return $row(
                       $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
@@ -258,7 +258,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                 },
                 {
                   $head: $text('Win/Loss'),
-                  columnOp: style({ flex: 1.25, alignItems: 'center', placeContent: 'center' }),
+                  columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
                   $body: map((pos: IAggregatedAccountSummary) => {
                     return $row(
                       $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
