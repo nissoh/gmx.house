@@ -11,7 +11,7 @@
     "sideEffects": false,
     "types": ".dist/types/index.d.ts",
     "scripts": {
-        "start": "node .dist/cjs/server",
+        "start": "node -r dotenv/config .dist/cjs/server",
         "dev": "tsnd -r dotenv/config --respawn ./src/server.ts",
         "clean": "yarn g:tsc:clean",
         "build:project": "yarn g:tsc:project",
@@ -39,6 +39,7 @@
         "@urql/core": "^2.3.4",
         "concurrently": "^6.3.0",
         "cors": "^2.8.5",
+        "ethers": "^5.5.1",
         "express": "^4.17.1",
         "express-promise-router": "^4.1.0",
         "express-session": "^1.17.2",
@@ -65,5 +66,8 @@
             "./app/mikro-orm.config.ts",
             "./dist/mikro-orm.config.js"
         ]
+    },
+    "engines": {
+        "node": "16.4.x"
     }
 }

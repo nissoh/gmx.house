@@ -7602,6 +7602,7 @@ fsevents@~2.3.2:
     concurrently: ^6.3.0
     cors: ^2.8.5
     dotenv: ^10.0.0
+    ethers: ^5.5.1
     express: ^4.17.1
     express-promise-router: ^4.1.0
     express-session: ^1.17.2
@@ -7988,7 +7989,6 @@ fsevents@~2.3.2:
     chai: ^4.3.4
     csv-parse: ^4.16.3
     ethereum-waffle: ^3.4.0
-    ethers: ^5.5.1
     hardhat: ^2.6.8
     hardhat-contract-sizer: ^2.1.1
     typechain: ^6.0.2
