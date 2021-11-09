@@ -37,9 +37,6 @@ const fetchCompeitionResults = map((queryParams: IPageable) => {
         BigInt(trade.collateral) >= minWithThreshold
       ).map(s => s.trade)
 
-    
-    console.log(settledList.length)
-
     const formattedList = toAggregatedAccountSummary(settledList)
     
     const claimMap = groupByMap(claimList, item => item.account.toLowerCase())

@@ -4,7 +4,7 @@
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
-    "sideEffects": true,
+    "sideEffects": false,
     "files": [
         ".dist"
     ],
@@ -16,7 +16,7 @@
         "build": "yarn g:parallel 'yarn build:cjs' 'yarn build:project'"
     },
     "dependencies": {
-        "@aelea/core": "1.2.1",
+        "@aelea/core": "1.3.0",
         "@ethersproject/abi": "5.5.0",
         "@ethersproject/abstract-signer": "5.5.0",
         "@ethersproject/bignumber": "^5.5.0",
@@ -29,6 +29,7 @@
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
         "@types/isomorphic-fetch": "^0.0.35",
+        "gmx-contracts": "workspace:*",
         "isomorphic-fetch": "^3.0.0"
     }
 }

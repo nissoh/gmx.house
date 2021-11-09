@@ -18,6 +18,7 @@ export interface TableOption<T, FilterState> {
 
   bodyContainerOp?: Op<INode, INode>
 
+  rowOp?: Op<INode, INode>
   cellOp?: Op<INode, INode>
   headerCellOp?: Op<INode, INode>
   bodyCellOp?: Op<INode, INode>
@@ -54,6 +55,7 @@ export const $Table2 = <T, FilterState = never>({
   dataSource, columns, scrollConfig, cellOp,
   headerCellOp, bodyCellOp,
   bodyContainerOp = O(),
+  rowOp = O(),
   sortChange = never(),
   filterChange = never(),
   $sortArrowDown = $caretDown
@@ -82,9 +84,11 @@ export const $Table2 = <T, FilterState = never>({
     bodyCellOp || O()
   )
 
-  const $rowContainer = $row(layoutSheet.spacing)
+  const $rowContainer = $row(layoutSheet.spacingSmall)
 
-  const $rowHeaderContainer = $rowContainer(style({ overflowY: 'scroll' }), stylePseudo('::-webkit-scrollbar', { backgroundColor: 'transparent', width: '6px' }))
+  const $rowHeaderContainer = $rowContainer(
+    style({ overflowY: 'scroll' }), stylePseudo('::-webkit-scrollbar', { backgroundColor: 'transparent', width: '6px' })
+  )
 
   const sortBy = chain((state) => {
     const changeState = scan((seed, change): ISortBy<T> => {

@@ -1,7 +1,48 @@
 import { intervalInMsMap } from "."
 import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, TOKEN_SYMBOL } from "./address"
 import { ExtractAndParseEventType } from "./contract"
-import type { Vault } from "./contract/"
+import { Vault } from "gmx-contracts"
+import { EventFilter, Event } from "@ethersproject/contracts"
+import { Listener } from "@ethersproject/providers"
+
+
+
+export interface TypedEvent<
+  TArgsArray extends Array<any> = any,
+  TArgsObject = any
+> extends Event {
+  args: TArgsArray & TArgsObject;
+}
+
+export interface TypedEventFilter<_TEvent extends TypedEvent>
+  extends EventFilter {}
+
+export interface TypedListener<TEvent extends TypedEvent> {
+  (...listenerArg: [...__TypechainArgsArray<TEvent>, TEvent]): void;
+}
+
+export type __TypechainArgsArray<T> = T extends TypedEvent<infer U> ? U : never;
+
+export interface OnEvent<TRes> {
+  <TEvent extends TypedEvent>(
+    eventFilter: TypedEventFilter<TEvent>,
+    listener: TypedListener<TEvent>
+  ): TRes;
+  (eventName: string, listener: Listener): TRes;
+}
+
+export type MinEthersFactory<C, ARGS> = {
+  deploy(...a: ARGS[]): Promise<C>;
+};
+
+export type GetContractTypeFromFactory<F> = F extends MinEthersFactory<infer C, any>
+  ? C
+  : never;
+
+export type GetARGsTypeFromFactory<F> = F extends MinEthersFactory<any, any>
+  ? Parameters<F["deploy"]>
+  : never;
+
 
 export type Address = string
 

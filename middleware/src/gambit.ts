@@ -1,7 +1,7 @@
 import { BaseProvider } from "@ethersproject/providers"
+import { Vault__factory } from "gmx-contracts"
 import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
-import { Vault__factory } from "./contract/index"
 import { listen } from "./contract"
 import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource, IPositionClose, IPositionLiquidated } from "./types"
 import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
@@ -10,7 +10,6 @@ import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp
 export const gambitContract = (jsonProvider: BaseProvider) => {
   const contract = Vault__factory.connect(ARBITRUM_ADDRESS.Vault, jsonProvider)
   const vaultEvent = listen(contract)
-
 
   return {
     contract,
@@ -79,14 +78,12 @@ export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll)
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
 
-
-  const delta = trade.settledPosition.realisedPnl
-  const collateral = trade.updateList[trade.updateList.length - 1].collateral
-
+  const delta = settlement.realisedPnl
+  const maxCollateral = trade.updateList.reduce((seed, b) => seed > b.collateral ? seed : b.collateral, 0n)
 
   return {
     delta,
-    deltaPercentage: delta * BASIS_POINTS_DIVISOR / collateral
+    deltaPercentage: maxCollateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateral : 0n
   }
 }
 

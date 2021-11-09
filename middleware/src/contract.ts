@@ -5,18 +5,21 @@ import { BaseContract, ContractTransaction } from "@ethersproject/contracts"
 import { BaseProvider } from "@ethersproject/providers"
 import { multicast } from "@most/core"
 import { Stream } from '@most/types'
-import { TypedEventFilter } from "./contract/ethers-contracts/commons"
+import { TypedEvent, TypedEventFilter } from "gmx-contracts/.dist/types/common"
 import { Address } from "./types"
-
 
 
 export type ConvertTypeToBigInt<T> = {
   [P in keyof T]: T[P] extends BigNumber ? bigint : T[P]
 }
 
+
+
+type EventFilterzz<A extends BaseContract, B extends keyof A['filters']> = ReturnType<A['filters'][B]> extends TypedEventFilter<infer Z> ? Z extends TypedEvent<infer AA, infer ZZ> ? ZZ : never : never
+
 export type ConnectFactoryFn<T extends BaseContract> = (address: Address, signerOrProvider: Signer | BaseProvider) => T
-export type ExtractEventType<A extends BaseContract, B extends keyof A['filters']> = ReturnType<A['filters'][B]> extends TypedEventFilter<never, infer Z> ? Z : never
-export type ExtractAndParseEventType<A extends BaseContract, B extends keyof A['filters']> = ConvertTypeToBigInt<ReturnType<A['filters'][B]> extends TypedEventFilter<never, infer Z> ? Z : never>
+export type ExtractEventType<A extends BaseContract, B extends keyof A['filters']> = EventFilterzz<A, B>
+export type ExtractAndParseEventType<A extends BaseContract, B extends keyof A['filters']> = ConvertTypeToBigInt<EventFilterzz<A, B>>
 
 export interface IContractBase<T extends BaseContract> {
   contract: T

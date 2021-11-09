@@ -43,16 +43,7 @@ export function timeSince(time: number) {
 export const priceChange = multicast(klineWS('ethusdt@aggTrade', 'btcusdt@aggTrade', 'linkusdt@aggTrade', 'uniusdt@aggTrade'))
 
 
-export const winLossTableColumn = {
-  $head: $text('Win/Loss'),
-  columnOp: style({ flex: 1.25, placeContent: 'center' }),
-  $body: map((pos: IAggregatedAccountSummary) => {
-    return $row(
-      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
-    )
-  })
-}
-  
+ 
 
 export const tableRiskColumnCellBody: TableColumn<IAggregatedAccountSummary> = {
   $head: $text('Risk'),
@@ -97,7 +88,7 @@ export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $Prof
 
 export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {
   return [
-    $column(layoutSheet.spacingTiny, containerOp)(
+    $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }), containerOp)(
       $text(formatReadableUSD(pos.size)),
       $seperator,
       style({ textAlign: 'center', fontSize: '.65em' }, $leverage(pos)),

@@ -11,7 +11,7 @@ import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
 import { $anchor } from '../elements/$common'
-import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, winLossTableColumn } from "./common"
+import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange } from "./common"
 import { $CompeititonInfo } from './competition/$rules'
 
 
@@ -91,7 +91,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const accountTableColumn = {
     $head: $text('Account'),
-    columnOp: style({ minWidth: '120px' }),
+    columnOp: style({ minWidth: '125px' }),
     $body: map(({ account }: IAggregatedTradeSummary) => {
 
       return switchLatest(map(map => {
@@ -145,6 +145,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
           $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
             $Table2<IAggregatedAccountSummary>({
               bodyContainerOp: layoutSheet.spacing,
+              rowOp: layoutSheet.spacingTiny,
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
@@ -160,11 +161,19 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               // bodyRowOp: O(layoutSheet.spacing),
               columns: [
                 accountTableColumn,
-                winLossTableColumn,
+                {
+                  $head: $text('Win/Loss'),
+                  columnOp: style({ maxWidth: '80px', placeContent: 'center' }),
+                  $body: map((pos: IAggregatedAccountSummary) => {
+                    return $row(
+                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                    )
+                  })
+                },
                 {
                   $head: $text('Risk-$'),
                   sortBy: 'size',
-                  columnOp: style({ placeContent: 'center' }),
+                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
                   $body: map((pos: IAggregatedTradeSummary) => {
                     return $Risk(pos)({})
                   })
@@ -179,7 +188,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 {
                   $head: $text('PnL-$'),
                   sortBy: 'realisedPnl',
-                  columnOp: style({ flex: 1.5, placeContent: 'flex-end', maxWidth: '160px' }),
+                  columnOp: style({ flex: 1.2, placeContent: 'flex-end', maxWidth: '160px' }),
                   $body: map((pos: IAggregatedSettledTradeSummary) => $row($SummaryProfitLoss(pos)))
                 },
               ],
