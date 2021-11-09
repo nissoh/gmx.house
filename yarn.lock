@@ -2,7 +2,7 @@
 # Manual changes might be lost - proceed with caution!
 
 __metadata:
-  version: 4
+  version: 5
   cacheKey: 8
 
 "@aelea/core@npm:1.1.0":
@@ -946,12 +946,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@graphprotocol/graph-ts@npm:0.20.1":
-  version: 0.20.1
-  resolution: "@graphprotocol/graph-ts@npm:0.20.1"
+"@graphprotocol/graph-ts@npm:0.23.1":
+  version: 0.23.1
+  resolution: "@graphprotocol/graph-ts@npm:0.23.1"
   dependencies:
-    assemblyscript: "git+https://github.com/AssemblyScript/assemblyscript.git#v0.6"
-  checksum: d98e729d08b10e65f88f64ef619fb99bb76788ae01a1805169908de2d2aa42d6ea21f8d69fecd77375d6a5d79d920e70d0e815f67068b84cf071b388b4984afa
+    assemblyscript: 0.19.10
+  checksum: dbccebee9517e389989a5a2b976b88427b0467adebf4ce72d00aa4f0af27d044f9e09e09b83d5b4784bd39855947947207a951b4e0a093c6017d921025017375
   languageName: node
   linkType: hard
 
@@ -1238,13 +1238,6 @@ __metadata:
   version: 1.0.1
   resolution: "@pedrouid/environment@npm:1.0.1"
   checksum: fd88340ad760f26340a2816c3677f0ca913976e315880891c3de3f028fe64abc9704fb904234dce77a1ff15c22d0b6cbf1d4199a76de6695c2aed8353ce20590
-  languageName: node
-  linkType: hard
-
-"@protobufjs/utf8@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@protobufjs/utf8@npm:1.1.0"
-  checksum: f9bf3163d13aaa3b6f5e6fbf37a116e094ea021c0e1f2a7ccd0e12a29e2ce08dafba4e8b36e13f8ed7397e1591610ce880ed1289af4d66cf4ace8a36a9557278
   languageName: node
   linkType: hard
 
@@ -2932,20 +2925,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"assemblyscript@git+https://github.com/AssemblyScript/assemblyscript.git#v0.6":
-  version: 0.6.0
-  resolution: "assemblyscript@https://github.com/AssemblyScript/assemblyscript.git#commit=3ed76a97f05335504166fce1653da75f4face28f"
+"assemblyscript@npm:0.19.10":
+  version: 0.19.10
+  resolution: "assemblyscript@npm:0.19.10"
   dependencies:
-    "@protobufjs/utf8": ^1.1.0
-    binaryen: 77.0.0-nightly.20190407
-    glob: ^7.1.3
+    binaryen: 101.0.0-nightly.20210723
     long: ^4.0.0
-    opencollective-postinstall: ^2.0.0
-    source-map-support: ^0.5.11
   bin:
     asc: bin/asc
     asinit: bin/asinit
-  checksum: a68cf9e6b8860edf3348cd107266f1622d32c7ec44970efe638bc648d98e08cae655c27414588467b39105938e9a4ffe4466250e1b3804029e7b1c6e36d7d454
+  checksum: d4087bcbae402eb0e972a78d8dfee607b2b51f4b29fcee5359f4db3052912ec12492a8714916bed8424f7f495f9357c7c6ab2482ba1d4ea4a44c55a86df5a67c
   languageName: node
   linkType: hard
 
@@ -3851,14 +3840,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"binaryen@npm:77.0.0-nightly.20190407":
-  version: 77.0.0-nightly.20190407
-  resolution: "binaryen@npm:77.0.0-nightly.20190407"
+"binaryen@npm:101.0.0-nightly.20210723":
+  version: 101.0.0-nightly.20210723
+  resolution: "binaryen@npm:101.0.0-nightly.20210723"
   bin:
-    binaryen-as: bin/as.js
-    binaryen-dis: bin/dis.js
-    binaryen-opt: bin/opt.js
-  checksum: 756334720191ec02b28b1fa153009338bee63ead43d5923faa7c651b7b97183b020f2ade712fab45d4cc714cae5bfeef3e8a5624246f87207ee4d847e181f6a9
+    wasm-opt: bin/wasm-opt
+  checksum: b1f7cc8e9fb4f1530e9454b5ea6deba17e2d863cea4efc6d0ba1b2af2325e9080c29df0ffeaf9708d455705a629a6a4fbef0ac29ed789a4e316b4c1437879f57
   languageName: node
   linkType: hard
 
@@ -7534,19 +7521,19 @@ __metadata:
 
 "fsevents@patch:fsevents@~2.1.1#~builtin<compat/fsevents>":
   version: 2.1.3
-  resolution: "fsevents@patch:fsevents@npm%3A2.1.3#~builtin<compat/fsevents>::version=2.1.3&hash=1cc4b2"
+  resolution: "fsevents@patch:fsevents@npm%3A2.1.3#~builtin<compat/fsevents>::version=2.1.3&hash=18f3a7"
   dependencies:
     node-gyp: latest
-  checksum: 37502954e1b2cf7d1f555561e45956521afa12e12cbfe05445ffa1f2852a3d8932980cacb808d504b1def84b12b3b7b41c26673180691295001fa7740cc63fba
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
 "fsevents@patch:fsevents@~2.3.2#~builtin<compat/fsevents>":
   version: 2.3.2
-  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=1cc4b2"
+  resolution: "fsevents@patch:fsevents@npm%3A2.3.2#~builtin<compat/fsevents>::version=2.3.2&hash=18f3a7"
   dependencies:
     node-gyp: latest
-  checksum: 78db9daf1f6526a49cefee3917cc988f62dc7f25b5dd80ad6de4ffc4af7f0cab7491ac737626ff53e482a111bc53aac9e411fe3602458eca36f6a003ecf69c16
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -7556,6 +7543,7 @@ fsevents@~2.1.1:
   dependencies:
     node-gyp: latest
   checksum: b5ec0516b44d75b60af5c01ff80a80cd995d175e4640d2a92fbabd02991dd664d76b241b65feef0775c23d531c3c74742c0fbacd6205af812a9c3cef59f04292
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -7565,6 +7553,7 @@ fsevents@~2.3.2:
   dependencies:
     node-gyp: latest
   checksum: 97ade64e75091afee5265e6956cb72ba34db7819b4c3e94c431d4be2b19b8bb7a2d4116da417950c3425f17c8fe693d25e20212cac583ac1521ad066b77ae31f
+  conditions: os=darwin
   languageName: node
   linkType: hard
 
@@ -7670,7 +7659,7 @@ fsevents@~2.3.2:
     ts-loader: 9.2.6
     tsconfig-paths-webpack-plugin: 3.5.1
     wallet-link: "workspace:*"
-    webpack: 5.62.2
+    webpack: 5.63.0
     webpack-cli: 4.9.1
     webpack-dev-server: 4.4.0
   languageName: unknown
@@ -8008,7 +7997,7 @@ fsevents@~2.3.2:
   version: 0.0.0-use.local
   resolution: "gmx-subgraph@workspace:subgraph"
   dependencies:
-    "@graphprotocol/graph-ts": 0.20.1
+    "@graphprotocol/graph-ts": 0.23.1
   languageName: unknown
   linkType: soft
 
@@ -11291,15 +11280,6 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"opencollective-postinstall@npm:^2.0.0":
-  version: 2.0.3
-  resolution: "opencollective-postinstall@npm:2.0.3"
-  bin:
-    opencollective-postinstall: index.js
-  checksum: 0a68c5cef135e46d11e665d5077398285d1ce5311c948e8327b435791c409744d4a6bb9c55bd6507fb5f2ef34b0ad920565adcdaf974cbdae701aead6f32b396
-  languageName: node
-  linkType: hard
-
 "optional-require@npm:^1.0.2":
   version: 1.1.7
   resolution: "optional-require@npm:1.1.7"
@@ -12608,20 +12588,20 @@ resolve@1.17.0:
 
 "resolve@patch:resolve@1.17.0#~builtin<compat/resolve>":
   version: 1.17.0
-  resolution: "resolve@patch:resolve@npm%3A1.17.0#~builtin<compat/resolve>::version=1.17.0&hash=00b1ff"
+  resolution: "resolve@patch:resolve@npm%3A1.17.0#~builtin<compat/resolve>::version=1.17.0&hash=07638b"
   dependencies:
     path-parse: ^1.0.6
-  checksum: a3606308046ca75c0a6350c26df636b64a71904a8e00f3181fd838b46b4fc303c32ae3e694c156eae5d9102cbe194c444f85822d8e6ce30cf7c510e412029908
+  checksum: 6fd799f282ddf078c4bc20ce863e3af01fa8cb218f0658d9162c57161a2dbafe092b13015b9a4c58d0e1e801cf7aa7a4f13115fea9db98c3f9a0c43e429bad6f
   languageName: node
   linkType: hard
 
 "resolve@patch:resolve@^1.0.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.10.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.8.1#~builtin<compat/resolve>, resolve@patch:resolve@^1.9.0#~builtin<compat/resolve>, resolve@patch:resolve@~1.20.0#~builtin<compat/resolve>":
   version: 1.20.0
-  resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=00b1ff"
+  resolution: "resolve@patch:resolve@npm%3A1.20.0#~builtin<compat/resolve>::version=1.20.0&hash=07638b"
   dependencies:
     is-core-module: ^2.2.0
     path-parse: ^1.0.6
-  checksum: bed00be983cd20a8af0e7840664f655c4b269786dbd9595c5f156cd9d8a0050e65cdbbbdafc30ee9b6245b230c78a2c8ab6447a52545b582f476c29adb188cc5
+  checksum: a0dd7d16a8e47af23afa9386df2dff10e3e0debb2c7299a42e581d9d9b04d7ad5d2c53f24f1e043f7b3c250cbdc71150063e53d0b6559683d37f790b7c8c3cd5
   languageName: node
   linkType: hard
 
@@ -13314,7 +13294,7 @@ resolve@1.17.0:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.5.11, source-map-support@npm:^0.5.12, source-map-support@npm:^0.5.13, source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.17, source-map-support@npm:~0.5.20":
+"source-map-support@npm:^0.5.12, source-map-support@npm:^0.5.13, source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.17, source-map-support@npm:~0.5.20":
   version: 0.5.20
   resolution: "source-map-support@npm:0.5.20"
   dependencies:
@@ -14488,11 +14468,11 @@ typescript@^4.4.4:
 
 "typescript@patch:typescript@^4.4.4#~builtin<compat/typescript>":
   version: 4.4.4
-  resolution: "typescript@patch:typescript@npm%3A4.4.4#~builtin<compat/typescript>::version=4.4.4&hash=32657b"
+  resolution: "typescript@patch:typescript@npm%3A4.4.4#~builtin<compat/typescript>::version=4.4.4&hash=ddd1e8"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: c97c33903f1eb4f9e178649befdfc859d93157db1eccd1e521e84976ec6861db53412d8018e5e4c5d09268771c65498d42caa64bd881878346c3644f6b7cd202
+  checksum: bd629ad0da4a15d79aaad56baf3ee7d96f6a181760d430ae77f8c5325df7bffd9edee57544a3970e3651e8b796fe03a5838a7eb39c6d46cc3866c0b23d36a0dd
   languageName: node
   linkType: hard
 
@@ -14819,7 +14799,7 @@ typescript@^4.4.4:
   version: 0.0.0-use.local
   resolution: "wallet-link@workspace:wallet-link"
   dependencies:
-    "@aelea/core": 1.2.1
+    "@aelea/core": 1.3.0
     "@ethersproject/providers": 5.5.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
@@ -15315,9 +15295,9 @@ typescript@^4.4.4:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.62.2":
-  version: 5.62.2
-  resolution: "webpack@npm:5.62.2"
+"webpack@npm:5.63.0":
+  version: 5.63.0
+  resolution: "webpack@npm:5.63.0"
   dependencies:
     "@types/eslint-scope": ^3.7.0
     "@types/estree": ^0.0.50
@@ -15348,7 +15328,7 @@ typescript@^4.4.4:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: ed2c134ba679b0f167aa286bf30ba0e49f61881f712534e5d471979482df6472dbdf64553c1952b4ee5e75ade8c24efcfa022a60b65c3703dc1bd28d206ae9d9
+  checksum: 8127be3d900d8e57f106f61dc66f8334162d5425d770f46b2110c89057c1607e9be1a20fa37ee53bd6915e3041dc074c5e2aa99665abb18112463b91606946f7
   languageName: node
   linkType: hard
 
