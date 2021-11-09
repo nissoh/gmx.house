@@ -7989,6 +7989,7 @@ fsevents@~2.3.2:
     chai: ^4.3.4
     csv-parse: ^4.16.3
     ethereum-waffle: ^3.4.0
+    ethers: ^5.5.1
     hardhat: ^2.6.8
     hardhat-contract-sizer: ^2.1.1
     typechain: ^6.0.2
