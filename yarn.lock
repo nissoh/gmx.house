@@ -14757,7 +14757,7 @@ typescript@^4.4.4:
   version: 0.0.0-use.local
   resolution: "wallet-link@workspace:wallet-link"
   dependencies:
-    "@aelea/core": 1.3.0
+    "@aelea/core": 1.2.1
     "@ethersproject/providers": 5.5.0
     "@most/core": 1.6.1
     "@most/disposable": 1.3.0
