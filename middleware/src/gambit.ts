@@ -115,19 +115,21 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
   const increaseFees = trade.increaseList.reduce((seed, pos) => seed += pos.fee, 0n)
   const decreaseFees = trade.decreaseList.reduce((seed, pos) => seed += pos.fee, 0n)
 
-
   const lastUpdate = trade.updateList[trade.updateList.length - 1]
 
-  const collateral = lastUpdate.collateral
-  const size = lastUpdate.size
-  const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = { collateral, size,
+  const maxCollateral = trade.updateList.reduce((seed, b) => seed > b.collateral ? seed : b.collateral, 0n)
+  const maxSize = trade.updateList.reduce((seed, b) => seed > b.size ? seed : b.size, 0n)
+
+  const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = {
+    size: maxSize,
     account: trade.account,
+    collateral: maxCollateral,
     indexToken: trade.initialPosition.indexToken,
     startTimestamp: trade.initialPosition.indexedAt,
     fee: increaseFees + decreaseFees,
     averagePrice: lastUpdate.averagePrice,
     isLong: trade.initialPosition.isLong,
-    leverage: formatFixed(size) / formatFixed(collateral),
+    leverage: formatFixed(maxSize / maxCollateral),
 
     trade: trade
   }
