@@ -12,7 +12,6 @@
         "start": "node .dist/cjs/server",
         "dev": "tsnd -r dotenv/config --respawn ./src/server.ts",
         "clean": "yarn g:tsc:clean",
-        "gql-typings": "zeus ../subgraph/schema.graphql ./src  --ts",
         "build:project": "yarn g:tsc:project",
         "build:cjs": "yarn g:tsc:cjs",
         "build": "yarn build:cjs"
