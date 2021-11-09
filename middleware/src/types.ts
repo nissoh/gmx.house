@@ -1,7 +1,7 @@
 import { intervalInMsMap } from "."
 import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, TOKEN_SYMBOL } from "./address"
 import { ExtractAndParseEventType } from "./contract"
-import { Vault } from "gmx-contracts"
+import type { Vault } from "gmx-contracts"
 import { EventFilter, Event } from "@ethersproject/contracts"
 import { Listener } from "@ethersproject/providers"
 

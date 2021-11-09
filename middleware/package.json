@@ -4,7 +4,7 @@
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
-    "sideEffects": false,
+    "sideEffects": true,
     "files": [
         ".dist"
     ],
@@ -31,5 +31,8 @@
         "@types/isomorphic-fetch": "^0.0.35",
         "gmx-contracts": "workspace:*",
         "isomorphic-fetch": "^3.0.0"
+    },
+    "peerDependencies": {
+        "ethers": "^5.5.1"
     }
 }

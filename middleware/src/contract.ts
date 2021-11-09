@@ -4,8 +4,8 @@ import { BigNumber } from "@ethersproject/bignumber"
 import { BaseContract, ContractTransaction } from "@ethersproject/contracts"
 import { BaseProvider } from "@ethersproject/providers"
 import { multicast } from "@most/core"
-import { Stream } from '@most/types'
-import { TypedEvent, TypedEventFilter } from "gmx-contracts/.dist/types/common"
+import type { Stream } from '@most/types'
+import type { TypedEvent, TypedEventFilter } from "gmx-contracts/.dist/types/common"
 import { Address } from "./types"
 
 
