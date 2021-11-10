@@ -114,7 +114,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const msgToGc = 'major tom to ground control'
   const majorTom = merge(
     now(msgToGc),
-    switchLatest(map(msg => at(10000, msgToGc), clientApi.spaceOddity))
+    switchLatest(map(msg => at(27000, msgToGc), clientApi.spaceOddity))
   )
 
   

@@ -4,7 +4,7 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, filter, map, merge, multicast, now, snapshot, startWith, switchLatest } from '@most/core'
+import { constant, filter, map, merge, multicast, now, snapshot, startWith, switchLatest, tap } from '@most/core'
 import { Stream } from '@most/types'
 import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, IPositionDelta, ISortable, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
@@ -36,7 +36,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [tableTopPnlRequest, tableTopPnlRequestTether]: Behavior<number, number>,
   [openPositionsRequest, openPositionsRequestTether]: Behavior<number, number>,
-  [tableTopSettledsortByChange, tableTopSettledsortByChangeTether]: Behavior<ISortBy<IAggregatedAccountSummary>, ISortBy<IAggregatedAccountSummary>>,
+  [tableTopSettledSortByChange, tableTopSettledsortByChangeTether]: Behavior<ISortBy<IAggregatedAccountSummary>, ISortBy<IAggregatedAccountSummary>>,
   [tableTopOpenSortByChange, tableTopOpenSortByChangeTether]: Behavior<ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>, ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>>,
 
 ) => {
@@ -49,7 +49,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const tableTopSettledSortByStore = config.parentStore<ISortBy<IAggregatedAccountSummary>>('tableTopSettledSortByStore', { name: 'realisedPnl', direction: 'asc' })
   const tableTopOpenSortByStore = config.parentStore<ISortBy<IAggregatedOpenPositionSummary & IPositionDelta>>('tableTopOpenSortByStore', { name: 'delta', direction: 'asc' })
   
-  const tableTopSettledSortBy = replayLatest(multicast(startWith(tableTopSettledSortByStore.state, tableTopSettledSortByStore.store(tableTopSettledsortByChange, map(x => x)))))
+  const tableTopSettledSortBy = startWith(tableTopSettledSortByStore.state, tableTopSettledSortByStore.store(tableTopSettledSortByChange, map(x => x)))
   const tableTopOpenSortBy = startWith(tableTopOpenSortByStore.state, tableTopOpenSortByStore.store(tableTopOpenSortByChange, map(x => x)))
   const filterByTimeFrameState = replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
 
@@ -65,9 +65,9 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     }
   }, combineObject({ tableTopSettledSortBy, filterByTimeFrameState }), tableTopPnlRequest)
 
-  const tableTopOpenState = combineArray((page, sortBy): IPageable & ISortable<any> => {
+  const tableTopOpenState = snapshot((sortBy, page): IPageable & ISortable<any> => {
     return { offset: page * 20, pageSize: 20, sortBy: sortBy.name, sortDirection: sortBy.direction }
-  }, openPositionsRequest, tableTopOpenSortBy)
+  }, tableTopOpenSortBy, openPositionsRequest)
 
 
   const openPositions: Stream<TablePageResponse<IAggregatedOpenPositionSummary>> = map((res) => {
@@ -150,7 +150,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 containerOps: O(layoutSheet.spacingBig)
               },
               sortChange: now(tableTopSettledSortByStore.state),
-              filterChange: merge(topPnlTimeframeChange, tableTopSettledsortByChange),
+              filterChange: merge(topPnlTimeframeChange, tableTopSettledSortByChange),
               dataSource: map((res) => {
                 return {
                   data: res.page,
@@ -209,6 +209,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
+              // filterChange: tableTopOpenSortBy,
               sortChange: now(tableTopOpenSortByStore.state),
               dataSource: openPositions,
               columns: [
