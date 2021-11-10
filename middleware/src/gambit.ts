@@ -129,7 +129,7 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
     fee: increaseFees + decreaseFees,
     averagePrice: lastUpdate.averagePrice,
     isLong: trade.initialPosition.isLong,
-    leverage: formatFixed(maxSize / maxCollateral),
+    leverage: Number(maxSize / maxCollateral),
 
     trade: trade
   }

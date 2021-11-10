@@ -328,16 +328,20 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     $node(),
                     $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
                       $ButtonPrimary({
-                        disabled: merge(
-                          skip(1, isNotMatchedAccount),
-                          merge(now(true), map(name => {
-                            try {
-                              validateIdentityName(name)
-                              return false
-                            } catch (e) {
-                              return true
-                            }
-                          }, display))
+                        disabled: snapshot(
+                          (match, valid) => match && valid,
+                          isNotMatchedAccount,
+                          mergeArray([
+                            now(true),
+                            map(name => {
+                              try {
+                                validateIdentityName(name)
+                                return false
+                              } catch (e) {
+                                return true
+                              }
+                            }, display)
+                          ])
                         ),
                         $content: $text('Sign & Post')
                       })({
