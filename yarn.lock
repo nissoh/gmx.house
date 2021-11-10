@@ -7685,8 +7685,6 @@ fsevents@~2.3.2:
     "@types/isomorphic-fetch": ^0.0.35
     gmx-contracts: "workspace:*"
     isomorphic-fetch: ^3.0.0
-  peerDependencies:
-    ethers: ^5.5.1
   languageName: unknown
   linkType: soft
 

@@ -4,7 +4,7 @@ import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { BaseProvider } from "@ethersproject/providers"
-import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, multicast, now, snapshot, switchLatest } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, multicast, now, skip, snapshot, switchLatest, tap } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "gambit-middleware"
@@ -329,7 +329,7 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
                       $ButtonPrimary({
                         disabled: merge(
-                          isNotMatchedAccount,
+                          skip(1, isNotMatchedAccount),
                           merge(now(true), map(name => {
                             try {
                               validateIdentityName(name)

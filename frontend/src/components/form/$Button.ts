@@ -1,7 +1,8 @@
 import { O } from "@aelea/core"
 import { $element, style, stylePseudo } from "@aelea/dom"
-import { $Button, $row, IButton, layoutSheet } from "@aelea/ui-components"
+import { $row, IButton, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
+import { $Button } from "./$buttonCore"
 
 
 const secondaryButtonStyle = style({
