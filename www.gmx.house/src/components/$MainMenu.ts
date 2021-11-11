@@ -10,7 +10,7 @@ import { IClaim } from "gambit-middleware"
 import { IWalletLink } from "wallet-link"
 import { $tradeGMX } from '../common/$tradeButton'
 import { dark, light } from '../common/theme'
-import { $Link } from '../components/$Link'
+import { $Link } from './$Link'
 import { $moreDots } from "../elements/$icons"
 import { $AccountPreview } from "./$AccountProfile"
 import { $IntermediateDisplay } from "./$ConnectAccount"
