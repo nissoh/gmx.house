@@ -67,10 +67,7 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
   [lowTableRequestIndex, lowTableRequestIndexTether]: Behavior<number, number>,
 ) => {
 
-
-
   const pagerOp = map((pageIndex: number): IPageable => {
-
     return {
       offset: pageIndex * 20,
       pageSize: 20,
@@ -78,22 +75,9 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
   })
 
 
-
   return [
 
     $column(
-      
-
-      $column(style({ padding: '0 10px' }))(
-        $CompeititonInfo(config.parentRoute, routeChangeTether),
-
-
-        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', placeContent: 'center', alignItems: 'center' }))(
-          $text('Highest or Lowest Percentage PnL for a single trade'),
-          $text(style({ fontSize: '.65em' }))('+$100 Trades settled during Nov 3-16'),
-        ),
-      ),
-
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
 

@@ -75,210 +75,194 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
 
   return [
 
-    $column(
+    $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
+          $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
+            bodyContainerOp: layoutSheet.spacing,
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            dataSource: combineArray((claimMap, res) => {
+              return {
+                data: res.page.map((item, index) => {
+                  return { ...item, claimMap, index: index + res.offset }
+                }),
+                pageSize: res.pageSize,
+                offset: res.offset,
+              }
+            }, config.claimMap, config.competitionNov2021HighestCumulative),
+            columns: [
+              {
+                $head: $text('Rank'),
+                columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
+                $body: map((pos) => {
 
-      $column(style({ padding: '0 10px' }))(
-        $CompeititonInfo(config.parentRoute, routeChangeTether),
+                  const claim = pos.claimMap.get(pos.account)
 
+                  if (!claim) {
+                    return $row(
+                      style({ zoom: '0.7' })(
+                        $alert($text('Unclaimed'))
+                      )
+                    )
+                  }
 
-        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', placeContent: 'center', alignItems: 'center' }))(
-          $text('Highest or Lowest Cumulative Percentage PnL'),
-          $text(style({ fontSize: '.65em' }))('+$1000 trades aggregated per account during Nov 3-16'),
+                  const rank = pos.index + 1
+
+                  let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                    $text(style({ fontSize: '1em' }))(`#`),
+                    $text(style({ fontSize: '1.5em' }))(`${rank}`),
+                  )
+
+                  if (rank < 6) {
+                    $nftPLaceholder = rank > 1
+                      ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                      : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Winner.png' })) 
+                  }
+
+                  if (rank < 21) {
+
+                    return $column(layoutSheet.spacingSmall)(
+                      $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+                        $nftPLaceholder
+                      ),
+                        
+                      // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
+                      //   `$${readableNumber(getPrizePoolByRank(rank))}`
+                      // )
+                    )
+                  }
+
+                  return $row()
+                })
+              },
+              {
+                $head: $text('Account'),
+                columnOp: style({ minWidth: '120px', flex: 1.2 }),
+                $body: map(({ account }: IAggregatedTradeSummary) => {
+
+                  return switchLatest(map(map => {
+                    return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
+                      profileClick: routeChangeTether()
+                    })
+                  }, config.claimMap))
+                })
+              },
+              {
+                $head: $text('Win/Loss'),
+                columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
+                $body: map((pos: IAggregatedAccountSummary) => {
+                  return $row(
+                    $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                  )
+                })
+              },
+              {
+                $head: $text('Profit-%'),
+                columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
+                $body: map((pos) => {
+                  return $settledPercentage(pos)
+                })
+              }
+            ],
+          })({ scrollIndex: highTableRequestIndexTether() }),
         ),
       ),
+      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 0% 100px, ${colorAlpha(pallete.negative, .1)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
+          $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
+            bodyContainerOp: layoutSheet.spacing,
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            dataSource: combineArray((claimMap, res) => {
+              return {
+                data: res.page.map((item, index) => {
+                  return { ...item, claimMap, index: index + res.offset }
+                }),
+                pageSize: res.pageSize,
+                offset: res.offset,
+              }
+            }, config.claimMap, config.competitionNov2021LowestCumulative),
+            columns: [
+              {
+                $head: $text('Rank'),
+                columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
+                $body: map((pos) => {
 
+                  const claim = pos.claimMap.get(pos.account)
 
-      $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-        
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-          $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-            $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
-              },
-              dataSource: combineArray((claimMap, res) => {
-                return {
-                  data: res.page.map((item, index) => {
-                    return { ...item, claimMap, index: index + res.offset }
-                  }),
-                  pageSize: res.pageSize,
-                  offset: res.offset,
-                }
-              }, config.claimMap, config.competitionNov2021HighestCumulative),
-              columns: [
-                {
-                  $head: $text('Rank'),
-                  columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos) => {
-
-                    const claim = pos.claimMap.get(pos.account)
-
-                    if (!claim) {
-                      return $row(
-                        style({ zoom: '0.7' })(
-                          $alert($text('Unclaimed'))
-                        )
-                      )
-                    }
-
-                    const rank = pos.index + 1
-
-                    let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-                      $text(style({ fontSize: '1em' }))(`#`),
-                      $text(style({ fontSize: '1.5em' }))(`${rank}`),
-                    )
-
-                    if (rank < 6) {
-                      $nftPLaceholder = rank > 1
-                        ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
-                        : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Winner.png' })) 
-                    }
-
-                    if (rank < 21) {
-
-                      return $column(layoutSheet.spacingSmall)(
-                        $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                          $nftPLaceholder
-                        ),
-                        
-                        // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
-                        //   `$${readableNumber(getPrizePoolByRank(rank))}`
-                        // )
-                      )
-                    }
-
-                    return $row()
-                  })
-                },
-                {
-                  $head: $text('Account'),
-                  columnOp: style({ minWidth: '120px', flex: 1.2 }),
-                  $body: map(({ account }: IAggregatedTradeSummary) => {
-
-                    return switchLatest(map(map => {
-                      return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
-                        profileClick: routeChangeTether()
-                      })
-                    }, config.claimMap))
-                  })
-                },
-                {
-                  $head: $text('Win/Loss'),
-                  columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos: IAggregatedAccountSummary) => {
+                  if (!claim) {
                     return $row(
-                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
-                    )
-                  })
-                },
-                {
-                  $head: $text('Profit-%'),
-                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos) => {
-                    return $settledPercentage(pos)
-                  })
-                }
-              ],
-            })({ scrollIndex: highTableRequestIndexTether() }),
-          ),
-        ),
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-          $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 0% 100px, ${colorAlpha(pallete.negative, .1)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-            $Table2<IAggregatedAccountSummary & {claimMap: Map<string, IClaim>, index: number}>({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
-              },
-              dataSource: combineArray((claimMap, res) => {
-                return {
-                  data: res.page.map((item, index) => {
-                    return { ...item, claimMap, index: index + res.offset }
-                  }),
-                  pageSize: res.pageSize,
-                  offset: res.offset,
-                }
-              }, config.claimMap, config.competitionNov2021LowestCumulative),
-              columns: [
-                {
-                  $head: $text('Rank'),
-                  columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos) => {
-
-                    const claim = pos.claimMap.get(pos.account)
-
-                    if (!claim) {
-                      return $row(
-                        style({ zoom: '0.7' })(
-                          $alert($text('Unclaimed'))
-                        )
+                      style({ zoom: '0.7' })(
+                        $alert($text('Unclaimed'))
                       )
-                    }
-
-                    const rank = pos.index + 1
-
-                    let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-                      $text(style({ fontSize: '1em' }))(`#`),
-                      $text(style({ fontSize: '1.5em' }))(`${rank}`),
                     )
+                  }
 
-                    if (rank < 6) {
-                      $nftPLaceholder = rank > 1
-                        ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
-                        : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Looser.png' })) 
-                    }
+                  const rank = pos.index + 1
 
-                    if (rank < 21) {
+                  let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                    $text(style({ fontSize: '1em' }))(`#`),
+                    $text(style({ fontSize: '1.5em' }))(`${rank}`),
+                  )
 
-                      return $column(layoutSheet.spacingSmall)(
-                        $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                          $nftPLaceholder
-                        ),
+                  if (rank < 6) {
+                    $nftPLaceholder = rank > 1
+                      ? $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                      : $nftPrice(rank, attr({ src: '/assets/blueberriesNFT/Looser.png' })) 
+                  }
+
+                  if (rank < 21) {
+
+                    return $column(layoutSheet.spacingSmall)(
+                      $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+                        $nftPLaceholder
+                      ),
                         
-                        // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
-                        //   `$${readableNumber(getPrizePoolByRank(rank))}`
-                        // )
-                      )
-                    }
-
-                    return $row()
-                  })
-                },
-                {
-                  $head: $text('Account'),
-                  columnOp: style({ minWidth: '120px', flex: 1.2 }),
-                  $body: map(({ account }: IAggregatedTradeSummary) => {
-
-                    return switchLatest(map(map => {
-                      return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
-                        profileClick: routeChangeTether()
-                      })
-                    }, config.claimMap))
-                  })
-                },
-                {
-                  $head: $text('Win/Loss'),
-                  columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
-                  $body: map((pos: IAggregatedAccountSummary) => {
-                    return $row(
-                      $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                      // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
+                      //   `$${readableNumber(getPrizePoolByRank(rank))}`
+                      // )
                     )
-                  })
-                },
-                {
-                  $head: $text('Profit-%'),
-                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos) => {
-                    return $settledPercentage(pos)
-                  })
-                }
-              ],
-            })({ scrollIndex: lowTableRequestIndexTether() }),
-          ),
+                  }
+
+                  return $row()
+                })
+              },
+              {
+                $head: $text('Account'),
+                columnOp: style({ minWidth: '120px', flex: 1.2 }),
+                $body: map(({ account }: IAggregatedTradeSummary) => {
+
+                  return switchLatest(map(map => {
+                    return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
+                      profileClick: routeChangeTether()
+                    })
+                  }, config.claimMap))
+                })
+              },
+              {
+                $head: $text('Win/Loss'),
+                columnOp: style({ flex: .8, alignItems: 'center', placeContent: 'center' }),
+                $body: map((pos: IAggregatedAccountSummary) => {
+                  return $row(
+                    $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
+                  )
+                })
+              },
+              {
+                $head: $text('Profit-%'),
+                columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
+                $body: map((pos) => {
+                  return $settledPercentage(pos)
+                })
+              }
+            ],
+          })({ scrollIndex: lowTableRequestIndexTether() }),
         ),
       ),
     ),
-
 
     {
       competitionNov2021LowestCumulative: pagerOp(highTableRequestIndex),
