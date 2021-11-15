@@ -89,14 +89,14 @@ export const $Trade = (config: ITrade) => component((
               $labelUSD('Collateral', summary.collateral),
 
               $buttonAnchor(attr({
-                href: `https://twitter.com/intent/tweet?text=\n${document.location.href}`
+                href: `https://twitter.com/intent/tweet?text=Here's my GMX Trading Competition Entry $GMX $redvsgreen $cryptotrading \n${document.location.href}`
               }))(  
                 $icon({
                   $content: $twitter,
                   width: '14px',
                   viewBox: '0 0 24 24'
                 }),
-                $text('share'),
+                $text('Share'),
               )
             )
           }, tradeSummary)
