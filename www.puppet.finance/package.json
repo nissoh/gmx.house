@@ -29,6 +29,7 @@
         "@ethersproject/strings": "5.5.0",
         "@ethersproject/units": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
+        "@gambitdao/wallet-link": "workspace:*",
         "@metamask/detect-provider": "^1.2.0",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
@@ -46,8 +47,7 @@
         "graphql": "^16.0.1",
         "hash.js": "1.1.7",
         "jazzicon": "^1.5.0",
-        "lightweight-charts-baseline": "0.0.3",
-        "wallet-link": "workspace:*"
+        "lightweight-charts-baseline": "0.0.3"
     },
     "devDependencies": {
         "copy-webpack-plugin": "9.0.1",

@@ -1,11 +1,10 @@
 import { O, replayLatest } from "@aelea/core"
-import { state } from "@aelea/ui-components"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter, tap } from "@most/core"
+import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
 import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
-import { CHAIN } from "./const"
+import { CHAIN, NETWORK_METADATA } from "./const"
 
 
 
@@ -16,7 +15,7 @@ export const getTxDetails = (provider: Stream<BaseProvider>) => (txHash: string)
   )
 }
 
-
+export { NETWORK_METADATA }
 
 export interface IWalletLink<T extends IEthereumProvider = IEthereumProvider> {
   account: Stream<string>

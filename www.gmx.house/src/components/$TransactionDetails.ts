@@ -9,7 +9,7 @@
 
 // import { shortenTxAddress } from "gambit-middleware"
 // import walletLink from "../common/walletLink"
-// import { getTxExplorerUrl } from "wallet-link"
+// import { getTxExplorerUrl } from "@gambitdao/wallet-link"
 
 
 

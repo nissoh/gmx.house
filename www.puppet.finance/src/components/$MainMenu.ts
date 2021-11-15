@@ -7,7 +7,7 @@ import { constant, empty, map, switchLatest, tap } from '@most/core'
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { IClaim } from "gambit-middleware"
-import { IWalletLink } from "wallet-link"
+import { IWalletLink } from "@gambitdao/wallet-link"
 import { $tradeGMX } from '../common/$tradeButton'
 import { dark, light } from '../common/theme'
 import { $Link } from './$Link'

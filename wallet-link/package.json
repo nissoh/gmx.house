@@ -1,5 +1,5 @@
 {
-    "name": "wallet-link",
+    "name": "@gambitdao/wallet-link",
     "version": "0.0.2",
     "license": "MIT",
     "module": ".dist/esm/index.js",

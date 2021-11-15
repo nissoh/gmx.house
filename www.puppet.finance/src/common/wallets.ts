@@ -3,8 +3,7 @@ import detectEthereumProvider from "@metamask/detect-provider"
 import { awaitPromises, map, multicast, now } from "@most/core"
 import WalletConnectProvider from "@walletconnect/ethereum-provider"
 import { IEthereumProvider } from "eip1193-provider"
-import { CHAIN } from "wallet-link"
-import { NETWORK_METADATA } from "wallet-link/src/const"
+import { CHAIN, NETWORK_METADATA } from "@gambitdao/wallet-link"
 
 
 export const walletConnect = replayLatest(multicast(map(() =>

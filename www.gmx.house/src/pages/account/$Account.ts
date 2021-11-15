@@ -7,7 +7,7 @@ import { BaseProvider } from '@ethersproject/providers'
 import { Stream } from '@most/types'
 import { IEthereumProvider } from "eip1193-provider"
 import { AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAccountAggregationMap, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
-import { IWalletLink } from "wallet-link"
+import { IWalletLink } from "@gambitdao/wallet-link"
 import { $Portfolio } from "./$Portfolio"
 import { $Trade } from "./$Trade"
 

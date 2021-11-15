@@ -11,7 +11,7 @@ import {
   IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
   IPageable, IPageChainlinkPricefeed, TradeType, TX_HASH_REGEX
 } from 'gambit-middleware'
-import { initWalletLink } from "wallet-link"
+import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
 import * as wallet from "../common/wallets"
 import { $MainMenu } from '../components/$MainMenu'
