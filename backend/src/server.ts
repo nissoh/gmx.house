@@ -13,6 +13,9 @@ import { competitionNov2021HighestCumulative, competitionNov2021LowestCumulative
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
+import compression from 'compression'
+
+
 
 require('events').EventEmitter.prototype._maxListeners = 100
 
@@ -120,6 +123,7 @@ const run = async () => {
 
   app.use(cors({}))
   app.use(express.json())
+  app.use(compression())
   app.use(express.static(publicDir))
   app.use('/api', api)
   app.use((req, res, next) => {
