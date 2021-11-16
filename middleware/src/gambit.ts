@@ -70,20 +70,20 @@ export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { s
 export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll): IPositionDelta {
   const settlement = trade.settledPosition
   const isLiq = isLiquidated(settlement)
+  const maxCollateralUpdate = trade.updateList.reduce((seed, b) => seed.collateral > b.collateral ? seed : b, trade.updateList[0])
 
   if (isLiq) {
     const { size, collateral } = settlement
-    const averagePrice = trade.updateList[trade.updateList.length - 1].averagePrice
+    const averagePrice = maxCollateralUpdate.averagePrice
 
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
 
   const delta = settlement.realisedPnl
-  const maxCollateral = trade.updateList.reduce((seed, b) => seed > b.collateral ? seed : b.collateral, 0n)
 
   return {
     delta,
-    deltaPercentage: maxCollateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateral : 0n
+    deltaPercentage: maxCollateralUpdate.collateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateralUpdate.collateral : 0n
   }
 }
 
