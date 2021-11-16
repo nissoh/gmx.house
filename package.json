@@ -4,7 +4,7 @@
     "author": "Nissan Hanina <nissanhanina@gmail.com>",
     "private": true,
     "workspaces": [
-        "*"
+        "backend-opengraph-webshot"
     ],
     "scripts": {
         "build": "yarn workspaces foreach --exclude '{backend,www.gmx.house}' --verbose --topological --parallel run build",
