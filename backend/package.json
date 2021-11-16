@@ -26,10 +26,6 @@
         "@ethersproject/bytes": "5.5.0",
         "@ethersproject/contracts": "^5.5.0",
         "@ethersproject/providers": "5.5.0",
-        "@mikro-orm/core": "4.5.9",
-        "@mikro-orm/mongo-highlighter": "^1.0.0",
-        "@mikro-orm/mongodb": "4.5.9",
-        "@mikro-orm/reflection": "^4.5.9",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
@@ -58,16 +54,8 @@
         "@types/node": "16.11.7",
         "@types/ws": "^8.2.0",
         "dotenv": "^10.0.0",
-        "ts-node": "^10.4.0",
         "ts-node-dev": "^1.1.8",
         "typescript": "^4.4.4"
-    },
-    "mikro-orm": {
-        "useTsNode": true,
-        "configPaths": [
-            "./app/mikro-orm.config.ts",
-            "./dist/mikro-orm.config.js"
-        ]
     },
     "engines": {
         "node": "16.4.x"

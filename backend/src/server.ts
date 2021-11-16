@@ -1,4 +1,3 @@
-import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
 import { map } from '@most/core'
 import cors from 'cors'
 import express from 'express'
@@ -12,7 +11,6 @@ import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage
 import { competitionNov2021HighestCumulative, competitionNov2021LowestCumulative } from './logic/competition-cumulative'
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
-import config from './mikro-orm.config'
 import compression from 'compression'
 
 
@@ -22,8 +20,6 @@ require('events').EventEmitter.prototype._maxListeners = 100
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
 
-export let ORM: MikroORM<IDatabaseDriver<Connection>>
-export let EM: EntityManager<IDatabaseDriver<Connection>>
 
 const app = express()
 const port = process.env.PORT
@@ -98,10 +94,7 @@ const apiComponent = helloFrontend(wss, {
 
 
 const run = async () => {
-  ORM = await MikroORM.init(config)
-  EM = ORM.em
-
-  
+ 
 
   apiComponent
     .run({
