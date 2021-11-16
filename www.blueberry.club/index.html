@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="/">
+    <meta name="viewport" content="width=device-width, initial-scale=0.85">
+    <style> 
+    /* WebkitFontSmoothing: 'antialiased', fontSmooth: 'antialiased', */
+        * { box-sizing: border-box; } body { margin: 0; overflow: hidden; }
+
+        body, button {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+
+        @font-face {
+            font-family: 'Moderat';
+            src: url("/assets/font/fc8e4e5.woff2") format('woff2');
+            font-weight: 300;
+            font-style: normal;
+            font-display: swap
+        }
+
+        @font-face {
+            font-family: 'Moderat';
+            src: url("/assets/font/7fc9237.woff2") format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap
+        }
+
+     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="/assets/favicon.png">
+
+    <meta property="og:url" content="blueberry.club">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="GMX Blueberry Club">
+    <meta property="og:image" content="/assets/OG_GBC.jpg">
+
+    <meta name="twitter:image:src" content="/assets/OG_GBC.jpg">
+    <meta name="twitter:site" content="@GBlueberryClub" />
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="GMX Blueberry Club">
+
+
+</head>
+
+<body>
+    <style>
+        .cubes .cube * {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+        }
+    
+        .cubes .cube .shadow {
+            background: #000000;
+            top: 40%;
+        }
+    
+        .cubes .cube .sides div {
+            backface-visibility: hidden;
+            will-change: transform;
+            display: flex;
+            align-items: center;
+            place-content: center;
+        }
+    
+        .cubes .cube .sides .front {
+            transform: rotateY(0deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .back {
+            transform: rotateY(-180deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .left {
+            transform: rotateY(-90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .right {
+            transform: rotateY(90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .top {
+            transform: rotateX(90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides .bottom {
+            transform: rotateX(-90deg) translateZ(50px);
+        }
+    
+        .cubes .cube .sides {
+            transform-style: preserve-3d;
+            perspective: 600px;
+        }
+    
+        .cubes {
+            pointer-events: none;
+        }
+    
+        .cubes .cube {
+            position: absolute;
+            height: 100px;
+            width: 100px;
+            margin: 0;
+    
+            animation: cube-fade-in 2s cubic-bezier(0.1, 0.31, 0, 1.19);
+            will-change: transform;
+    
+        }
+    
+        @keyframes cube-fade-in {
+            0% {
+                opacity: 0;
+                transform: scale(.5)
+            }
+        }
+    </style>
+    <template id="cube-template">
+        <div class="cube">
+            <div class="shadow"></div>
+            <div class="sides">
+                <div class="back">T</div>
+                <div class="top">U</div>
+                <div class="left">Z</div>
+                <div class="front">Y</div>
+                <div class="right">R</div>
+                <div class="bottom">L</div>
+            </div>
+        </div>
+    </template>
+</body>
+
+</html>
