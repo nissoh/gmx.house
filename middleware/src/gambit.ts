@@ -73,7 +73,7 @@ export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll)
 
   if (isLiq) {
     const { size, collateral } = settlement
-    const averagePrice = settlement.markPrice
+    const averagePrice = trade.updateList[trade.updateList.length - 1].averagePrice
 
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
