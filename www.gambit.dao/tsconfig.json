@@ -1,0 +1,26 @@
+{
+  "extends": "../tsconfig",
+  "compilerOptions": {
+    "outDir": ".dist/esm",
+    "rootDir": "src",
+    "target": "ES2020",
+    "declarationDir": ".dist/types",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
+  },
+  "references": [
+    {
+      "path": "../middleware"
+    },
+    {
+      "path": "../backend"
+    },
+    {
+      "path": "../wallet-link"
+    }
+  ]
+}
