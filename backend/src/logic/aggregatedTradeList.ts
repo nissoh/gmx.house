@@ -2,6 +2,7 @@
 import { O } from '@aelea/core'
 import { awaitPromises, map, snapshot } from '@most/core'
 import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAggregatedTradeAll, IAggregatedTradeSettledListMap, IChainlinkPrice, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
+import { cacheMap } from '../utils'
 import { chainlinkClient, latestPricefeedMapSource, vaultClient } from './api'
 import { accountAggregationQuery, accountListAggregationQuery, aggregatedClosedTradeQuery, aggregatedSettledTradesMapQuery, chainlinkPricefeedQuery, IChainLinkMap, openAggregateLiquidatedTradeQuery, openAggregateOpenTradeQuery, openAggregateTradesQuery, tradeListTimespanMapQuery } from './queries'
 
@@ -88,10 +89,20 @@ export const tradeByTimespan = map((queryParams: IPageable & ITimerange) => {
   return { query: fethPage(0), queryParams }
 })
 
+const cacheLifeMap = {
+  [intervalInMsMap.HR24]: intervalInMsMap.MIN5,
+  [intervalInMsMap.DAY7]: intervalInMsMap.MIN30,
+  [intervalInMsMap.MONTH]: intervalInMsMap.MIN60,
+}
 
+const leaderboardCacheMap = cacheMap({})
 export const requestLeaderboardTopList = O(
-  map((queryParams: ILeaderboardRequest) => {
-    const to = Date.now() / 1000 | 0
+  map(async (queryParams: ILeaderboardRequest) => {
+    const cacheLife = cacheLifeMap[queryParams.timeInterval]
+    const to = await leaderboardCacheMap('open', cacheLife, async () => {
+      return Date.now() / 1000 | 0
+    })
+
     const from = (to - (queryParams.timeInterval / 1000 | 0))
 
     const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
@@ -105,6 +116,8 @@ export const requestLeaderboardTopList = O(
 
       return list
     }
+
+
 
     const cacheQuery = fethPage(0).then(list => {
       const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds].map(fromJson.toAggregatedSettledTrade)
