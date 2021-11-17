@@ -91,9 +91,7 @@ const apiComponent = helloFrontend(wss, {
   competitionNov2021HighestPercentage,
   competitionNov2021LowestPercentage,
   competitionNov2021HighestCumulative,
-  competitionNov2021LowestCumulative,
-
-  spaceOddity: map(msg => 'Can you hear me major tom?')
+  competitionNov2021LowestCumulative
 })
 
 

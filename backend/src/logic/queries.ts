@@ -190,7 +190,7 @@ query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
   }
 }
 `
-export const aggregatedSettledTradesMapQuery2: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
+export const tradeListTimespanMapQuery: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
 ${schemaFragments}
 
 query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {

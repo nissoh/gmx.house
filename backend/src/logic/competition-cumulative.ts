@@ -1,60 +1,36 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import {
-  IAggregatedTradeSettledListMap, fromJson, pagingQuery, intervalInMsMap, IPageable,
-  groupByMap, parseFixed, toAggregatedAccountSummary, ITimerange
-} from "gambit-middleware"
-import { cacheMap } from "../utils"
-import { vaultClient } from "./api"
-import { aggregatedSettledTradesMapQuery2 } from "./queries"
+import { fromJson, pagingQuery, groupByMap, parseFixed, toAggregatedAccountSummary } from "gambit-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
-
-const leaderboardCacheMap = cacheMap({})
-
+import { tradeByTimespan } from "./aggregatedTradeList"
 
 
-const fetchCompeitionResults = map((queryParams: IPageable & ITimerange) => {
-  const from = Math.floor(queryParams.from / 1000)
-  const to = Math.floor(queryParams.to / 1000)
+const fetchCompeitionResults = O(
+  tradeByTimespan,
+  map(({ query: listQuery, queryParams }) => {
+    const claimListQuery = EM.find(Claim, {})
 
-  const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
-    const list = await vaultClient(aggregatedSettledTradesMapQuery2, { from, to, pageSize: 1000, offset })
+    const query = Promise.all([claimListQuery, listQuery]).then(([claimList, list]) => {
+      const minWithThreshold = parseFixed(950, 30)
+      const settledList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
+        .map(fromJson.toAggregatedTradeSettledSummary)
+        .filter(trade =>
+          BigInt(trade.collateral) >= minWithThreshold
+        ).map(s => s.trade)
 
-    if (list.aggregatedTradeCloseds.length === 1000) {
-      const newPage = await fethPage(offset + 1000)
-
-      return { aggregatedTradeLiquidateds: list.aggregatedTradeLiquidateds, aggregatedTradeCloseds: [...list.aggregatedTradeCloseds, ...newPage.aggregatedTradeCloseds] }
-    }
-
-    return list
-  }
-
-  const query = leaderboardCacheMap('HIGH' + from + to, intervalInMsMap.MIN5, async () => {
-    const list = await fethPage(0)
-    const claimList = await EM.find(Claim, {})
-    const minWithThreshold = parseFixed(950, 30)
-
+      const formattedList = toAggregatedAccountSummary(settledList)
     
-    const settledList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
-      .map(fromJson.toAggregatedTradeSettledSummary)
-      .filter(trade =>
-        BigInt(trade.collateral) >= minWithThreshold
-      ).map(s => s.trade)
+      const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 
-    const formattedList = toAggregatedAccountSummary(settledList)
-    
-    const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
-
-    return { formattedList, claimMap }
-  })
+      return { formattedList, claimMap }
+    })
  
-  return { query, queryParams }
-})
+    return { query, queryParams }
+  })
+)
 
-const bigNumberForPriority = 1000000n
-
-    
+const bigNumberForPriority = 1000000n 
 export const competitionNov2021HighestCumulative = O(
   fetchCompeitionResults,
   map(async ({ query, queryParams }) => {
