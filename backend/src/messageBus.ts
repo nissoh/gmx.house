@@ -1,5 +1,5 @@
 import { fromCallback, O, Op } from '@aelea/core'
-import { chain, empty, filter, map, mergeArray, recoverWith, tap } from '@most/core'
+import { chain, empty, filter, map, mergeArray, recoverWith, tap, until } from '@most/core'
 import { Stream } from '@most/types'
 import { ICommunicationMessage } from 'gambit-middleware'
 import ws, { EventEmitter } from 'ws'
@@ -21,17 +21,14 @@ function wsConnection(wss: EventEmitter, clientPipeList: Op<WsData, string>[]): 
         const outEffects = tap(outmsg => {
           ws.send(outmsg)
         }, serverOut)
-  
-        ws.on('close', () => {
-          connectDisposable.dispose()
-        })
 
-        return outEffects
+        const wsDipose = fromCallback(cb => ws.on('close', cb))
+
+        return until(wsDipose, outEffects)
       }, connection)
 
-      const connectDisposable = connectToMessages.run(sink, scheduler)
 
-      return connectDisposable
+      return connectToMessages.run(sink, scheduler)
     }
   }
 }
