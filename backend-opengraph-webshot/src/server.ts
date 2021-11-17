@@ -70,7 +70,7 @@ openGraphScreenshot.get('/og-trade-preview', async (req, res) => {
   try {
     const file = await screenPage(selfRef)
   
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate')
+    res.setHeader('Cache-Control', 'max-age=604800, must-revalidate')
     res.setHeader('Content-Type', `image/jpeg`)
     res.end(file)
   } catch (error: any) {

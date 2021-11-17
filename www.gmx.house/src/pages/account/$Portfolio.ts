@@ -6,7 +6,7 @@ import { pallete } from "@aelea/ui-components-theme"
 import { at, constant, empty, filter, fromPromise, map, mergeArray, multicast, now, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "gambit-middleware"
+import { AccountHistoricalDataApi, calculateSettledPositionDelta, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "gambit-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { IWalletLink } from "@gambitdao/wallet-link"
 import { fetchHistoricKline } from "../../binance-api"
@@ -82,7 +82,8 @@ export const $Portfolio = (config: IAccount) => component((
 
   const historicalPnl = multicast(
     combineArray((historicalData, interval) => {
-      return historicalPnLMetric([...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds], interval, INTERVAL_TICKS)
+      const tradeList = [...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds].map(toAggregatedTradeSettledSummary)
+      return historicalPnLMetric(tradeList, interval, INTERVAL_TICKS)
     }, accountHistoryPnL, chartInterval)
   )
 
@@ -380,7 +381,7 @@ export const $Portfolio = (config: IAccount) => component((
               dataSource: map((data: IAccountAggregationMap) => {
                 const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
                   // .filter(trade => trade.initialPosition.indexToken === token.address)
-                  .sort((a, b) => b.indexedAt - a.indexedAt)
+                  .sort((a, b) => b.settledPosition.indexedAt - a.settledPosition.indexedAt)
                   .map(toAggregatedTradeSettledSummary)
                 return settledList
 
@@ -472,43 +473,43 @@ export const $Portfolio = (config: IAccount) => component((
 
 
 
-                const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.settledPosition.indexedAt > startDate)
-                const liquidatedTradeList = accountHistoryPnL.aggregatedTradeLiquidateds.filter(pos => pos.settledPosition.indexedAt > startDate)
+                const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.settledPosition.indexedAt > startDate).map(toAggregatedTradeSettledSummary)
+                const liquidatedTradeList = accountHistoryPnL.aggregatedTradeLiquidateds.filter(pos => pos.settledPosition.indexedAt > startDate).map(toAggregatedTradeSettledSummary)
 
                 const settledList = [...closedTradeList, ...liquidatedTradeList]
 
                 setTimeout(() => {
                   const increasePosMarkers = settledList
-                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken)
-                    .map((pos): SeriesMarker<Time> => {
+                    .filter(summary => selectedToken.address === summary.trade.initialPosition.indexToken)
+                    .map((summary): SeriesMarker<Time> => {
                       return {
-                        color: pos.initialPosition.isLong ? pallete.positive : pallete.negative,
+                        color: summary.trade.initialPosition.isLong ? pallete.positive : pallete.negative,
                         position: "aboveBar",
-                        shape: pos.initialPosition.isLong ? 'arrowUp' : 'arrowDown',
-                        time: unixTimeTzOffset(pos.initialPositionBlockTimestamp),
+                        shape: summary.trade.initialPosition.isLong ? 'arrowUp' : 'arrowDown',
+                        time: unixTimeTzOffset(summary.trade.initialPositionBlockTimestamp),
                       }
                     })
                   const closePosMarkers = closedTradeList
-                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && !(isLiquidated(pos.settledPosition)))
-                    .map((pos): SeriesMarker<Time> => {
+                    .filter(summary => selectedToken.address === summary.trade.initialPosition.indexToken && summary.trade.settledPosition && !(isLiquidated(summary.trade.settledPosition)))
+                    .map((summary): SeriesMarker<Time> => {
 
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(pos.settledPosition!.realisedPnl),
-                        time: unixTimeTzOffset(pos.indexedAt),
+                        text: '$' + formatReadableUSD(summary.realisedPnl),
+                        time: unixTimeTzOffset(summary.trade.indexedAt),
                       }
                     })
                   const liquidatedPosMarkers = liquidatedTradeList
-                    .filter(pos => selectedToken.address === pos.initialPosition.indexToken && pos.settledPosition && isLiquidated(pos.settledPosition))
+                    .filter(summmary => selectedToken.address === summmary.trade.initialPosition.indexToken && summmary.trade.settledPosition && isLiquidated(summmary.trade.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pallete.negative,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$-' + formatReadableUSD(pos.settledPosition!.collateral),
-                        time: unixTimeTzOffset(pos.indexedAt),
+                        text: '$-' + formatReadableUSD(pos.trade.settledPosition.collateral),
+                        time: unixTimeTzOffset(pos.trade.indexedAt),
                       }
                     })
                   
