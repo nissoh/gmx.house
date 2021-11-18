@@ -17,14 +17,14 @@ export const api = Router()
 export const vaultClient = prepareClient({
   fetch: fetch as any,
   url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault',
-  requestPolicy: 'network-only'
+  // requestPolicy: 'network-only'
 })
 
 
 export const chainlinkClient = prepareClient({
   fetch: fetch as any,
   url: 'https://api.thegraph.com/subgraphs/name/deividask/chainlink',
-  requestPolicy: 'network-only'
+  // requestPolicy: 'network-only'
 })
 
 
