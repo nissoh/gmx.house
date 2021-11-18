@@ -171,7 +171,7 @@ query ($from: Int = 0, $to: Int = 9e10, $offset: Int = 0, $pageSize: Int = 1000,
 export const openAggregateTradesQuery: TypedDocumentNode<IAggregatedTradeOpenListMap> = gql`
 ${schemaFragments}
 
-query {
+query($from: Int = 0, $to: Int = 9e10) {
   aggregatedTradeOpens(first: 1000) {
     ...aggregatedTradeOpenFields
   }

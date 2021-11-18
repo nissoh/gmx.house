@@ -99,7 +99,7 @@ const leaderboardCacheMap = cacheMap({})
 export const requestLeaderboardTopList = O(
   map(async (queryParams: ILeaderboardRequest) => {
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
-    const to = await leaderboardCacheMap('open', cacheLife, async () => {
+    const to = await leaderboardCacheMap('requestLeaderboardTopList', cacheLife, async () => {
       return Date.now() / 1000 | 0
     })
 
@@ -147,8 +147,11 @@ export const requestAccountListAggregation = O(
 
 export const requestOpenAggregatedTrades = O(
   snapshot(async (feedMap, queryParams: IPageable & ISortable<'size' | 'delta' | 'deltaPercentage'>) => {
+    const to = await leaderboardCacheMap('requestOpenAggregatedTrades', intervalInMsMap.MIN5, async () => {
+      return Date.now() / 1000 | 0
+    })
 
-    const cacheQuery = vaultClient(openAggregateTradesQuery, {}).then(list => {
+    const cacheQuery = vaultClient(openAggregateTradesQuery, { to }).then(list => {
       const sortedList = list.aggregatedTradeOpens.map(fromJson.toAggregatedOpenTradeSummary)
       return sortedList
     })
