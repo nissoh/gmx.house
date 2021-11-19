@@ -6,6 +6,7 @@ import { cacheMap } from '../utils'
 import { chainlinkClient, latestPricefeedMapSource, vaultClient } from './api'
 import { accountAggregationQuery, accountListAggregationQuery, aggregatedClosedTradeQuery, aggregatedSettledTradesMapQuery, chainlinkPricefeedQuery, IChainLinkMap, openAggregateLiquidatedTradeQuery, openAggregateOpenTradeQuery, openAggregateTradesQuery, tradeListTimespanMapQuery } from './queries'
 
+const createCache = cacheMap({})
 
 export const requestChainlinkPricefeed = O(
   map(async (queryParams: IPageChainlinkPricefeed) => {
@@ -71,22 +72,25 @@ export const requestAggregatedSettledTradeList = O(
 )
 
 export const tradeByTimespan = map((queryParams: IPageable & ITimerange) => {
-  const from = Math.floor(queryParams.from / 1000)
-  const to = Math.floor(queryParams.to / 1000)
+  const query = createCache('tradeByTimespan' + queryParams.from, intervalInMsMap.MIN5, async () => {
+    const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
+      const from = Math.floor(queryParams.from / 1000)
+      const to = Math.floor(queryParams.to / 1000)
+    
+      const list = await vaultClient(tradeListTimespanMapQuery, { from, to, pageSize: 1000, offset })
 
-  const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
-    const list = await vaultClient(tradeListTimespanMapQuery, { from, to, pageSize: 1000, offset })
+      if (list.aggregatedTradeCloseds.length === 1000) {
+        const newPage = await fethPage(offset + 1000)
+        return { aggregatedTradeLiquidateds: list.aggregatedTradeLiquidateds, aggregatedTradeCloseds: [...list.aggregatedTradeCloseds, ...newPage.aggregatedTradeCloseds] }
+      }
 
-    if (list.aggregatedTradeCloseds.length === 1000) {
-      const newPage = await fethPage(offset + 1000)
-
-      return { aggregatedTradeLiquidateds: list.aggregatedTradeLiquidateds, aggregatedTradeCloseds: [...list.aggregatedTradeCloseds, ...newPage.aggregatedTradeCloseds] }
+      return list
     }
+    
+    return fethPage(0) 
+  })
 
-    return list
-  }
-
-  return { query: fethPage(0), queryParams }
+  return { query, queryParams }
 })
 
 const cacheLifeMap = {
@@ -95,11 +99,10 @@ const cacheLifeMap = {
   [intervalInMsMap.MONTH]: intervalInMsMap.MIN60,
 }
 
-const leaderboardCacheMap = cacheMap({})
 export const requestLeaderboardTopList = O(
   map(async (queryParams: ILeaderboardRequest) => {
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
-    const to = await leaderboardCacheMap('requestLeaderboardTopList', cacheLife, async () => {
+    const to = await createCache('requestLeaderboardTopList' + queryParams.timeInterval, cacheLife, async () => {
       return Date.now() / 1000 | 0
     })
 
@@ -147,7 +150,7 @@ export const requestAccountListAggregation = O(
 
 export const requestOpenAggregatedTrades = O(
   snapshot(async (feedMap, queryParams: IPageable & ISortable<'size' | 'delta' | 'deltaPercentage'>) => {
-    const to = await leaderboardCacheMap('requestOpenAggregatedTrades', intervalInMsMap.MIN5, async () => {
+    const to = await createCache('requestOpenAggregatedTrades', intervalInMsMap.MIN5, async () => {
       return Date.now() / 1000 | 0
     })
 

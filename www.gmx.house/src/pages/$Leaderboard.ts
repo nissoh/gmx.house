@@ -188,7 +188,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 {
                   $head: $text('PnL-$'),
                   sortBy: 'realisedPnl',
-                  columnOp: style({ flex: 1.2, placeContent: 'flex-end', maxWidth: '160px' }),
+                  columnOp: style({ flex: 1.2, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map((pos: IAggregatedSettledTradeSummary) => $row($SummaryProfitLoss(pos)))
                 },
               ],
