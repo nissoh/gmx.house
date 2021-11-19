@@ -1775,10 +1775,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:16.11.7":
-  version: 16.11.7
-  resolution: "@types/node@npm:16.11.7"
-  checksum: 2706403e6efc4aa40fdce8f0b5d9884d5600c3c8610aedc7fa5e7e298d30366f7e8b7296028d52898dca3edef4c3e827b03bf20952c4780f13fa4e79864f7a86
+"@types/node@npm:16.11.8":
+  version: 16.11.8
+  resolution: "@types/node@npm:16.11.8"
+  checksum: c60418498f0affd0fb69351fd04ec0d8c684d1892d6d548d95fc2288b157c4e2e3e0bd3b6da6802ba128cb34ea2144c08e8683469e08cf58c61d5fb6ab9db4b5
   languageName: node
   linkType: hard
 
@@ -3801,7 +3801,7 @@ __metadata:
     "@types/express": ^4.17.13
     "@types/express-serve-static-core": ^4.17.25
     "@types/express-session": ^1.17.4
-    "@types/node": 16.11.7
+    "@types/node": 16.11.8
     "@types/ws": ^8.2.0
     concurrently: ^6.4.0
     dotenv: ^10.0.0
@@ -3841,7 +3841,7 @@ __metadata:
     "@types/express-serve-static-core": ^4.17.25
     "@types/express-session": ^1.17.4
     "@types/isomorphic-fetch": ^0.0.35
-    "@types/node": 16.11.7
+    "@types/node": 16.11.8
     "@types/ws": ^8.2.0
     "@urql/core": ^2.3.5
     compression: ^1.7.4
@@ -5145,6 +5145,23 @@ __metadata:
   peerDependencies:
     webpack: ^5.1.0
   checksum: 70652af613b6bee93039c95daa72a68b0cdc4f66d3d861d9237b4b338968fb5c4fb1860c8424348c73d480975844887c9a0d9a2a57257c226a896b2348d2edcd
+  languageName: node
+  linkType: hard
+
+"copy-webpack-plugin@npm:9.0.1":
+  version: 9.0.1
+  resolution: "copy-webpack-plugin@npm:9.0.1"
+  dependencies:
+    fast-glob: ^3.2.5
+    glob-parent: ^6.0.0
+    globby: ^11.0.3
+    normalize-path: ^3.0.0
+    p-limit: ^3.1.0
+    schema-utils: ^3.0.0
+    serialize-javascript: ^6.0.0
+  peerDependencies:
+    webpack: ^5.1.0
+  checksum: f3e69883e173f9a298b63dcf35ba5aafc02e252c67c236029424af19fb2e36fc93de94054bd7a9ada8b4cbcc4e96e9a3a269f972e4a45f4fd1b32a3d199d2cae
   languageName: node
   linkType: hard
 
@@ -7865,7 +7882,7 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"glob-parent@npm:^6.0.1":
+"glob-parent@npm:^6.0.0, glob-parent@npm:^6.0.1":
   version: 6.0.2
   resolution: "glob-parent@npm:6.0.2"
   dependencies:
@@ -7970,7 +7987,7 @@ fsevents@~2.3.2:
   languageName: node
   linkType: hard
 
-"globby@npm:^11.0.1, globby@npm:^11.0.4":
+"globby@npm:^11.0.1, globby@npm:^11.0.3, globby@npm:^11.0.4":
   version: 11.0.4
   resolution: "globby@npm:11.0.4"
   dependencies:
@@ -12817,7 +12834,7 @@ resolve@1.17.0:
   languageName: node
   linkType: hard
 
-"schema-utils@npm:^3.1.0, schema-utils@npm:^3.1.1":
+"schema-utils@npm:^3.0.0, schema-utils@npm:^3.1.0, schema-utils@npm:^3.1.1":
   version: 3.1.1
   resolution: "schema-utils@npm:3.1.1"
   dependencies:
@@ -14294,6 +14311,17 @@ resolve@1.17.0:
   languageName: node
   linkType: hard
 
+"tsconfig-paths-webpack-plugin@npm:3.5.1":
+  version: 3.5.1
+  resolution: "tsconfig-paths-webpack-plugin@npm:3.5.1"
+  dependencies:
+    chalk: ^4.1.0
+    enhanced-resolve: ^5.7.0
+    tsconfig-paths: ^3.9.0
+  checksum: 86a58fc9ab373ac0ce0717a1147ed83b25ca05f2fa236f11ad8ae81a2577c9a33d7d6596d742d3d8b927c02e85300ef24d685ae7c767f4f964f22f78aa642647
+  languageName: node
+  linkType: hard
+
 "tsconfig-paths-webpack-plugin@npm:3.5.2":
   version: 3.5.2
   resolution: "tsconfig-paths-webpack-plugin@npm:3.5.2"
@@ -15274,6 +15302,46 @@ resolve@1.17.0:
   languageName: node
   linkType: hard
 
+"webpack-dev-server@npm:4.4.0":
+  version: 4.4.0
+  resolution: "webpack-dev-server@npm:4.4.0"
+  dependencies:
+    ansi-html-community: ^0.0.8
+    bonjour: ^3.5.0
+    chokidar: ^3.5.2
+    colorette: ^2.0.10
+    compression: ^1.7.4
+    connect-history-api-fallback: ^1.6.0
+    del: ^6.0.0
+    express: ^4.17.1
+    graceful-fs: ^4.2.6
+    html-entities: ^2.3.2
+    http-proxy-middleware: ^2.0.0
+    internal-ip: ^6.2.0
+    ipaddr.js: ^2.0.1
+    open: ^8.0.9
+    p-retry: ^4.5.0
+    portfinder: ^1.0.28
+    schema-utils: ^3.1.0
+    selfsigned: ^1.10.11
+    serve-index: ^1.9.1
+    sockjs: ^0.3.21
+    spdy: ^4.0.2
+    strip-ansi: ^7.0.0
+    url: ^0.11.0
+    webpack-dev-middleware: ^5.2.1
+    ws: ^8.1.0
+  peerDependencies:
+    webpack: ^4.37.0 || ^5.0.0
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack-dev-server: bin/webpack-dev-server.js
+  checksum: c317b5029b6f8caad47a257edb68b2dad5cd7087f4481ebda3359701c981037ce387486bdf992fb6e23213685d8e25e306b25a62541a42d0154562b1999563a5
+  languageName: node
+  linkType: hard
+
 "webpack-dev-server@npm:4.5.0":
   version: 4.5.0
   resolution: "webpack-dev-server@npm:4.5.0"
@@ -15324,10 +15392,47 @@ resolve@1.17.0:
   languageName: node
   linkType: hard
 
-"webpack-sources@npm:^3.2.2":
+"webpack-sources@npm:^3.2.0, webpack-sources@npm:^3.2.2":
   version: 3.2.2
   resolution: "webpack-sources@npm:3.2.2"
   checksum: cc81f1f1bfd1c25c7a565598850294b515bcccf7974d0249b4a0c8c607307866ce3f9e8cdef1c74d5facfb0d993944c499cfd4b7c8f52d01359b6671cc5823d4
+  languageName: node
+  linkType: hard
+
+"webpack@npm:5.64.0":
+  version: 5.64.0
+  resolution: "webpack@npm:5.64.0"
+  dependencies:
+    "@types/eslint-scope": ^3.7.0
+    "@types/estree": ^0.0.50
+    "@webassemblyjs/ast": 1.11.1
+    "@webassemblyjs/wasm-edit": 1.11.1
+    "@webassemblyjs/wasm-parser": 1.11.1
+    acorn: ^8.4.1
+    acorn-import-assertions: ^1.7.6
+    browserslist: ^4.14.5
+    chrome-trace-event: ^1.0.2
+    enhanced-resolve: ^5.8.3
+    es-module-lexer: ^0.9.0
+    eslint-scope: 5.1.1
+    events: ^3.2.0
+    glob-to-regexp: ^0.4.1
+    graceful-fs: ^4.2.4
+    json-parse-better-errors: ^1.0.2
+    loader-runner: ^4.2.0
+    mime-types: ^2.1.27
+    neo-async: ^2.6.2
+    schema-utils: ^3.1.0
+    tapable: ^2.1.1
+    terser-webpack-plugin: ^5.1.3
+    watchpack: ^2.2.0
+    webpack-sources: ^3.2.0
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack: bin/webpack.js
+  checksum: 9d32a61d988b0cd34f7c2b9006ac2eec81c36a72acf3b7f01c6c567c2ebc95bb75d422a53a5bea69c36dbfc50c11ac953ec07742da43c55beb512d0f2d4bb400
   languageName: node
   linkType: hard
 
