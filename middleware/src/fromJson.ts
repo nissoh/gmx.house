@@ -70,12 +70,13 @@ function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccount
   const fee = BigInt(json?.fee)
   const collateral = BigInt(json?.collateral)
   const size = BigInt(json?.size)
+  const realisedPnl = BigInt(json?.realisedPnl)
   const delta: IPositionDelta = {
     delta: BigInt(json.delta?.delta),
     deltaPercentage: BigInt(json.delta?.deltaPercentage)
   }
 
-  return { ...json, collateral, pnl, fee, size, delta }
+  return { ...json, collateral, pnl, fee, size, delta, realisedPnl }
 }
 
 

@@ -284,7 +284,7 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(competitionTopCumulative2Route)(
               $column(
-                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades aggregated per account during Nov 3-16'),
+                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades aggregated per account during Nov 17-30'),
                 $CompetitionCumulative({
                   claimMap,
                   parentRoute: rootRoute,

@@ -83,7 +83,7 @@ export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) =
   return $text(colorStyle)(display)
 }
 
-export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.pnl - pos.fee)
+export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.realisedPnl)
 
 
 export const $Risk = (pos: IAggregatedTradeSummary, containerOp: Op<INode, INode> = O()) => component(() => {

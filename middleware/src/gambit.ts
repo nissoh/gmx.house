@@ -70,20 +70,20 @@ export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { s
 export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll): IPositionDelta {
   const settlement = trade.settledPosition
   const isLiq = isLiquidated(settlement)
+  const maxCollateralUpdate = trade.updateList.reduce((seed, b) => seed.collateral > b.collateral ? seed : b, trade.updateList[0])
 
   if (isLiq) {
     const { size, collateral } = settlement
-    const averagePrice = settlement.markPrice
+    const averagePrice = maxCollateralUpdate.averagePrice
 
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
 
   const delta = settlement.realisedPnl
-  const maxCollateral = trade.updateList.reduce((seed, b) => seed > b.collateral ? seed : b.collateral, 0n)
 
   return {
     delta,
-    deltaPercentage: maxCollateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateral : 0n
+    deltaPercentage: maxCollateralUpdate.collateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateralUpdate.collateral : 0n
   }
 }
 
@@ -148,7 +148,7 @@ export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed
   const cumulativeAccountData: IAggregatedPositionSettledSummary<T> = {
     ...parsedAgg, pnl, delta,
     fee: isLiq ? 0n : parsedAgg.fee,
-    realisedPnl: pnl - parsedAgg.fee,
+    realisedPnl: isLiq ? pnl : pnl - parsedAgg.fee,
     settledTimestamp: trade.indexedAt,
   }
 
@@ -179,6 +179,8 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
       return seed
     }, <IPositionDelta>{ delta: 0n, deltaPercentage: 0n })
 
+    const realisedPnl = tradeSummaries.reduce((seed, pos) => seed + pos.realisedPnl, 0n)
+
 
     const summary: IAggregatedAccountSummary = {
       account, fee, profitablePositionsCount, delta,
@@ -187,7 +189,7 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
       claim: null,
       collateral: tradeSummaries.reduce((seed, pos) => seed + pos.collateral, 0n),
       pnl: pnl,
-      realisedPnl: pnl - fee,
+      realisedPnl,
       size: tradeSummaries.reduce((sum, pos) => sum + pos.size, 0n),
       averagePrice: tradeSummaries.reduce((sum, pos) => sum + pos.averagePrice, 0n) / BigInt(tradeSummaries.length)
     }
@@ -201,25 +203,22 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
 }
 
 
-export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggregatedTradeLiquidated>, interval: intervalInMsMap, ticks: number, endtime = Date.now() / 1000 | 0) {
-  let accumulated = 0
+export function historicalPnLMetric(list: IAggregatedPositionSettledSummary[], interval: intervalInMsMap, ticks: number, endtime = Date.now() / 1000 | 0) {
+  let accumulated = 0n
 
   const intervalInSecs = Math.floor((interval / ticks) / 1000)
   const initialDataStartTime = endtime - intervalInSecs * ticks
   const closedPosList = list
-  // .filter(t => t.settledPosition)
     .map(aggTrade => {
-
-      const summary = toAggregatedTradeSettledSummary(aggTrade)
-      const time = aggTrade.initialPositionBlockTimestamp
-      const value = formatFixed(summary.pnl - summary.fee, USD_DECIMALS)
-
-      return { value, time }
+      const time = aggTrade.trade.settledPosition.indexedAt
+      return { value: aggTrade.realisedPnl, time }
     })
 
-  const sortedParsed = closedPosList
+  const sortedByTime = closedPosList
     .filter(pos => pos.time > initialDataStartTime)
     .sort((a, b) => a.time - b.time)
+  
+  const sortedParsed = sortedByTime
     .map(x => {
       accumulated += x.value
       return { value: accumulated, time: x.time }
@@ -245,9 +244,9 @@ export function historicalPnLMetric(list: Array<IAggregatedTradeClosed | IAggreg
           return { time: prev.time, value: next.value }
         }
       ),
-      [{ time: initialDataStartTime, value: 0 }] as { time: number; value: number} []
+      [{ time: initialDataStartTime, value: 0n }] as { time: number; value: bigint} []
     )
-    .map(t => ({ time: unixTimeTzOffset(t.time), value: t.value }))
+    .map(t => ({ time: unixTimeTzOffset(t.time), value: formatFixed(t.value, 30) }))
           
 
   return filled
