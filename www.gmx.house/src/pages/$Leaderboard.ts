@@ -163,7 +163,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 accountTableColumn,
                 {
                   $head: $text('Win/Loss'),
-                  columnOp: style({ maxWidth: '80px', placeContent: 'center' }),
+                  columnOp: style({ maxWidth: '65px', placeContent: 'center' }),
                   $body: map((pos: IAggregatedAccountSummary) => {
                     return $row(
                       $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
