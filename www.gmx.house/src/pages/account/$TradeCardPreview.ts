@@ -228,7 +228,7 @@ export const $TradeCardPreview = ({
                   ),
                   $column(style({ gap: '6px' }))(
                     $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
-                      $TokenIndex(summary, { width: '18px' }),
+                      $TokenIndex(summary.indexToken, { width: '18px' }),
                       $text(formatReadableUSD(summary.averagePrice))
                     ),
                     $row(layoutSheet.spacingSmall, style({ color: isSettled ? '' : pallete.indeterminate, fontSize: '.65em' }))(
