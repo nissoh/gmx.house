@@ -129,6 +129,13 @@ function toAggregatedPositionSummary<T extends IAggregatedOpenPositionSummary>(j
   return { ...toAggregatedTradeSummary(json), averagePrice  }
 }
 
+function toPositionDelta<T extends IPositionDelta>(json: T): T {
+  const delta = BigInt(json.delta)
+  const deltaPercentage = BigInt(json.deltaPercentage)
+
+  return { ...json, delta, deltaPercentage  }
+}
+
 function toAggregatedPositionSettledSummary<T extends IAggregatedPositionSettledSummary<IAggregatedTradeSettledAll>>(json: T): T {
   const averagePrice = BigInt(json.averagePrice)
   const pnl = BigInt(json.pnl)
@@ -136,11 +143,12 @@ function toAggregatedPositionSettledSummary<T extends IAggregatedPositionSettled
 
   const jsonTrade = json.trade
   const settledPosition = jsonTrade.settledPosition
+  const delta = toPositionDelta(json.delta)
 
   // @ts-ignore
   const trade =  isLiquidated(settledPosition) ? toAggregatedTradeLiquidatedJson(json.trade) : toAggregatedTradeClosedJson(json.trade)
 
-  return { ...toAggregatedTradeSummary(json), trade, averagePrice, pnl, realisedPnl  }
+  return { ...toAggregatedTradeSummary(json), trade, averagePrice, pnl, realisedPnl, delta  }
 }
 
 function toAggregatedSettledTrade<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(json: T): T {

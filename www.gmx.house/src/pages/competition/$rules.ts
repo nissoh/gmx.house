@@ -3,9 +3,11 @@ import { $text, style, attr, $node } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $row, layoutSheet, $column } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { map, periodic } from "@most/core"
+import { empty, map, periodic } from "@most/core"
+import { IAggregatedPositionSettledSummary, IClaim, IPositionDelta } from "gambit-middleware"
 import { $AnchorLink } from "../../components/$Link"
 import { $anchor } from "../../elements/$common"
+import { $ProfitLossText, $SummaryDeltaPercentage } from "../common"
 
 
 export const COMPETITION_START = Date.UTC(2021, 10, 3, 13, 0, 0)
@@ -75,6 +77,17 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
 
       details(COMPETITION_START, BATCH_1_END, true),
       details(BATCH_2_START, COMPETITION_END, false),
+    )
+  )
+}
+
+export  const $competitionPrize = (prize: bigint | undefined, delta: IPositionDelta) => {
+  return $row(
+    $column(style({ alignItems: 'center' }))(
+      prize ? style({ fontSize: '1.2em' })($ProfitLossText(prize)) : empty(),
+      style({ color: pallete.message, fontSize: '.65em' })(
+        $SummaryDeltaPercentage(delta)
+      )
     )
   )
 }

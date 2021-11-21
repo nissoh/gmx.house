@@ -4,19 +4,18 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, map, periodic, scan, switchLatest } from '@most/core'
+import { constant, empty, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { calculateSettledPositionDelta, formatFixed, IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, isLiquidated, TradeType } from 'gambit-middleware'
+import { IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, isLiquidated, parseFixed, TradeType } from 'gambit-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
 import { $alert } from '../../elements/$common'
-import { $Entry } from "../common"
-import { $CompeititonInfo } from './$rules'
+import { $Entry, $ProfitLossText, $SummaryDeltaPercentage } from "../common"
+import { $competitionPrize } from './$rules'
 
 
-
-
+const prizeLadder: bigint[] = [parseFixed(2000, 30), parseFixed(1000, 30), parseFixed(500, 30), ...Array(17).fill(parseFixed(100, 30))]
 
 export interface ICompetitonTopPercentage<T extends BaseProvider> {
   parentRoute: Route
@@ -30,18 +29,6 @@ export interface ICompetitonTopPercentage<T extends BaseProvider> {
 }
 
 
-const $settledPercentage = (pos: IAggregatedPositionSettledSummary) => {
-  const delta = calculateSettledPositionDelta(pos.trade)
-
-  const perc = formatFixed(delta.deltaPercentage, 2)
-  const isNeg = delta.deltaPercentage < 0n
-
-  return $row(
-    $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-      `${isNeg ? '' : '+'}${perc}%`
-    )
-  )
-}
 
 const $nftPrice = (rank: number, imgOp: Op<INode, INode>) => {
   const size = '54px'
@@ -146,7 +133,7 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                 {
                   $head: $text('Account'),
                   columnOp: style({ minWidth: '120px', flex: 1.2 }),
-                  $body: map(({ account }: IAggregatedTradeSummary) => {
+                  $body: map(({ account }) => {
 
                     return switchLatest(map(map => {
                       return $AccountPreview({ address: account, parentRoute: config.parentRoute, claim: map.get(account.toLowerCase()) })({
@@ -171,11 +158,12 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   })
                 },
                 {
-                  $head: $text('Profit-%'),
-                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos) => {
-                    return $settledPercentage(pos)
-                  })
+                  $head: $column(style({ textAlign: 'center' }))(
+                    $text('Prize $'),
+                    $text(style({ fontSize: '.65em' }))('Result %'),
+                  ),
+                  columnOp: style({ flex:1, maxWidth: '110px', placeContent: 'flex-end' }),
+                  $body: map(pos => $competitionPrize(prizeLadder[pos.index], pos.delta))
                 }
               ],
             })({ scrollIndex: highTableRequestIndexTether() }),
@@ -270,11 +258,12 @@ export const $CompetitionSingle = <T extends BaseProvider>(config: ICompetitonTo
                   })
                 },
                 {
-                  $head: $text('Profit-%'),
-                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos) => {
-                    return $settledPercentage(pos)
-                  })
+                  $head: $column(style({ textAlign: 'center' }))(
+                    $text('Prize $'),
+                    $text(style({ fontSize: '.65em' }))('Result %'),
+                  ),
+                  columnOp: style({ flex:1, maxWidth: '110px', placeContent: 'flex-end' }),
+                  $body: map(pos => $competitionPrize(prizeLadder[pos.index], pos.delta))
                 }
               ],
             })({ scrollIndex: lowTableRequestIndexTether() }),

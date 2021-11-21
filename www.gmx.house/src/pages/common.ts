@@ -4,7 +4,7 @@ import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-compone
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, multicast, now } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IPositionDelta, liquidationWeight, parseFixed } from "gambit-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
@@ -81,6 +81,16 @@ export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) =
   
   // @ts-ignore
   return $text(colorStyle)(display)
+}
+
+export const $SummaryDeltaPercentage = (delta: IPositionDelta) => {
+
+  const perc = formatFixed(delta.deltaPercentage, 2)
+  const isNeg = delta.deltaPercentage < 0n
+
+  return $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+    `${isNeg ? '' : '+'}${perc}%`
+  )
 }
 
 export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.realisedPnl)
