@@ -114,20 +114,31 @@ export function getFundingFee(entryFundingRate: bigint, cumulativeFundingRate: b
 export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(trade: T): IAggregatedOpenPositionSummary<T> {
   const increaseFees = trade.increaseList.reduce((seed, pos) => seed += pos.fee, 0n)
   const decreaseFees = trade.decreaseList.reduce((seed, pos) => seed += pos.fee, 0n)
+  const latestUpdate = trade.updateList[0]
 
-  const lastUpdate = trade.updateList[trade.updateList.length - 1]
+  const { maxSize, maxCollateral } = trade.updateList.reduce((seed, next) => {
+    if (next.collateral > seed.maxCollateral) {
+      seed.maxCollateral = next.collateral
+    }
 
-  const maxCollateral = trade.updateList.reduce((seed, b) => seed > b.collateral ? seed : b.collateral, 0n)
-  const maxSize = trade.updateList.reduce((seed, b) => seed > b.size ? seed : b.size, 0n)
+    if (next.size > seed.maxSize) {
+      seed.maxSize = next.size
+    }
+    return seed
+  }, { maxCollateral: 0n, maxSize: 0n, collateral: 0n })
+
 
   const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = {
     size: maxSize,
     account: trade.account,
-    collateral: maxCollateral,
+    maxCollateral,
     indexToken: trade.initialPosition.indexToken,
     startTimestamp: trade.initialPosition.indexedAt,
     fee: increaseFees + decreaseFees,
-    averagePrice: lastUpdate.averagePrice,
+
+    collateral: latestUpdate.collateral,
+    averagePrice: latestUpdate.averagePrice,
+
     isLong: trade.initialPosition.isLong,
     leverage: Number(maxSize / maxCollateral),
 

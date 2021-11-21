@@ -99,7 +99,7 @@ export const $TradeCardPreview = ({
       const updateIdx = (trade.updateList.length - 1) + -matchedIncreaseIdx
       const pos = trade.updateList[updateIdx]
       const delta = calculatePositionDelta(priceFeed.value, trade.initialPosition.isLong, pos)
-      const value = formatFixed((delta.delta), 30)
+      const value = formatFixed(delta.delta, 30)
       // const val = formatFixed((delta.hasProfit ? delta.delta : -delta.delta) - summary.fee, 30)
 
       return { value, time: priceFeed.time, price: priceFeed.value, ...delta }
@@ -366,7 +366,6 @@ export const $TradeCardPreview = ({
 
 
             if (data.length > 10) {
-                
               if (low.value !== high.value) {
                 setTimeout(() => {
                   const increaseList = tradeSummary.trade.increaseList
@@ -382,8 +381,9 @@ export const $TradeCardPreview = ({
                       }
                     })
 
-                  const decreaseMarkers = tradeSummary.trade.decreaseList
-                    .slice(0, -1)
+                  const decreaseList = isTradeSettled(tradeSummary.trade) ? tradeSummary.trade.decreaseList.slice(0, -1) : tradeSummary.trade.decreaseList
+
+                  const decreaseMarkers = decreaseList
                     .map((ip): SeriesMarker<Time> => {
                       return {
                         color: pallete.foreground,

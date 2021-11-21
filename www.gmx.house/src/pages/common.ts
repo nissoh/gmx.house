@@ -69,7 +69,7 @@ export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) =
   const pnls = isStream(pnl) ? pnl : now(pnl)
 
   const display = multicast(map(n => {
-    return n > 0n ? '+' + formatReadableUSD(n) : formatReadableUSD(n)
+    return (n > 0n ? '+' : '') + formatReadableUSD(n)
   }, pnls))
 
   const colorStyle = colorful

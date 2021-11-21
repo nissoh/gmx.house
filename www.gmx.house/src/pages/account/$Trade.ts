@@ -1,7 +1,7 @@
-import { Behavior } from "@aelea/core"
+import { Behavior, O } from "@aelea/core"
 import { $text, attr, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
-import { $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
@@ -10,8 +10,9 @@ import * as wallet from "@gambitdao/wallet-link"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"
 import { $ethScan, $twitter } from "../../elements/$icons"
-import { timeSince } from "../common"
+import { $ProfitLossText, timeSince } from "../common"
 import { $TradeCardPreview } from "./$TradeCardPreview"
+import { $Table2 } from "../../common/$Table2"
 
 
 export interface ITrade {
@@ -118,10 +119,7 @@ export const $Trade = (config: ITrade) => component((
               return empty()
             }
 
-            const trade = summary.trade
-            const isSettled = isTradeSettled(trade)
-            const maybeSettled = isSettled ? [trade.settledPosition] : []
-
+            const actionList = [...summary.trade.increaseList, ...summary.trade.decreaseList].sort((a, b) => b.indexedAt - a.indexedAt)
             return $column(layoutSheet.spacingBig, style({ padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(
               $row(layoutSheet.spacing, style({ fontSize: '.85em', placeContent: 'space-between', flex: 1, alignSelf: 'stretch' }))(
                 $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
@@ -130,81 +128,79 @@ export const $Trade = (config: ITrade) => component((
                 // $labelUSD('Average Price', summary.averagePrice),
               ),
 
-              // $card($Table2({
-              //   dataSource: now([...summary.trade.increaseList, ...summary.trade.decreaseList, ...maybeSettled].sort((a, b) => b.indexedAt - a.indexedAt)),
-              //   bodyContainerOp: layoutSheet.spacing,
-              //   scrollConfig: {
-              //     containerOps: O(layoutSheet.spacingBig)
-              //   },
-              //   columns: [
-              //     {
-              //       $head: $text('Timestamp'),
-              //       columnOp: O(style({  flex: 1.2 })),
+              $card($Table2({
+                dataSource: now(actionList),
+                bodyContainerOp: layoutSheet.spacing,
+                scrollConfig: {
+                  containerOps: O(layoutSheet.spacingBig)
+                },
+                columns: [
+                  {
+                    $head: $text('Timestamp'),
+                    columnOp: O(style({  flex: 1 })),
 
-              //       $body: map((pos) => {
-              //         return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-              //           $text(timeSince(pos.indexedAt)),
-              //           $text(new Date(pos.indexedAt * 1000).toLocaleDateString()),  
-              //         )
-              //       })
-              //     },
-              //     {
-              //       $head: $text('Action'),
-              //       columnOp: O(style({ flex: 1.2 })),
+                    $body: map((pos) => {
+                      return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+                        $text(timeSince(pos.indexedAt)),
+                        $text(new Date(pos.indexedAt * 1000).toLocaleDateString()),  
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Action'),
+                    columnOp: O(style({ flex: 1.2 })),
                     
-              //       $body: map((pos) => {
-              //         const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-
-              //         if ('markPrice' in pos) {
-              //           return $container(
-              //             $text('Liquidate'),
-              //             $ProfitLossText(-pos.collateral),
-              //             $explorer(pos.id.split('-')[1])
-              //           )
-              //         } else if ('realisedPnl' in pos) {
-              //           return $container(
-              //             $text('Close'),
-              //             $ProfitLossText(pos.realisedPnl),
-              //             $explorer(pos.id.split('-')[1])
-              //           )
-              //         } else {
-              //           const isDecrease = pos.__typename === "DecreasePosition"
-              //           return $container(
-              //             $text(isDecrease ? 'Decrease' : 'Increase'),
-              //             $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.collateralDelta, false),
-              //             $explorer(pos.id.split('-')[1])
-              //           )
-              //         }
-              //       })
-              //     },
-              //     // {
-              //     //   $head: $text('Delta'),
-              //     //   columnOp: O(style({ flex: 1.2 })),
+                      const isDecrease = pos.__typename === "DecreasePosition"
+                      return $container(
+                        $text(isDecrease ? 'Decrease' : 'Increase'),
+                        $explorer(pos.id.split('-')[1])
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Collateral Delta'),
+                    columnOp: O(style({ flex: 1.2 })),
                     
-              //     //   $body: map((pos) => {
-              //     //     const $container = $row(layoutSheet.spacing)
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-              //     //     if ('markPrice' in pos) {
-              //     //       return $container(
-              //     //         $text('Liquidate'),
-              //     //         $text(formatReadableUSD(pos.collateral))
-              //     //       )
-              //     //     } else if ('realisedPnl' in pos) {
-              //     //       return $container(
-              //     //         $text('Close'),
-              //     //         $text(formatReadableUSD(pos.realisedPnl))
-              //     //       )
-              //     //     } else {
-              //     //       return $container(
-              //     //         $text('Increase'),
-              //     //         $text(formatReadableUSD(pos.sizeDelta))
-              //     //       )
-              //     //     }
-              //     //   })
-              //     // },
-              //   ]
-              // })({}))
+                      const isDecrease = pos.__typename === "DecreasePosition"
+
+                      return $container(
+                        $ProfitLossText(isDecrease ? -pos.collateralDelta : pos.collateralDelta, false),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Size Delta'),
+                    columnOp: O(style({ flex: 1.2 })),
+                    
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+
+                      const isDecrease = pos.__typename === "DecreasePosition"
+
+                      return $container(
+                        $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.sizeDelta, false),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Market Price'),
+                    columnOp: O(style({ flex: .5 })),
+                    
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      return $container(
+                        $text(formatReadableUSD(pos.price)),
+                      )
+                    })
+                  },
+                ]
+              })({}))
             )
           }, tradeSummary)
         ),
