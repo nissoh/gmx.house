@@ -6,7 +6,10 @@ import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith,
 import { Stream } from "@most/types"
 import {
   calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
+  fromJson,
   getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
+  IAggregatedTradeOpen,
+  IAggregatedTradeSettledAll,
   IChainlinkPrice, IClaim, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
   unixTimeTzOffset
 } from "gambit-middleware"
@@ -77,7 +80,10 @@ export const $TradeCardPreview = ({
   }, aggregatedTradeState))
 
   const historicPnL = replayLatest(multicast(combineArray((summary, pricefeed) => {
-    const trade = summary.trade
+    const trade: IAggregatedTradeOpen | IAggregatedTradeSettledAll = { ...summary.trade }
+
+    trade.updateList = trade.updateList.map(fromJson.positionUpdateJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
+
 
     const startTime = trade.initialPosition.indexedAt
     const endtime = 'settledPosition' in trade ? trade.settledPosition.indexedAt : Math.floor(Date.now() / 1000)

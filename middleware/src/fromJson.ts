@@ -81,9 +81,9 @@ function accountSummaryJson(json: IAggregatedAccountSummary): IAggregatedAccount
 
 
 function toAggregatedTradeOpenJson<T extends IAggregatedTradeOpen>(json: T): T {
-  const decreaseList = json.decreaseList?.map(positionDecreaseJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
-  const increaseList = json.increaseList?.map(positionIncreaseJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
-  const updateList = json.updateList?.map(positionUpdateJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
+  const decreaseList = json.decreaseList?.map(positionDecreaseJson)
+  const increaseList = json.increaseList?.map(positionIncreaseJson)
+  const updateList = json.updateList?.map(positionUpdateJson)
   const initialPosition = positionIncreaseJson(json.initialPosition)
 
   return { ...json, decreaseList, increaseList, updateList, initialPosition }
