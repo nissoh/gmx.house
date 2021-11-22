@@ -19,6 +19,7 @@ const light: Theme = {
     indeterminate: '#dccb07',
   }
 }
+
 const dark: Theme = {
   name: 'dark',
   pallete: {
@@ -27,7 +28,7 @@ const dark: Theme = {
     message: '#ffffff',
 
     background: '#141416',
-    horizon: '#34273a',
+    horizon: '#202229',
     middleground: '#502b86',
     foreground: '#b9b0b8',
 
