@@ -5,7 +5,7 @@ import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@a
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDecrease, IPositionIncrease, IPositionLiquidated, IRequestAggregatedTradeQueryparam, isLiquidated, isTradeSettled, TradeType } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDecrease, IPositionIncrease, IPositionLiquidated, IRequestAggregatedTradeQueryparam, isLiquidated, isTradeSettled, TradeType } from "@gambitdao/gmx-middleware"
 import * as wallet from "@gambitdao/wallet-link"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"

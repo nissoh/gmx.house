@@ -12,7 +12,7 @@ import {
   IAggregatedTradeSettledAll,
   IChainlinkPrice, IClaim, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
   unixTimeTzOffset
-} from "gambit-middleware"
+} from "@gambitdao/gmx-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"

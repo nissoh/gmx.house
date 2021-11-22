@@ -939,6 +939,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@gambitdao/gmx-middleware@workspace:*, @gambitdao/gmx-middleware@workspace:middleware":
+  version: 0.0.0-use.local
+  resolution: "@gambitdao/gmx-middleware@workspace:middleware"
+  dependencies:
+    "@aelea/core": 1.3.0
+    "@ethersproject/abi": 5.5.0
+    "@ethersproject/abstract-signer": 5.5.0
+    "@ethersproject/bignumber": ^5.5.0
+    "@ethersproject/bytes": 5.5.0
+    "@ethersproject/contracts": ^5.5.0
+    "@ethersproject/providers": 5.5.0
+    "@most/core": 1.6.1
+    "@most/disposable": 1.3.0
+    "@most/prelude": 1.8.0
+    "@most/scheduler": 1.3.0
+    "@most/types": 1.1.0
+    "@types/isomorphic-fetch": ^0.0.35
+    gmx-contracts: "workspace:*"
+    isomorphic-fetch: ^3.0.0
+  languageName: unknown
+  linkType: soft
+
 "@gambitdao/wallet-link@workspace:*, @gambitdao/wallet-link@workspace:wallet-link":
   version: 0.0.0-use.local
   resolution: "@gambitdao/wallet-link@workspace:wallet-link"
@@ -3826,6 +3848,7 @@ __metadata:
     "@ethersproject/bytes": 5.5.0
     "@ethersproject/contracts": ^5.5.0
     "@ethersproject/providers": 5.5.0
+    "@gambitdao/gmx-middleware": "workspace:*"
     "@mikro-orm/core": 4.5.9
     "@mikro-orm/mongo-highlighter": ^1.0.0
     "@mikro-orm/mongodb": 4.5.9
@@ -3852,7 +3875,6 @@ __metadata:
     express: ^4.17.1
     express-promise-router: ^4.1.0
     express-session: ^1.17.2
-    gambit-middleware: "workspace:*"
     graphql: ^16.0.1
     isomorphic-fetch: ^3.0.0
     ts-node: ^10.4.0
@@ -7684,28 +7706,6 @@ fsevents@~2.3.2:
   checksum: ca6c170f37640e2d94297da8bb4bf27a1d12bea3e00e6a3e007fd7aa32e37e000f5772acf941b4e4f3cf1c95c3752033d0c509af157ad8f526e7f00723b9eb9f
   languageName: node
   linkType: hard
-
-"gambit-middleware@workspace:*, gambit-middleware@workspace:middleware":
-  version: 0.0.0-use.local
-  resolution: "gambit-middleware@workspace:middleware"
-  dependencies:
-    "@aelea/core": 1.3.0
-    "@ethersproject/abi": 5.5.0
-    "@ethersproject/abstract-signer": 5.5.0
-    "@ethersproject/bignumber": ^5.5.0
-    "@ethersproject/bytes": 5.5.0
-    "@ethersproject/contracts": ^5.5.0
-    "@ethersproject/providers": 5.5.0
-    "@most/core": 1.6.1
-    "@most/disposable": 1.3.0
-    "@most/prelude": 1.8.0
-    "@most/scheduler": 1.3.0
-    "@most/types": 1.1.0
-    "@types/isomorphic-fetch": ^0.0.35
-    gmx-contracts: "workspace:*"
-    isomorphic-fetch: ^3.0.0
-  languageName: unknown
-  linkType: soft
 
 "ganache-core@npm:^2.13.2":
   version: 2.13.2
@@ -15680,6 +15680,7 @@ resolve@1.17.0:
     "@ethersproject/strings": 5.5.0
     "@ethersproject/units": ^5.5.0
     "@ethersproject/wallet": ^5.5.0
+    "@gambitdao/gmx-middleware": "workspace:*"
     "@gambitdao/wallet-link": "workspace:*"
     "@metamask/detect-provider": ^1.2.0
     "@most/core": 1.6.1
@@ -15696,7 +15697,6 @@ resolve@1.17.0:
     copy-webpack-plugin: 10.0.0
     eip1193-provider: 1.0.1
     fork-ts-checker-webpack-plugin: 6.4.0
-    gambit-middleware: "workspace:*"
     graphql: ^16.0.1
     hash.js: 1.1.7
     html-webpack-plugin: 5.5.0

@@ -1,7 +1,7 @@
 import { fromCallback, O, Op } from '@aelea/core'
 import { chain, empty, filter, map, mergeArray, recoverWith, tap, until } from '@most/core'
 import { Stream } from '@most/types'
-import { ICommunicationMessage } from 'gambit-middleware'
+import { ICommunicationMessage } from '@gambitdao/gmx-middleware'
 import ws, { EventEmitter } from 'ws'
 
 

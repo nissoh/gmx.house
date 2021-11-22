@@ -7,7 +7,7 @@
 // import { filter, take } from "@most/core"
 // import { map, skipRepeats, startWith, switchLatest } from "@most/core"
 
-// import { shortenTxAddress } from "gambit-middleware"
+// import { shortenTxAddress } from "@gambitdao/gmx-middleware"
 // import walletLink from "../common/walletLink"
 // import { getTxExplorerUrl } from "@gambitdao/wallet-link"
 

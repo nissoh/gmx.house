@@ -1,7 +1,7 @@
 
 import { O } from '@aelea/core'
 import { awaitPromises, map, snapshot } from '@most/core'
-import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAggregatedTradeAll, IAggregatedTradeSettledListMap, IChainlinkPrice, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
+import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAggregatedTradeAll, IAggregatedTradeSettledListMap, IChainlinkPrice, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from '@gambitdao/gmx-middleware'
 import { cacheMap } from '../utils'
 import { chainlinkClient, latestPricefeedMapSource, vaultClient } from './api'
 import { accountAggregationQuery, accountListAggregationQuery, aggregatedClosedTradeQuery, aggregatedSettledTradesMapQuery, chainlinkPricefeedQuery, IChainLinkMap, openAggregateLiquidatedTradeQuery, openAggregateOpenTradeQuery, openAggregateTradesQuery, tradeListTimespanMapQuery } from './queries'

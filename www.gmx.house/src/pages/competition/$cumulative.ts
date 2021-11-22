@@ -6,7 +6,7 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, parseFixed } from 'gambit-middleware'
+import { IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, parseFixed } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'

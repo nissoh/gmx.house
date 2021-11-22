@@ -1,6 +1,6 @@
 {
     "name": "www.gmx.house",
-    "version": "11.0.0",
+    "version": "12.0.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "private": true,
@@ -29,6 +29,7 @@
         "@ethersproject/strings": "5.5.0",
         "@ethersproject/units": "^5.5.0",
         "@ethersproject/wallet": "^5.5.0",
+        "@gambitdao/gmx-middleware": "workspace:*",
         "@gambitdao/wallet-link": "workspace:*",
         "@metamask/detect-provider": "^1.2.0",
         "@most/core": "1.6.1",
@@ -43,7 +44,6 @@
         "@walletconnect/web3-provider": "^1.6.6",
         "construct-style-sheets-polyfill": "3.0.4",
         "eip1193-provider": "1.0.1",
-        "gambit-middleware": "workspace:*",
         "graphql": "^16.0.1",
         "hash.js": "1.1.7",
         "jazzicon": "^1.5.0",

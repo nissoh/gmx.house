@@ -3,7 +3,7 @@ import { requestChainlinkPricefeed } from './aggregatedTradeList'
 import { awaitPromises, map, merge, multicast, now, periodic, runEffects, tap } from '@most/core'
 import { scheduler } from './scheduler'
 import { verifyMessage } from "@ethersproject/wallet"
-import { getIdentityFromENS, IClaimSource, isAddress, parseTwitterClaim } from 'gambit-middleware'
+import { getIdentityFromENS, IClaimSource, isAddress, parseTwitterClaim } from '@gambitdao/gmx-middleware'
 import { EM } from '../server'
 import { Claim } from './dto'
 import { providerMainnet } from '../rpc'

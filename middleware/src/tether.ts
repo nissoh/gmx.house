@@ -5,8 +5,8 @@ import { Disposable, Scheduler, Sink, Stream, Time } from '@most/types'
 
 
 class SourceSink<T> implements Sink<T> {
-  hasValue = false;
-  latestValue!: T;
+  hasValue = false
+  latestValue!: T
 
   constructor(private parent: Tether<T>, public sink: Sink<T>) { }
 
@@ -43,8 +43,8 @@ class TetherSink<A> extends Pipe<A, A> {
 
 class Tether<T> implements Stream<T> {
 
-  sourceSinkList: SourceSink<T>[] = [];
-  tetherSinkList: TetherSink<T>[] = [];
+  sourceSinkList: SourceSink<T>[] = []
+  tetherSinkList: TetherSink<T>[] = []
 
   sourceDisposable: Disposable = disposeNone()
 

@@ -1,6 +1,6 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import { fromJson, pagingQuery, groupByMap, parseFixed } from "gambit-middleware"
+import { fromJson, pagingQuery, groupByMap, parseFixed } from "@gambitdao/gmx-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
 import { tradeByTimespan } from "./aggregatedTradeList"

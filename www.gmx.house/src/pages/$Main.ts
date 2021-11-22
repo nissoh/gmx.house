@@ -10,7 +10,7 @@ import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
   IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
   IPageable, IPageChainlinkPricefeed, ITimerange, TradeType, TX_HASH_REGEX
-} from 'gambit-middleware'
+} from '@gambitdao/gmx-middleware'
 import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
 import * as wallet from "../common/wallets"

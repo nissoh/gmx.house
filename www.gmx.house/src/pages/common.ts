@@ -4,7 +4,7 @@ import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-compone
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, multicast, now } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IPositionDelta, liquidationWeight, parseFixed } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IPositionDelta, liquidationWeight, parseFixed } from "@gambitdao/gmx-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
