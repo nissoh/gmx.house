@@ -70,14 +70,14 @@ export function calculatePositionDelta(marketPrice: bigint, isLong: boolean, { s
 export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll): IPositionDelta {
   const settlement = trade.settledPosition
   const isLiq = isLiquidated(settlement)
+  const averagePrice = trade.updateList[trade.updateList.length - 1].averagePrice
   const maxCollateralUpdate = trade.updateList.reduce((seed, b) => seed.collateral > b.collateral ? seed : b, trade.updateList[0])
 
   if (isLiq) {
     const { size, collateral } = settlement
-    const averagePrice = maxCollateralUpdate.averagePrice
-
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
+
 
   const delta = settlement.realisedPnl
 
@@ -114,7 +114,7 @@ export function getFundingFee(entryFundingRate: bigint, cumulativeFundingRate: b
 export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(trade: T): IAggregatedOpenPositionSummary<T> {
   const increaseFees = trade.increaseList.reduce((seed, pos) => seed += pos.fee, 0n)
   const decreaseFees = trade.decreaseList.reduce((seed, pos) => seed += pos.fee, 0n)
-  const latestUpdate = trade.updateList[0]
+  const latestUpdate = trade.updateList[trade.updateList.length - 1]
 
   const { maxSize, maxCollateral } = trade.updateList.reduce((seed, next) => {
     if (next.collateral > seed.maxCollateral) {
@@ -129,7 +129,6 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
 
 
   const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = {
-    size: maxSize,
     account: trade.account,
     maxCollateral,
     indexToken: trade.initialPosition.indexToken,
@@ -138,6 +137,7 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
 
     collateral: latestUpdate.collateral,
     averagePrice: latestUpdate.averagePrice,
+    size: latestUpdate.size,
 
     isLong: trade.initialPosition.isLong,
     leverage: Number(maxSize / maxCollateral),

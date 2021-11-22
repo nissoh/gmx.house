@@ -82,9 +82,6 @@ export const $TradeCardPreview = ({
   const historicPnL = replayLatest(multicast(combineArray((summary, pricefeed) => {
     const trade: IAggregatedTradeOpen | IAggregatedTradeSettledAll = { ...summary.trade }
 
-    trade.updateList = trade.updateList.map(fromJson.positionUpdateJson).sort((a, b) => a.indexedAt - b.indexedAt) || []
-
-
     const startTime = trade.initialPosition.indexedAt
     const endtime = 'settledPosition' in trade ? trade.settledPosition.indexedAt : Math.floor(Date.now() / 1000)
 
@@ -112,7 +109,7 @@ export const $TradeCardPreview = ({
     }
     
     const initialTick: IPricefeedTick = {
-      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary.trade.updateList[0]),
+      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary),
       time: startTime,
       price: pricefeed[0].value,
       value: 0
