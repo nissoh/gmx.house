@@ -111,7 +111,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
 
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $column(layoutSheet.spacing, style({ maxWidth: '517px', flex: 1, padding: '0 12px' }))(
 
           $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
             $row(layoutSheet.spacing)(
@@ -195,7 +195,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             })({ scrollIndex: tableTopPnlRequestTether(), sortBy: tableTopSettledsortByChangeTether() })
           ),
         ),
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $column(layoutSheet.spacing, style({ maxWidth: '517px', flex: 1, padding: '0 12px' }))(
           $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
             $row(layoutSheet.spacing)(
               $header(layoutSheet.flex)(`Top Open`),
