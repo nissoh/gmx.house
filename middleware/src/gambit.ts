@@ -71,23 +71,22 @@ export function calculateSettledPositionDelta(trade: IAggregatedTradeSettledAll)
   const settlement = trade.settledPosition
   const isLiq = isLiquidated(settlement)
   const averagePrice = trade.updateList[trade.updateList.length - 1].averagePrice
+  const maxCollateralUpdate = trade.updateList.reduce((seed, b) => seed.collateral > b.collateral ? seed : b, trade.updateList[0])
 
   if (isLiq) {
     const { size, collateral } = settlement
     return calculatePositionDelta(settlement.markPrice, settlement.isLong, { size, collateral, averagePrice })
   }
 
-  const d = trade.updateList.reduce((seed, updatePos) => {
-    const deltaPercentage = updatePos.realisedPnl * BASIS_POINTS_DIVISOR / updatePos.collateral
-    return {
-      delta: seed.delta + updatePos.realisedPnl,
-      deltaPercentage: seed.deltaPercentage + deltaPercentage
-    }
-  }, { delta: 0n, deltaPercentage: 0n })
 
+  const delta = settlement.realisedPnl
 
-  return d
+  return {
+    delta,
+    deltaPercentage: maxCollateralUpdate.collateral > 0n ? delta * BASIS_POINTS_DIVISOR / maxCollateralUpdate.collateral : 0n
+  }
 }
+
 
 
 export function isTradeSettled(trade: IAggregatedTradeAll): trade is IAggregatedTradeSettledAll  {
@@ -118,16 +117,6 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
   const decreaseFees = trade.decreaseList.reduce((seed, pos) => seed += pos.fee, 0n)
   const latestUpdate = trade.updateList[trade.updateList.length - 1]
 
-
-  const delta = trade.updateList.reduce((seed, updatePos) => {
-    const deltaPercentage = updatePos.realisedPnl * BASIS_POINTS_DIVISOR / updatePos.collateral
-    return {
-      delta: seed.delta + updatePos.realisedPnl,
-      deltaPercentage: seed.deltaPercentage + deltaPercentage
-    }
-  }, { delta: 0n, deltaPercentage: 0n })
-
-
   const cumulativeAccountData: IAggregatedOpenPositionSummary<T> = {
     account: trade.account,
     indexToken: trade.initialPosition.indexToken,
@@ -143,10 +132,9 @@ export function toAggregatedOpenTradeSummary<T extends IAggregatedTradeOpen>(tra
 
     trade: trade
   }
-
-
   return cumulativeAccountData
 }
+
 
 export function toAggregatedTradeSettledSummary<T extends IAggregatedTradeClosed | IAggregatedTradeLiquidated>(trade: T): IAggregatedPositionSettledSummary<T> {
   const isLiq = isLiquidated(trade.settledPosition)
