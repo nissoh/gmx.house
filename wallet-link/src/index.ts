@@ -33,6 +33,38 @@ interface IWalletLinkConfig {
 }
 
 
+// https://eips.ethereum.org/EIPS/eip-3085
+export async function attemptToSwitchNetwork(metamask: IEthereumProvider, chain: CHAIN) {
+  try {
+    // check if the chain to connect to is installed
+    await metamask.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: '0x' + chain.toString(16) }], // chainId must be in hexadecimal numbers
+    })
+  } catch (error: any) {
+    // @ts-ignore
+    if (!NETWORK_METADATA[chain]) {
+      throw new Error(`Could not add metamask network, chainId ${chain} is not supported`)
+    }
+    // This error code indicates that the chain has not been added to MetaMask
+    // if it is not, then install it into the user MetaMask
+    if (error.code === 4902) {
+      try {
+        await metamask.request({
+          method: 'wallet_addEthereumChain',
+          params: [
+            // @ts-ignore
+            NETWORK_METADATA[chain]
+          ],
+        })
+      } catch (addError) {
+        console.error(addError)
+      }
+    }
+    console.error(error)
+  }
+}
+
 
 
 function connectWallet<T extends IEthereumProvider = IEthereumProvider>(wallet: T): IWalletLink<T> {
