@@ -12,12 +12,12 @@ const fetchCompeitionResults = O(
     const claimQuery = EM.find(Claim, {})
 
     const query = Promise.all([claimQuery, listQuery]).then(([claimList, list]) => {
-      const hunderedBucks = parseFixed(90, 30)
+      const minCollateral = parseFixed(90, 30)
     
       const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
         .map(fromJson.toAggregatedTradeSettledSummary)
         .filter(trade =>
-          BigInt(trade.collateral) >= hunderedBucks
+          BigInt(trade.minCollateral) >= minCollateral
         )
     
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
