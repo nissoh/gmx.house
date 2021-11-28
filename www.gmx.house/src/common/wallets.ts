@@ -30,30 +30,3 @@ export const metamask = replayLatest(multicast(awaitPromises(map(() =>
 , now(null)))))
 
 
-
-// https://eips.ethereum.org/EIPS/eip-3085
-export async function attemptToSwitchNetwork(metamask: IEthereumProvider, chain: CHAIN) {
-  try {
-    // check if the chain to connect to is installed
-    await metamask.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: NETWORK_METADATA[chain].chainId }], // chainId must be in hexadecimal numbers
-    })
-  } catch (error: any) {
-    // This error code indicates that the chain has not been added to MetaMask
-    // if it is not, then install it into the user MetaMask
-    if (error.code === 4902) {
-      try {
-        await metamask.request({
-          method: 'wallet_addEthereumChain',
-          params: [
-            NETWORK_METADATA[chain]
-          ],
-        })
-      } catch (addError) {
-        console.error(addError)
-      }
-    }
-    console.error(error)
-  }
-}

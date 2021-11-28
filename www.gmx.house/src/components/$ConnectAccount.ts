@@ -5,7 +5,7 @@ import { pallete } from "@aelea/ui-components-theme"
 import { awaitPromises, constant, empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { CHAIN, IWalletLink } from "@gambitdao/wallet-link"
+import { attemptToSwitchNetwork, CHAIN, IWalletLink } from "@gambitdao/wallet-link"
 import { $icon, $walletConnectLogo } from "../common/$icons"
 import * as wallet from "../common/wallets"
 import { $ButtonPrimary } from "./form/$Button"
@@ -89,7 +89,7 @@ export const $IntermediateDisplay = (config: IIntermediateDisplay) => component(
                   )
                 })({
                   click: switchNetworkTether(
-                    map(() => wallet.attemptToSwitchNetwork(walletLink.wallet, CHAIN.ARBITRUM)),
+                    map(() => attemptToSwitchNetwork(walletLink.wallet, CHAIN.ARBITRUM)),
                     awaitPromises,
                     constant(walletLink.wallet)
                   )

@@ -1,6 +1,6 @@
 import { O, replayLatest } from "@aelea/core"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, fromPromise, map, merge, mergeArray, multicast, now, skipAfter } from "@most/core"
+import { awaitPromises, constant, empty, fromPromise, join, map, merge, mergeArray, multicast, now, skipAfter, switchLatest, tap } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
 import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
@@ -104,11 +104,25 @@ async function lisAccountss(provider: IEthereumProvider | null) {
 export function initWalletLink(config: IWalletLinkConfig, changeProvider: Stream<IEthereumProvider | null>): Stream<IWalletLink> {
   const attemptConnect = O(map(lisAccountss), awaitPromises)
 
-  const initialConnection = skipAfter(res => res !== null, attemptConnect(mergeArray(config.walletProviders)))
+  const walletSources = attemptConnect(mergeArray(config.walletProviders))
+  const initialConnection = skipAfter(res => res !== null, walletSources)
   const withProviderChange = attemptConnect(changeProvider)
 
-  const connection = replayLatest(multicast(merge(withProviderChange, initialConnection)))
+  const initialWithNetchange = switchLatest(map(initWallet => {
+    if (initWallet) {
+      return join(constant(initialConnection, initWallet.network))
+    }
+
+    return empty()
+  }, initialConnection))
+
+  const connection = replayLatest(multicast(mergeArray([
+    withProviderChange,
+    initialWithNetchange
+  ])))
   
+
+
   return connection
 }
 
