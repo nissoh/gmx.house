@@ -12,13 +12,19 @@ const fetchCompeitionResults = O(
     const claimQuery = EM.find(Claim, {})
 
     const query = Promise.all([claimQuery, listQuery]).then(([claimList, list]) => {
-      const minCollateral = parseFixed(90, 30)
+      const minCollateralRequired = parseFixed(90, 30)
     
       const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
         .map(fromJson.toAggregatedTradeSettledSummary)
-        .filter(trade =>
-          BigInt(trade.minCollateral) >= minCollateral
-        )
+        .filter(summary => {
+          const minCollateral = summary.trade.updateList.reduce((seed, b) => {
+            const current = b.realisedPnl < 0n ? b.collateral + b.realisedPnl * -1n : b.collateral
+
+            return seed < current ? seed : current
+          }, summary.trade.updateList[0].collateral)
+
+          return minCollateral >= minCollateralRequired
+        })
     
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 

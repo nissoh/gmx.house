@@ -224,7 +224,6 @@ export interface IAggregatedOpenPositionSummary<A extends IAggregatedTradeOpen =
   account: string
   isLong: boolean
   averagePrice: bigint
-  minCollateral: bigint
 
   trade: A
 }
