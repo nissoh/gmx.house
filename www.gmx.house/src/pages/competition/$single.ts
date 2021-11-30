@@ -4,14 +4,14 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, empty, map, periodic, scan, switchLatest } from '@most/core'
+import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
 import { IAggregatedPositionSettledSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, isLiquidated, parseFixed, TradeType } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $Link } from "../../components/$Link"
 import { $alert } from '../../elements/$common'
-import { $Entry, $ProfitLossText, $SummaryDeltaPercentage } from "../common"
+import { $Entry } from "../common"
 import { $competitionPrize } from './$rules'
 
 

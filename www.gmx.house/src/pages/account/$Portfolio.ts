@@ -6,7 +6,7 @@ import { pallete } from "@aelea/ui-components-theme"
 import { at, constant, empty, filter, fromPromise, map, mergeArray, multicast, now, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, calculateSettledPositionDelta, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "@gambitdao/gmx-middleware"
+import { AccountHistoricalDataApi, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "@gambitdao/gmx-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { IWalletLink } from "@gambitdao/wallet-link"
 import { fetchHistoricKline } from "../../binance-api"
@@ -25,7 +25,8 @@ export interface IAccount {
   parentRoute: Route
 
   accountAggregation: Stream<IAccountAggregationMap>
-  walletLink: Stream<IWalletLink | null>
+  walletLink: IWalletLink
+  walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
 
   claimMap: Stream<Map<string, IClaim>>
 }
@@ -39,7 +40,6 @@ export const $Portfolio = (config: IAccount) => component((
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
   [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, TradeableToken>,
   [selectOtherTimeframe, selectOtherTimeframeTether]: Behavior<IBranch, intervalInMsMap>,
-  [requestAccountAggregationPage, requestAccountAggregationPageTether]: Behavior<number, number>,
   [changeRoute, changeRouteTether]: Behavior<string, string>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
 
@@ -143,7 +143,7 @@ export const $Portfolio = (config: IAccount) => component((
 
         $column(
           $row(style({ marginBottom: '-20px', marginLeft: '20px' }))(
-            $ProfilePreviewClaim({ address: accountAddress, claimMap: config.claimMap, avatarSize: '100px', labelSize: '1.2em', walletLink: config.walletLink })({
+            $ProfilePreviewClaim({ address: accountAddress, claimMap: config.claimMap, avatarSize: '100px', labelSize: '1.2em', walletStore: config.walletStore, walletLink: config.walletLink })({
               walletChange: walletChangeTether()
             }),
           ),
@@ -430,7 +430,6 @@ export const $Portfolio = (config: IAccount) => component((
                 }
               ],
             })({
-              scrollIndex: requestAccountAggregationPageTether()
             })
           ),
         )

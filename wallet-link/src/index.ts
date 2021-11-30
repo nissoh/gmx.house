@@ -1,11 +1,20 @@
-import { O, replayLatest } from "@aelea/core"
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, constant, empty, fromPromise, join, map, merge, mergeArray, multicast, now, skipAfter, switchLatest, tap } from "@most/core"
+import { awaitPromises, map, merge, snapshot } from "@most/core"
 import { Stream } from "@most/types"
-import { IEthereumProvider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
+import { EIP1193Provider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
 import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
 import { CHAIN, NETWORK_METADATA } from "./const"
 
+
+export interface IWalletLink<T extends EIP1193Provider = EIP1193Provider> {
+  account: Stream<string | null>
+  network: Stream<CHAIN | null>
+  disconnect: Stream<ProviderRpcError>
+  connect: Stream<ProviderInfo>
+
+  provider: Stream<Web3Provider | null>
+  wallet: Stream<T | null>
+}
 
 
 export const getTxDetails = (provider: Stream<BaseProvider>) => (txHash: string): Stream<TransactionReceipt | null> => {
@@ -15,26 +24,53 @@ export const getTxDetails = (provider: Stream<BaseProvider>) => (txHash: string)
   )
 }
 
-export { NETWORK_METADATA }
 
-export interface IWalletLink<T extends IEthereumProvider = IEthereumProvider> {
-  account: Stream<string>
-  network: Stream<CHAIN>
-  provider: Web3Provider
-  wallet: T
-  disconnect: Stream<ProviderRpcError>
-  connect: Stream<ProviderInfo>
-}
+// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
+// walletconnect chaining chain issue https://github.com/WalletConnect/walletconnect-monorepo/issues/612
+// attempting to manage wallet connection and event flow
+export function initWalletLink<T extends EIP1193Provider>(walletChange: Stream<T | null>): IWalletLink<T> {
+  const ethersWeb3Wrapper = map(wallet => wallet ? new Web3Provider(wallet): wallet, walletChange)
+
+  const walletEvent = eip1193ProviderEvent(walletChange)
+
+  const connect = walletEvent('connect')
+  const disconnect = walletEvent('disconnect')
+  
+  const networkChange = map(Number, walletEvent('chainChanged'))
+  const accountChange = map(list => list[0], walletEvent('accountsChanged'))
+  const proivderChange = snapshot((walletProvider, net) => {
+    if (walletProvider === null) {
+      return null
+    }
+    return new Web3Provider(walletProvider)
+  }, walletChange, networkChange)
 
 
+  const currentAccount = awaitPromises(map(async (provi) => {
+    if (provi) {
+      return (await provi.listAccounts())[0]
+    }
+    return null
+  }, ethersWeb3Wrapper))
 
-interface IWalletLinkConfig {
-  walletProviders: Stream<IEthereumProvider | null>[]
+
+  const account = merge(accountChange, currentAccount)
+  const provider = merge(ethersWeb3Wrapper, proivderChange)
+
+  const network = awaitPromises(map(async net => {
+    if (net) {
+      return (await net.getNetwork()).chainId
+    }
+
+    return null
+  }, provider))
+
+  return { account, network, provider, disconnect, connect, wallet: walletChange }
 }
 
 
 // https://eips.ethereum.org/EIPS/eip-3085
-export async function attemptToSwitchNetwork(metamask: IEthereumProvider, chain: CHAIN) {
+export async function attemptToSwitchNetwork(metamask: EIP1193Provider, chain: CHAIN) {
   try {
     // check if the chain to connect to is installed
     await metamask.request({
@@ -65,66 +101,5 @@ export async function attemptToSwitchNetwork(metamask: IEthereumProvider, chain:
   }
 }
 
-
-
-function connectWallet<T extends IEthereumProvider = IEthereumProvider>(wallet: T): IWalletLink<T> {
-  const provider = new Web3Provider(wallet)
-
-  const listen = eip1193ProviderEvent(wallet)
-
-  const connect = listen('connect')
-  const disconnect = listen('disconnect')
-  
-  const networkChange = map(Number, listen('chainChanged'))
-
-  const accountChange = map(list => {
-    return list[0]
-  }, listen('accountsChanged'))
-
-  const newLocal = provider.getNetwork()
-  const currentNetwork = map(net => net.chainId, fromPromise(newLocal))
-  const currentAccount = awaitPromises(map(async () => (await provider.listAccounts())[0], now(null)))
-
-  const network = merge(networkChange, currentNetwork)
-  const account = merge(accountChange, currentAccount)
-
-  return { account, network, provider, wallet, disconnect, connect }
-}
-
-async function lisAccountss(provider: IEthereumProvider | null) {
-  // @ts-ignore
-  const accounts: string[] = await (provider?.request({ method: 'eth_accounts' }) || [])
-
-  return accounts.length ? connectWallet(provider!) : null
-}
-
-// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1193.md
-// walletconnect chaining chain issue https://github.com/WalletConnect/walletconnect-monorepo/issues/612
-// attempting to manage wallet connection and event flow
-export function initWalletLink(config: IWalletLinkConfig, changeProvider: Stream<IEthereumProvider | null>): Stream<IWalletLink> {
-  const attemptConnect = O(map(lisAccountss), awaitPromises)
-
-  const walletSources = attemptConnect(mergeArray(config.walletProviders))
-  const initialConnection = skipAfter(res => res !== null, walletSources)
-  const withProviderChange = attemptConnect(changeProvider)
-
-  const initialWithNetchange = switchLatest(map(initWallet => {
-    if (initWallet) {
-      return join(constant(initialConnection, initWallet.network))
-    }
-
-    return empty()
-  }, initialConnection))
-
-  const connection = replayLatest(multicast(mergeArray([
-    withProviderChange,
-    initialWithNetchange
-  ])))
-  
-
-
-  return connection
-}
-
-export { CHAIN, getAccountExplorerUrl, getTxExplorerUrl }
+export { NETWORK_METADATA, CHAIN, getAccountExplorerUrl, getTxExplorerUrl }
  

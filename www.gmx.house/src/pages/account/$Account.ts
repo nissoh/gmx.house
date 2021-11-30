@@ -20,7 +20,9 @@ export interface IPortfolio<T extends BaseProvider> {
   aggregatedTradeList: Stream<IAccountAggregationMap>
   settledPosition: Stream<IAggregatedTradeSettledAll>
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
-  walletLink: Stream<IWalletLink | null>
+
+  walletLink: IWalletLink
+  walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 
@@ -58,7 +60,8 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
           parentStore: config.parentStore,
           parentRoute: accountRoute,
           accountAggregation: config.aggregatedTradeList,
-          walletLink: config.walletLink
+          walletLink: config.walletLink,
+          walletStore: config.walletStore
         })({
           requestAccountAggregation: requestAccountAggregationTether(),
           changeRoute: changeRouteTether(),
