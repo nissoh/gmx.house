@@ -213,8 +213,8 @@ export const $TradeCardPreview = ({
             const isOpen = !(`settledPosition` in trade)
             const isSettled = `settledPosition` in trade
 
-            return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
-              $row(style({ fontFamily: 'RelativeMono', alignItems: 'center', placeContent: 'space-evenly' }))(
+            return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
+              $row(style({ alignItems: 'center', placeContent: 'space-evenly' }))(
                 $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                   $row(
                     style({ borderRadius: '2px', padding: '4px', backgroundColor: pallete.message, })(

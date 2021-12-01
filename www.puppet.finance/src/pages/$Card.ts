@@ -42,7 +42,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
 
 
   return [
-    $column(layoutSheet.spacingBig, style({ height: '100vh', fontSize: '1.25em', fontFamily: 'RelativePro', backgroundColor: 'rgb(14, 15, 32)' }))(
+    $column(layoutSheet.spacingBig, style({ height: '100vh', fontSize: '1.25em', backgroundColor: 'rgb(14, 15, 32)' }))(
 
       $row(layoutSheet.spacing, style({ alignItems: 'center', position: 'absolute', left: '15px', bottom: '15px' }))(
         $element('img')(attr({ src: '/assets/gmx-logo.png' }), style({ width: '42px' }))(),
