@@ -1,5 +1,5 @@
 import { gql, TypedDocumentNode } from "@urql/core"
-import { IAccountAggregationMap, IPageable, ITimerange, IAccountQueryParamApi, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IAggregatedTradeLiquidated, IIdentifiableEntity, IAggregatedTradeOpen, IAggregatedTradeClosed, IChainlinkPrice, IPageChainlinkPricefeed } from "gambit-middleware"
+import { IAccountAggregationMap, IPageable, ITimerange, IAccountQueryParamApi, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IAggregatedTradeLiquidated, IIdentifiableEntity, IAggregatedTradeOpen, IAggregatedTradeClosed, IChainlinkPrice, IPageChainlinkPricefeed } from "@gambitdao/gmx-middleware"
 
 
 

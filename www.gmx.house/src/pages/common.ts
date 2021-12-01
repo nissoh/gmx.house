@@ -4,7 +4,7 @@ import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-compone
 import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, multicast, now } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, liquidationWeight, parseFixed } from "gambit-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IPositionDelta, liquidationWeight, parseFixed } from "@gambitdao/gmx-middleware"
 import { klineWS, PRICE_EVENT_TICKER_MAP, WSBTCPriceEvent } from "../binance-api"
 import { $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
@@ -69,7 +69,7 @@ export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) =
   const pnls = isStream(pnl) ? pnl : now(pnl)
 
   const display = multicast(map(n => {
-    return n > 0n ? '+' + formatReadableUSD(n) : formatReadableUSD(n)
+    return (n > 0n ? '+' : '') + formatReadableUSD(n)
   }, pnls))
 
   const colorStyle = colorful
@@ -81,6 +81,16 @@ export const $ProfitLossText = (pnl: Stream<bigint> | bigint, colorful = true) =
   
   // @ts-ignore
   return $text(colorStyle)(display)
+}
+
+export const $SummaryDeltaPercentage = (delta: IPositionDelta) => {
+
+  const perc = formatFixed(delta.deltaPercentage, 2)
+  const isNeg = delta.deltaPercentage < 0n
+
+  return $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+    `${isNeg ? '' : '+'}${perc}%`
+  )
 }
 
 export const $SummaryProfitLoss = (pos: IAggregatedSettledTradeSummary) => $ProfitLossText(pos.realisedPnl)
@@ -143,8 +153,8 @@ export const $LivePnl = (pos: IAggregatedOpenPositionSummary) => component(() =>
   ]
 })
 
-export const $TokenIndex = (pos: IAggregatedOpenPositionSummary, IIcon?: { width?: string }) => {
-  const $token = $tokenIconMap[pos.indexToken]
+export const $TokenIndex = (indexToken: ARBITRUM_TRADEABLE_ADDRESS, IIcon?: { width?: string }) => {
+  const $token = $tokenIconMap[indexToken]
 
   if (!$token) {
     throw new Error('Unable to find matched token')
@@ -162,7 +172,7 @@ export const $Entry = (pos: IAggregatedOpenPositionSummary) =>
   $row(
     $column(layoutSheet.spacingTiny, style({ alignSelf: 'flex-start' }))(
       $row(style({ position: 'relative', flexDirection: 'row-reverse', alignSelf: 'center' }))(
-        $TokenIndex(pos),
+        $TokenIndex(pos.indexToken),
         style({ borderRadius: '50%', padding: '3px', marginRight: '-5px', backgroundColor: pallete.background, })(
           $icon({
             $content: pos.isLong ? $bull : $bear,

@@ -1,6 +1,6 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import { fromJson, pagingQuery, groupByMap, parseFixed, toAggregatedAccountSummary } from "gambit-middleware"
+import { fromJson, pagingQuery, groupByMap, parseFixed, toAggregatedAccountSummary } from "@gambitdao/gmx-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
 import { tradeByTimespan } from "./aggregatedTradeList"
@@ -12,12 +12,18 @@ const fetchCompeitionResults = O(
     const claimListQuery = EM.find(Claim, {})
 
     const query = Promise.all([claimListQuery, listQuery]).then(([claimList, list]) => {
-      const minWithThreshold = parseFixed(950, 30)
+      const minCollateralRequired = parseFixed(950, 30)
       const settledList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
         .map(fromJson.toAggregatedTradeSettledSummary)
-        .filter(trade =>
-          BigInt(trade.collateral) >= minWithThreshold
-        ).map(s => s.trade)
+        .filter(summary => {
+          const minCollateral = summary.trade.updateList.reduce((seed, b) => {
+            const current = b.realisedPnl < 0n ? b.collateral + b.realisedPnl * -1n : b.collateral
+
+            return seed < current ? seed : current
+          }, summary.trade.updateList[0].collateral)
+
+          return minCollateral >= minCollateralRequired
+        }).map(s => s.trade)
 
       const formattedList = toAggregatedAccountSummary(settledList)
     

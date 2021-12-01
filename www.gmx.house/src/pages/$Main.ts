@@ -4,13 +4,13 @@ import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-import { at, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
+import { at, awaitPromises, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
   IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
   IPageable, IPageChainlinkPricefeed, ITimerange, TradeType, TX_HASH_REGEX
-} from 'gambit-middleware'
+} from '@gambitdao/gmx-middleware'
 import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
 import * as wallet from "../common/wallets"
@@ -26,6 +26,7 @@ import { $Account } from './account/$Account'
 import { $CompetitionCumulative } from "./competition/$cumulative"
 import { $CompetitionSingle } from "./competition/$single"
 import { $CompeititonInfo, BATCH_1_END, BATCH_2_START, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
+import { Stream } from "@most/types"
 
 
 
@@ -111,9 +112,26 @@ export default ({ baseRoute = '' }: Website) => component((
     spaceOddity
   })
 
-  const walletLink = initWalletLink({
-    walletProviders: [wallet.metamask, wallet.walletConnect]
-  }, walletChange)
+  const walletStore = rootStore<'metamask' | 'walletConnect' | null, 'walletStore'>('walletStore', null)
+
+  const chosenWalletName = now(walletStore.state)
+  const defaultWalletProvider: Stream<IEthereumProvider | null> = awaitPromises(map(async name => {
+    const provider = name === 'walletConnect' ? wallet.walletConnect : await wallet.metamaskQuery
+    if (name && provider) {
+      const [mainAccount]: string[] = await provider.request({ method: 'eth_accounts' }) as any
+      if (mainAccount) {
+        return provider
+      }
+
+    }
+
+    return null
+  }, chosenWalletName))
+
+
+  const walletLink = initWalletLink(
+    merge(defaultWalletProvider, walletChange)
+  )
 
 
   const msgToGc = 'major tom to ground control'
@@ -170,7 +188,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
                 ),
                 $node(),
-                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, showAccount: false })({
+                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, showAccount: false, walletStore })({
                   routeChange: linkClickTether(),
                   walletChange: walletChangeTether()
                 })
@@ -190,7 +208,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 })
                 : empty(),
               screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
-              $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
+              $MainMenu({ walletLink, walletStore, claimMap, parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether(),
                 walletChange: walletChangeTether()
               })
@@ -314,7 +332,8 @@ export default ({ baseRoute = '' }: Website) => component((
                 aggregatedTradeList: map(res => res ? fromJson.toAccountAggregationJson(res): null, clientApi.requestAccountAggregation),
                 settledPosition: clientApi.requestAggregatedTrade,
                 chainlinkPricefeed: clientApi.requestChainlinkPricefeed,
-                walletLink
+                walletLink,
+                walletStore
               })({
                 requestAggregatedTrade: requestAggregatedTradeTether(),
                 requestChainlinkPricefeed: requestChainlinkPricefeedTether(),

@@ -1,9 +1,9 @@
 import { fromCallback, O, Op } from "@aelea/core"
 import type { BaseProvider, EventType, ExternalProvider } from "@ethersproject/providers"
-import { at, awaitPromises, chain, continueWith, filter, map, recoverWith, switchLatest, take } from "@most/core"
+import { at, awaitPromises, chain, continueWith, empty, filter, map, recoverWith, switchLatest, take } from "@most/core"
 import { disposeWith } from "@most/disposable"
 import { Stream } from "@most/types"
-import type { IEthereumProvider, ProviderAccounts, ProviderChainId, ProviderInfo, ProviderMessage, ProviderRpcError } from "eip1193-provider"
+import type { EIP1193Provider, ProviderAccounts, ProviderChainId, ProviderInfo, ProviderMessage, ProviderRpcError } from "eip1193-provider"
 import { CHAIN, EXPLORER_URL } from "./const"
 
 
@@ -46,28 +46,36 @@ export interface ProviderEventListener {
   (event: "accountsChanged"): Stream<ProviderAccounts>
 }
 
-//  on(event: "connect", listener: (info: ProviderInfo) => void): void;
-//  on(event: "disconnect", listener: (error: ProviderRpcError) => void): void;
-//  on(event: "message", listener: (message: ProviderMessage) => void): void;
-//  on(event: "chainChanged", listener: (chainId: ProviderChainId) => void): void;
-//  on(event: "accountsChanged", listener: (accounts: ProviderAccounts) => void): void;
-
-
-export function eip1193ProviderEvent(provider: IEthereumProvider): ProviderEventListener {
-  return (eventName) => fromCallback<any, any>(
-    (cb) => {
-      provider.on(eventName as any, cb)
-      return disposeWith(() => provider.removeListener(eventName, cb), null)
-    }
-  )
-}
 
 
 export const filterNull = <T>(prov: Stream<T | null>) => filter((provider): provider is T => provider !== null, prov)
 
+export const eip1193ProviderEvent = <A>(provider: Stream<EIP1193Provider | null>): ProviderEventListener => (eventName: string) => switchLatest(
+  map(provider => {
+    if (provider === null) {
+      return empty()
+    }
 
-export const providerEvent = <A>(ps: Stream<BaseProvider>) => (eventType: EventType) => switchLatest(
-  map((provider: BaseProvider) => {
+    const eventChange: Stream<A> = fromCallback<any, any>(
+      (cb) => {
+        provider.on(eventName as any, cb)
+        return disposeWith(() => provider.removeListener(eventName, cb), null)
+      },
+      a => {
+        return a
+      }
+    )
+
+    return eventChange
+  }, provider)
+)
+
+export const providerEvent = <A>(ps: Stream<BaseProvider | null>) => (eventType: EventType) => switchLatest(
+  map(provider => {
+    if (provider === null) {
+      return empty()
+    }
+
     const eventChange: Stream<A> = fromCallback(
       cb => {
         provider.on(eventType, cb)

@@ -6,7 +6,7 @@ import { $column, layoutSheet, state } from '@aelea/ui-components'
 import { BaseProvider } from '@ethersproject/providers'
 import { Stream } from '@most/types'
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAccountAggregationMap, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType, TX_HASH_REGEX } from 'gambit-middleware'
+import { AccountHistoricalDataApi, ETH_ADDRESS_REGEXP, IAccountAggregationMap, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType, TX_HASH_REGEX } from '@gambitdao/gmx-middleware'
 import { IWalletLink } from "@gambitdao/wallet-link"
 import { $Portfolio } from "./$Portfolio"
 import { $Trade } from "./$Trade"
@@ -20,7 +20,9 @@ export interface IPortfolio<T extends BaseProvider> {
   aggregatedTradeList: Stream<IAccountAggregationMap>
   settledPosition: Stream<IAggregatedTradeSettledAll>
   chainlinkPricefeed: Stream<IChainlinkPrice[]>
-  walletLink: Stream<IWalletLink | null>
+
+  walletLink: IWalletLink
+  walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
 
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>;
 
@@ -58,7 +60,8 @@ export const $Account = <T extends BaseProvider>(config: IPortfolio<T>) => compo
           parentStore: config.parentStore,
           parentRoute: accountRoute,
           accountAggregation: config.aggregatedTradeList,
-          walletLink: config.walletLink
+          walletLink: config.walletLink,
+          walletStore: config.walletStore
         })({
           requestAccountAggregation: requestAccountAggregationTether(),
           changeRoute: changeRouteTether(),

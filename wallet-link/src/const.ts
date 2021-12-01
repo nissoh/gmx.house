@@ -2,8 +2,10 @@
 
 export enum CHAIN {
   ETH = 1,
-  // ETH_ROPSTEN = 3,
-  // ETH_KOVAN = 42,
+  ETH_ROPSTEN = 3,
+  ETH_KOVAN = 42,
+  ETH_RINKBY = 4,
+  ETH_GOERLI = 5,
 
   BSC = 56,
   BSC_TESTNET = 97,
@@ -12,7 +14,7 @@ export enum CHAIN {
   ARBITRUM_RINKBY = 421611,
 }
 
-export const BSC_RPC_PROVIDERS = [
+const BSC_RPC_PROVIDERS = [
   "https://bsc-dataseed.binance.org",
   "https://bsc-dataseed1.defibit.io",
   "https://bsc-dataseed1.ninicoin.io",
@@ -34,8 +36,10 @@ const ARBITRUM_RPC_PROVIDERS = [
 
 export const EXPLORER_URL = {
   [CHAIN.ETH]: "https://etherscan.io/",
-  // [CHAIN.ETH_KOVAN]: "https://kovan.etherscan.io/",
-  // [CHAIN.ETH_ROPSTEN]: "https://ropsten.etherscan.io/",
+  [CHAIN.ETH_KOVAN]: "https://kovan.etherscan.io/",
+  [CHAIN.ETH_ROPSTEN]: "https://ropsten.etherscan.io/",
+  [CHAIN.ETH_RINKBY]: "https://rinkeby.etherscan.io/",
+  [CHAIN.ETH_GOERLI]: "https://goerli.etherscan.io/",
 
   [CHAIN.BSC]: "https://bscscan.com/",
   [CHAIN.BSC_TESTNET]: "https://testnet.bscscan.com/",
@@ -44,7 +48,34 @@ export const EXPLORER_URL = {
   [CHAIN.ARBITRUM_RINKBY]: "https://rinkeby-explorer.arbitrum.io/",
 }
 
-export const NETWORK_METADATA = {
+interface AddEthereumChainParameter {
+  chainId: string; // A 0x-prefixed hexadecimal string
+  chainName: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string; // 2-6 characters long
+    decimals: 18;
+  };
+  rpcUrls: string[];
+  blockExplorerUrls?: string[];
+  iconUrls?: string[]; // Currently ignored.
+}
+
+
+export const NETWORK_METADATA: {[k: string]: AddEthereumChainParameter} = {
+
+  [CHAIN.ETH]: {
+    chainName: 'Ethereum Mainnet',
+    chainId: '0x' + CHAIN.ETH.toString(16),
+    nativeCurrency: {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      decimals: 18
+    },
+    blockExplorerUrls: [EXPLORER_URL[CHAIN.ETH]],
+    rpcUrls: ["https://api.infura.io/v1/jsonrpc/mainnet"],
+  },
+
   [CHAIN.BSC]: {
     chainId: '0x' + CHAIN.BSC.toString(16),
     chainName: 'BSC',
@@ -79,25 +110,14 @@ export const NETWORK_METADATA = {
     blockExplorerUrls: ["https://rinkeby-explorer.arbitrum.io/"],
   },
   [CHAIN.ARBITRUM]: {
-    name: 'Arbitrum',
+    chainName: 'Arbitrum',
     chainId: '0x' + CHAIN.ARBITRUM.toString(16),
     nativeCurrency: {
       name: 'Ethereum',
       symbol: 'ETH',
       decimals: 18
     },
-    ExplorerUrls: [EXPLORER_URL[CHAIN.ARBITRUM]],
-    rpcUrl: ARBITRUM_RPC_PROVIDERS,
-  },
-  [CHAIN.ETH]: {
-    name: 'Ethereum Mainnet',
-    chainId: '0x' + CHAIN.ETH.toString(16),
-    nativeCurrency: {
-      name: 'Ethereum',
-      symbol: 'ETH',
-      decimals: 18
-    },
-    ExplorerUrls: [EXPLORER_URL[CHAIN.ETH]],
-    rpcUrl: ["https://api.infura.io/v1/jsonrpc/mainnet"],
+    blockExplorerUrls: [EXPLORER_URL[CHAIN.ARBITRUM]],
+    rpcUrls: ARBITRUM_RPC_PROVIDERS,
   },
 }

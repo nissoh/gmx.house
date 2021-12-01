@@ -66,7 +66,7 @@ export const $Table2 = <T, FilterState = never>({
 
 
   const cellStyle = O(
-    style({ padding: '3px 6px', overflowWrap: 'break-word' }),
+    style({ padding: '3px 6px' }),
     layoutSheet.flex,
   )
 

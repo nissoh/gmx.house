@@ -1,19 +1,19 @@
 import { Behavior, combineArray, combineObject, O, Op } from "@aelea/core"
 import { $element, $node, $text, attr, component, INode, nodeEvent, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
-import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet } from "@aelea/ui-components"
+import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { BaseProvider } from "@ethersproject/providers"
-import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, multicast, now, skip, snapshot, switchLatest, tap } from "@most/core"
+import { awaitPromises, constant, delay, empty, fromPromise, map, merge, mergeArray, multicast, now, skip, snapshot, switchLatest, tap } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "gambit-middleware"
+import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "@gambitdao/gmx-middleware"
 import * as wallet from "@gambitdao/wallet-link"
 import { getAccountExplorerUrl, IWalletLink } from "@gambitdao/wallet-link"
 import { $jazzicon } from "../common/avatar"
 import { $alert, $anchor, $labeledDivider } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
-import { $IntermediateDisplay } from "./$ConnectAccount"
+import { $IntermediateConnect } from "./$ConnectAccount"
 import { $Link } from "./$Link"
 import { $ButtonPrimary, $ButtonSecondary } from "./form/$Button"
 
@@ -27,12 +27,14 @@ export interface IAccountPreview {
 }
 
 export interface IAccountClaim extends IAccountPreview {
-  walletLink: Stream<IWalletLink | null>
+  walletLink: IWalletLink
 }
 
 export interface IProfile extends IAccountClaim {
   tempFix?: boolean
   claimMap: Stream<Map<string, IClaim>>
+
+  walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
 }
 
 
@@ -130,7 +132,7 @@ export const $AccountPreview = ({
 
 
 
-export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap, walletLink }: IProfile) => component((
+export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap, walletLink, walletStore }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
   [display, displayTether]: Behavior<any, string>,
@@ -157,16 +159,14 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
     switchLatest(constant(claimFromMap, dismissPopover))
   ])
 
-  const claimer = switchLatest(map(wallet => wallet ? wallet.account : now(null), walletLink))
-
-
+  
   return [
 
     $column(layoutSheet.spacing)(
       $Popover({
         dismiss: claimedAccount,
         $$popContent: map((address) => {
-          return $ClaimForm(address, walletLink, claimFromMap)({
+          return $ClaimForm(address, walletLink, walletStore, claimFromMap)({
             display: displayTether(),
             claimSucceed: claimedAccountTether(),
             walletChange: walletChangeTether()
@@ -192,7 +192,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
                           })({})
                         )
                         : empty()
-                    }, claimer)
+                    }, walletLink.account)
                   )
                 )
               )
@@ -218,7 +218,7 @@ enum ClaimStatus {
   SUCCESS
 }
 
-const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, claim: Stream<IClaim | undefined>) => component((
+const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">, claim: Stream<IClaim | undefined>) => component((
   [display, displayTether]: Behavior<string, string>,
   [claimTx, claimTxTether]: Behavior<PointerEvent, any>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
@@ -231,16 +231,17 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
       switchLatest(
         mergeArray([
           now(
-            $IntermediateDisplay({
+            $IntermediateConnect({
               $display: switchLatest(
-                combineArray((wallet, claim) => {
+                combineArray((claim, provider) => {
 
-                  if (!wallet) {
+                  if (!wallet || !provider) {
                     return empty()
                   }
 
-                  const isNotMatchedAccount = multicast(map(walletAddress => address !== walletAddress, wallet.account))
-                  const provider = wallet.provider
+                  const isNotMatchedAccount = map(walletAddress => {
+                    return address !== walletAddress
+                  }, walletLink.account)
 
                   const claimFlowOp = O(
                     claimSucceedTether(
@@ -328,8 +329,10 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                     $node(),
                     $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
                       $ButtonPrimary({
-                        disabled: snapshot(
-                          (match, valid) => match && valid,
+                        disabled: combineArray(
+                          (match, valid) => {
+                            return match || valid
+                          },
                           isNotMatchedAccount,
                           mergeArray([
                             now(true),
@@ -363,9 +366,10 @@ const $ClaimForm = (address: string, walletLink: Stream<IWalletLink | null>, cla
                   
                     ),
                   )
-                }, walletLink, claim)
+                }, claim, walletLink.provider)
               ),
-              walletLink
+              walletLink,
+              walletStore
             })({
               walletChange: walletChangeTether()
             }),

@@ -6,7 +6,7 @@ import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, filter, map, merge, multicast, now, snapshot, startWith, switchLatest, tap } from '@most/core'
 import { Stream } from '@most/types'
-import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, IPositionDelta, ISortable, parseFixed, TradeType } from 'gambit-middleware'
+import { IAggregatedAccountSummary, IAggregatedOpenPositionSummary, IAggregatedSettledTradeSummary, IAggregatedTradeSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPagableResponse, IPageable, IPositionDelta, ISortable, parseFixed, TradeType } from '@gambitdao/gmx-middleware'
 import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
@@ -111,7 +111,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
       $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
 
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $column(layoutSheet.spacing, style({ maxWidth: '517px', flex: 1, padding: '0 12px' }))(
 
           $row(style({ fontSize: '0.85em', justifyContent: 'space-between' }))(
             $row(layoutSheet.spacing)(
@@ -163,7 +163,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 accountTableColumn,
                 {
                   $head: $text('Win/Loss'),
-                  columnOp: style({ maxWidth: '80px', placeContent: 'center' }),
+                  columnOp: style({ maxWidth: '65px', placeContent: 'center' }),
                   $body: map((pos: IAggregatedAccountSummary) => {
                     return $row(
                       $text(`${pos.profitablePositionsCount}/${pos.settledPositionCount - pos.profitablePositionsCount}`)
@@ -195,7 +195,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
             })({ scrollIndex: tableTopPnlRequestTether(), sortBy: tableTopSettledsortByChangeTether() })
           ),
         ),
-        $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+        $column(layoutSheet.spacing, style({ maxWidth: '517px', flex: 1, padding: '0 12px' }))(
           $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
             $row(layoutSheet.spacing)(
               $header(layoutSheet.flex)(`Top Open`),

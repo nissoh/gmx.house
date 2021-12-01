@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property, SerializedPrimaryKey, Unique } from '@mikro-orm/core'
 import { ObjectId } from '@mikro-orm/mongodb'
-import { IClaim, IClaimSource } from 'gambit-middleware'
+import { IClaim, IClaimSource } from '@gambitdao/gmx-middleware'
 
 
 export abstract class BaseEntity {

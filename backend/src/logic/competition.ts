@@ -1,6 +1,6 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import { fromJson, pagingQuery, groupByMap, parseFixed } from "gambit-middleware"
+import { fromJson, pagingQuery, groupByMap, parseFixed } from "@gambitdao/gmx-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
 import { tradeByTimespan } from "./aggregatedTradeList"
@@ -12,13 +12,19 @@ const fetchCompeitionResults = O(
     const claimQuery = EM.find(Claim, {})
 
     const query = Promise.all([claimQuery, listQuery]).then(([claimList, list]) => {
-      const hunderedBucks = parseFixed(90, 30)
+      const minCollateralRequired = parseFixed(90, 30)
     
       const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
         .map(fromJson.toAggregatedTradeSettledSummary)
-        .filter(trade =>
-          BigInt(trade.collateral) >= hunderedBucks
-        )
+        .filter(summary => {
+          const minCollateral = summary.trade.updateList.reduce((seed, b) => {
+            const current = b.realisedPnl < 0n ? b.collateral + b.realisedPnl * -1n : b.collateral
+
+            return seed < current ? seed : current
+          }, summary.trade.updateList[0].collateral)
+
+          return minCollateral >= minCollateralRequired
+        })
     
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 

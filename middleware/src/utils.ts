@@ -35,7 +35,7 @@ export function readableNumber(ammount: number) {
 
   if (whole.replace(/^-/, '') === '0') {
     const shortDecimal = decimal.slice(0, 2)
-    return whole + '.' + shortDecimal
+    return whole + (shortDecimal ? '.' + shortDecimal  : '')
   }
 
   return Number(whole).toLocaleString()

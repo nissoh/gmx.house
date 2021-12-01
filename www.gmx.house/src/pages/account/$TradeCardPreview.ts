@@ -6,10 +6,13 @@ import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith,
 import { Stream } from "@most/types"
 import {
   calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
+  fromJson,
   getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
+  IAggregatedTradeOpen,
+  IAggregatedTradeSettledAll,
   IChainlinkPrice, IClaim, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
   unixTimeTzOffset
-} from "gambit-middleware"
+} from "@gambitdao/gmx-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
 import { $Chart } from "../../components/chart/$Chart"
@@ -77,7 +80,7 @@ export const $TradeCardPreview = ({
   }, aggregatedTradeState))
 
   const historicPnL = replayLatest(multicast(combineArray((summary, pricefeed) => {
-    const trade = summary.trade
+    const trade: IAggregatedTradeOpen | IAggregatedTradeSettledAll = { ...summary.trade }
 
     const startTime = trade.initialPosition.indexedAt
     const endtime = 'settledPosition' in trade ? trade.settledPosition.indexedAt : Math.floor(Date.now() / 1000)
@@ -99,14 +102,14 @@ export const $TradeCardPreview = ({
       const updateIdx = (trade.updateList.length - 1) + -matchedIncreaseIdx
       const pos = trade.updateList[updateIdx]
       const delta = calculatePositionDelta(priceFeed.value, trade.initialPosition.isLong, pos)
-      const value = formatFixed((delta.delta), 30)
+      const value = formatFixed(delta.delta, 30)
       // const val = formatFixed((delta.hasProfit ? delta.delta : -delta.delta) - summary.fee, 30)
 
       return { value, time: priceFeed.time, price: priceFeed.value, ...delta }
     }
     
     const initialTick: IPricefeedTick = {
-      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary.trade.updateList[0]),
+      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary),
       time: startTime,
       price: pricefeed[0].value,
       value: 0
@@ -228,7 +231,7 @@ export const $TradeCardPreview = ({
                   ),
                   $column(style({ gap: '6px' }))(
                     $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
-                      $TokenIndex(summary, { width: '18px' }),
+                      $TokenIndex(summary.indexToken, { width: '18px' }),
                       $text(formatReadableUSD(summary.averagePrice))
                     ),
                     $row(layoutSheet.spacingSmall, style({ color: isSettled ? '' : pallete.indeterminate, fontSize: '.65em' }))(
@@ -366,7 +369,6 @@ export const $TradeCardPreview = ({
 
 
             if (data.length > 10) {
-                
               if (low.value !== high.value) {
                 setTimeout(() => {
                   const increaseList = tradeSummary.trade.increaseList
@@ -382,8 +384,9 @@ export const $TradeCardPreview = ({
                       }
                     })
 
-                  const decreaseMarkers = tradeSummary.trade.decreaseList
-                    .slice(0, -1)
+                  const decreaseList = isTradeSettled(tradeSummary.trade) ? tradeSummary.trade.decreaseList.slice(0, -1) : tradeSummary.trade.decreaseList
+
+                  const decreaseMarkers = decreaseList
                     .map((ip): SeriesMarker<Time> => {
                       return {
                         color: pallete.foreground,

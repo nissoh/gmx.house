@@ -1,5 +1,5 @@
 import { $Node, $svg, attr } from "@aelea/dom"
-import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS } from "gambit-middleware"
+import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS } from "@gambitdao/gmx-middleware"
 
 
 export interface IIcon {

@@ -1,7 +1,7 @@
 
 import { O } from '@aelea/core'
 import { awaitPromises, map, snapshot } from '@most/core'
-import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAggregatedTradeAll, IAggregatedTradeSettledListMap, IChainlinkPrice, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from 'gambit-middleware'
+import { AccountHistoricalDataApi, calculatePositionDelta, fromJson, IAggregatedTradeAll, IAggregatedTradeSettledListMap, IChainlinkPrice, ILeaderboardRequest, indexTokenToName, intervalInMsMap, IPageable, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, ISortable, ITimerange, pagingQuery, parseFixed, toAggregatedAccountSummary, TradeType } from '@gambitdao/gmx-middleware'
 import { cacheMap } from '../utils'
 import { chainlinkClient, latestPricefeedMapSource, vaultClient } from './api'
 import { accountAggregationQuery, accountListAggregationQuery, aggregatedClosedTradeQuery, aggregatedSettledTradesMapQuery, chainlinkPricefeedQuery, IChainLinkMap, openAggregateLiquidatedTradeQuery, openAggregateOpenTradeQuery, openAggregateTradesQuery, tradeListTimespanMapQuery } from './queries'
@@ -75,7 +75,7 @@ export const tradeByTimespan = map((queryParams: IPageable & ITimerange) => {
   const query = createCache('tradeByTimespan' + queryParams.from, intervalInMsMap.MIN5, async () => {
     const fethPage = async (offset: number): Promise<IAggregatedTradeSettledListMap> => {
       const from = Math.floor(queryParams.from / 1000)
-      const to = Math.floor(queryParams.to / 1000)
+      const to = Math.floor(Math.min(Date.now(), queryParams.to) / 1000)
     
       const list = await vaultClient(tradeListTimespanMapQuery, { from, to, pageSize: 1000, offset })
 

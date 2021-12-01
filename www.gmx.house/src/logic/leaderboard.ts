@@ -2,7 +2,7 @@ import { O } from "@aelea/core"
 import { http } from "@aelea/ui-components"
 import { filter, fromPromise, map, mergeArray, multicast } from "@most/core"
 import { Stream } from "@most/types"
-import { fromJson, ICommunicationMessage, ILeaderboardRequest, IPositionLiquidated } from "gambit-middleware"
+import { fromJson, ICommunicationMessage, ILeaderboardRequest, IPositionLiquidated } from "@gambitdao/gmx-middleware"
 
 
 export type ILoopMap<T> = {

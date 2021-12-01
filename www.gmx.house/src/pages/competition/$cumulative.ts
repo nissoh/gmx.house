@@ -6,13 +6,14 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, periodic, scan, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { formatFixed, IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable } from 'gambit-middleware'
+import { IAggregatedAccountSummary, IAggregatedTradeSummary, IClaim, IPagableResponse, IPageable, parseFixed } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'
-import { $CompeititonInfo } from './$rules'
+import { $competitionPrize } from './$rules'
 
 
+const prizeLadder: bigint[] = [parseFixed(25000, 30), parseFixed(10000, 30), parseFixed(5000, 30), ...Array(17).fill(parseFixed(1000, 30))]
 
 export interface ICompetitonTopCumulative<T extends BaseProvider> {
   parentRoute: Route
@@ -25,17 +26,6 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> {
   parentStore: <T, TK extends string = string>(key: TK, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
-
-const $settledPercentage = (pos: IAggregatedAccountSummary) => {
-  const delta = formatFixed(pos.delta.deltaPercentage, 2)
-  const isNeg = delta< 0n
-
-  return $row(
-    $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-      `${isNeg ? '' : '+'}${delta}%`
-    )
-  )
-}
 
 const $nftPrice = (rank: number, imgOp: Op<INode, INode>) => {
   const size = '54px'
@@ -159,11 +149,12 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                 })
               },
               {
-                $head: $text('Profit-%'),
-                columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                $body: map((pos) => {
-                  return $settledPercentage(pos)
-                })
+                $head: $column(style({ textAlign: 'center' }))(
+                  $text('Prize $'),
+                  $text(style({ fontSize: '.65em' }))('Result %'),
+                ),
+                columnOp: style({ flex:1, maxWidth: '110px', placeContent: 'flex-end' }),
+                $body: map(pos => $competitionPrize(prizeLadder[pos.index], pos.delta))
               }
             ],
           })({ scrollIndex: highTableRequestIndexTether() }),
@@ -252,11 +243,12 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                 })
               },
               {
-                $head: $text('Profit-%'),
-                columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                $body: map((pos) => {
-                  return $settledPercentage(pos)
-                })
+                $head: $column(style({ textAlign: 'center' }))(
+                  $text('Prize $'),
+                  $text(style({ fontSize: '.65em' }))('Result %'),
+                ),
+                columnOp: style({ flex:1, maxWidth: '110px', placeContent: 'flex-end' }),
+                $body: map(pos => $competitionPrize(prizeLadder[pos.index], pos.delta))
               }
             ],
           })({ scrollIndex: lowTableRequestIndexTether() }),
