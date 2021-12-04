@@ -5,7 +5,7 @@ import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@a
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, multicast, now, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDecrease, IPositionIncrease, IPositionLiquidated, IRequestAggregatedTradeQueryparam, isLiquidated, isTradeSettled, TradeType } from "@gambitdao/gmx-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDecrease, IPositionIncrease, IPositionLiquidated, IRequestAggregatedTradeQueryparam, isLiquidated, isTradeSettled, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType } from "@gambitdao/gmx-middleware"
 import * as wallet from "@gambitdao/wallet-link"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"
@@ -79,7 +79,10 @@ export const $Trade = (config: ITrade) => component((
             const isSettled = isTradeSettled(trade)
 
             const txHash = (isSettled ? summary.trade.id : summary.trade.initialPosition.id).split('-')[1]
-            
+            const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, summary.trade.initialPosition.indexToken)
+
+
+
             return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center', alignItems: 'center', }))(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
                 isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
@@ -90,7 +93,7 @@ export const $Trade = (config: ITrade) => component((
               $labelUSD('Collateral', summary.collateral),
 
               $buttonAnchor(attr({
-                href: `https://twitter.com/intent/tweet?text=Here's my GMX Trading Competition Entry $GMX $redvsgreen $cryptotrading \n${document.location.href}`
+                href: `https://twitter.com/intent/tweet?text=$${formatReadableUSD(summary.collateral)} ${token.symbol} trade on GMX \n${document.location.href}`
               }))(  
                 $icon({
                   $content: $twitter,
