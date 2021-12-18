@@ -1,12 +1,11 @@
 import { Behavior, combineArray, O, Op, replayLatest } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
-import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils, state } from "@aelea/ui-components"
+import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
+import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import {
   calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
-  fromJson,
   getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
   IAggregatedTradeOpen,
   IAggregatedTradeSettledAll,
@@ -57,8 +56,8 @@ export const $TradeCardPreview = ({
   const aggregatedTradeState = replayLatest(multicast(aggregatedTrade))
   const nullishTrade = filter(x => x === null, aggregatedTradeState)
 
-  const parsedPricefeed = replayLatest(multicast(map(feed => {
-    return feed
+  const parsedPricefeed = replayLatest(multicast(combineArray((summary, feed) => {
+    const parsedFeed = feed
       .map(({ unixTimestamp, value }) => {
 
         const parsedValue = parseFixed(Number(value) / 1e8, 30)
@@ -67,8 +66,22 @@ export const $TradeCardPreview = ({
           time: unixTimestamp,
         }
       })
-      .sort((a, b) => a.time - b.time)
-  }, chainlinkPricefeed)))
+
+    parsedFeed.unshift({
+      time: summary.startTimestamp,
+      value: summary.trade.initialPosition.price
+    })
+
+    const trade = summary.trade
+    if (isTradeSettled(trade)) {
+      parsedFeed.push({
+        time: trade.settledPosition.indexedAt,
+        value: trade.decreaseList[trade.decreaseList.length - 1].price
+      })
+    }
+
+    return parsedFeed.sort((a, b) => a.time - b.time)
+  }, aggregatedTradeState, chainlinkPricefeed)))
 
   const latestPrice = latestPositionPrice ? latestPositionPrice : switchLatest(map(summary => {
     const trade = summary.trade
@@ -315,22 +328,14 @@ export const $TradeCardPreview = ({
               // topFillColor1: pallete.positive,
               // topFillColor2: pallete.positive,
               topLineColor: pallete.positive,
-              // priceLineColor: 'transparent',
               baseValue: {
                 type: 'price',
                 price: 0,
               },
-              
-              
               lineWidth: 2,
               baseLineVisible: false,
               lastValueVisible: false,
               priceLineVisible: false,
-              // crosshairMarkerVisible: false,
-              // lineColor: pallete.primary,
-              // topColor: pallete.background,
-              // bottomColor: 'transparent',
-                  
             })
 
             // @ts-ignore

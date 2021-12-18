@@ -1,47 +1,6 @@
 import { intervalInMsMap } from "."
-import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, TOKEN_SYMBOL } from "./address"
-import { ExtractAndParseEventType } from "./contract"
-import type { Vault } from "gmx-contracts"
-import { EventFilter, Event } from "@ethersproject/contracts"
-import { Listener } from "@ethersproject/providers"
+import { ARBITRUM_TRADEABLE_ADDRESS, STABLE_COINS, TOKEN_SYMBOL } from "./address"
 
-
-
-export interface TypedEvent<
-  TArgsArray extends Array<any> = any,
-  TArgsObject = any
-> extends Event {
-  args: TArgsArray & TArgsObject;
-}
-
-export interface TypedEventFilter<_TEvent extends TypedEvent>
-  extends EventFilter {}
-
-export interface TypedListener<TEvent extends TypedEvent> {
-  (...listenerArg: [...__TypechainArgsArray<TEvent>, TEvent]): void;
-}
-
-export type __TypechainArgsArray<T> = T extends TypedEvent<infer U> ? U : never;
-
-export interface OnEvent<TRes> {
-  <TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>,
-    listener: TypedListener<TEvent>
-  ): TRes;
-  (eventName: string, listener: Listener): TRes;
-}
-
-export type MinEthersFactory<C, ARGS> = {
-  deploy(...a: ARGS[]): Promise<C>;
-};
-
-export type GetContractTypeFromFactory<F> = F extends MinEthersFactory<infer C, any>
-  ? C
-  : never;
-
-export type GetARGsTypeFromFactory<F> = F extends MinEthersFactory<any, any>
-  ? Parameters<F["deploy"]>
-  : never;
 
 
 export type Address = string
@@ -52,7 +11,7 @@ export interface TokenAbstract {
   decimals: number
 }
 export interface Token extends TokenAbstract {
-  address: ARBITRUM_ADDRESS
+  address: STABLE_COINS
 }
 
 export interface TradeableToken extends TokenAbstract {
@@ -85,11 +44,58 @@ export interface IEntityIndexed extends IIdentifiableEntity {
 
 export type TypeName<T extends string> = { __typename: T }
 
-export type IPositionLiquidated = IEntityIndexed & TypeName<'LiquidatePosition'> & Omit<ExtractAndParseEventType<Vault, 'LiquidatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionIncrease = IEntityIndexed & TypeName<'IncreasePosition'> & Omit<ExtractAndParseEventType<Vault, 'IncreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionDecrease = IEntityIndexed & TypeName<'DecreasePosition'> & Omit<ExtractAndParseEventType<Vault, 'DecreasePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionUpdate = IEntityIndexed & TypeName<'UpdatePosition'> & Omit<ExtractAndParseEventType<Vault, 'UpdatePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
-export type IPositionClose = IEntityIndexed & TypeName<'ClosePosition'> & Omit<ExtractAndParseEventType<Vault, 'ClosePosition'>, 'indexToken'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionLiquidated = {
+  key: string
+  account: string
+  collateralToken: string
+  indexToken: string
+  isLong: boolean
+  size: bigint
+  collateral: bigint
+  reserveAmount: bigint
+  realisedPnl: bigint
+  markPrice: bigint
+} & IEntityIndexed & TypeName<'LiquidatePosition'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionIncrease = {
+  key: string
+  account: string
+  collateralToken: string
+  indexToken: string
+  collateralDelta: bigint
+  sizeDelta: bigint
+  isLong: boolean
+  price: bigint
+  fee: bigint
+} & IEntityIndexed & TypeName<'IncreasePosition'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionDecrease = {
+  key: string
+  account: string
+  collateralToken: string
+  indexToken: string
+  collateralDelta: bigint
+  sizeDelta: bigint
+  isLong: boolean
+  price: bigint
+  fee: bigint
+} & IEntityIndexed & TypeName<'DecreasePosition'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionUpdate = {
+  key: string
+  size: bigint
+  collateral: bigint
+  averagePrice: bigint
+  entryFundingRate: bigint
+  reserveAmount: bigint
+  realisedPnl: bigint
+} & IEntityIndexed & TypeName<'UpdatePosition'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
+export type IPositionClose = {
+  key: string
+  size: bigint
+  collateral: bigint
+  averagePrice: bigint
+  entryFundingRate: bigint
+  reserveAmount: bigint
+  realisedPnl: bigint
+} & IEntityIndexed & TypeName<'ClosePosition'> & { indexToken: ARBITRUM_TRADEABLE_ADDRESS }
 
 export enum IClaimSource {
   TWITTER = 'TWITTER',

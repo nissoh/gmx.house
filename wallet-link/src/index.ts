@@ -1,8 +1,8 @@
 import { BaseProvider, TransactionReceipt, Web3Provider } from "@ethersproject/providers"
-import { awaitPromises, map, merge, snapshot } from "@most/core"
+import { awaitPromises, constant, map, merge, mergeArray, snapshot } from "@most/core"
 import { Stream } from "@most/types"
 import { EIP1193Provider, ProviderInfo, ProviderRpcError } from "eip1193-provider"
-import { eip1193ProviderEvent, getAccountExplorerUrl, getTxExplorerUrl, providerAction } from "./common"
+import { eip1193ProviderEvent, getAccountExplorerUrl, getTxnUrl, parseError, providerAction } from "./common"
 import { CHAIN, NETWORK_METADATA } from "./const"
 
 
@@ -29,7 +29,15 @@ export const getTxDetails = (provider: Stream<BaseProvider>) => (txHash: string)
 // walletconnect chaining chain issue https://github.com/WalletConnect/walletconnect-monorepo/issues/612
 // attempting to manage wallet connection and event flow
 export function initWalletLink<T extends EIP1193Provider>(walletChange: Stream<T | null>): IWalletLink<T> {
-  const ethersWeb3Wrapper = map(wallet => wallet ? new Web3Provider(wallet): wallet, walletChange)
+  const ethersWeb3Wrapper = awaitPromises(map(async wallet => {
+    if (wallet) {
+      const w3p = new Web3Provider(wallet)
+      await w3p.getNetwork()
+      return w3p
+    }
+
+    return null
+  }, walletChange))
 
   const walletEvent = eip1193ProviderEvent(walletChange)
 
@@ -38,28 +46,37 @@ export function initWalletLink<T extends EIP1193Provider>(walletChange: Stream<T
   
   const networkChange = map(Number, walletEvent('chainChanged'))
   const accountChange = map(list => list[0], walletEvent('accountsChanged'))
-  const proivderChange = snapshot((walletProvider, net) => {
+  const proivderChange = awaitPromises(snapshot(async (walletProvider, net) => {
     if (walletProvider === null) {
       return null
     }
-    return new Web3Provider(walletProvider)
-  }, walletChange, networkChange)
+
+    const w3p = new Web3Provider(walletProvider)
+    await w3p.getNetwork()
+
+    return w3p
+  }, walletChange, networkChange))
 
 
   const currentAccount = awaitPromises(map(async (provi) => {
-    if (provi) {
-      return (await provi.listAccounts())[0]
+    if (provi === null) {
+      return null
     }
-    return null
+
+    await provi.getNetwork()
+    return (await provi.listAccounts())[0] || null
   }, ethersWeb3Wrapper))
 
 
   const account = merge(accountChange, currentAccount)
-  const provider = merge(ethersWeb3Wrapper, proivderChange)
+  const onDisconnect = constant(null, disconnect)
+  const provider = mergeArray([ethersWeb3Wrapper, proivderChange, onDisconnect])
 
-  const network = awaitPromises(map(async net => {
-    if (net) {
-      return (await net.getNetwork()).chainId
+  const network = awaitPromises(map(async w3p => {
+    if (w3p) {
+      // @ts-ignore
+      const newLocal = w3p.getNetwork()
+      return (await newLocal).chainId
     }
 
     return null
@@ -93,13 +110,14 @@ export async function attemptToSwitchNetwork(metamask: EIP1193Provider, chain: C
             NETWORK_METADATA[chain]
           ],
         })
-      } catch (addError) {
-        console.error(addError)
+      } catch (addError: any) {
+        throw parseError(addError)
       }
     }
-    console.error(error)
+
+    throw parseError(parseError(error))
   }
 }
 
-export { NETWORK_METADATA, CHAIN, getAccountExplorerUrl, getTxExplorerUrl }
+export { NETWORK_METADATA, CHAIN, getAccountExplorerUrl, getTxnUrl, parseError }
  

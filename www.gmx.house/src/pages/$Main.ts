@@ -4,7 +4,7 @@ import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
-import { at, awaitPromises, empty, map, merge, mergeArray, multicast, now, periodic, switchLatest } from '@most/core'
+import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
   AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
@@ -46,9 +46,6 @@ interface Website {
 
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
-
-  // websocket communication
-  [spaceOddity, spaceOddityTether]: Behavior<string, string>,
 
   [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
   [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
@@ -108,8 +105,6 @@ export default ({ baseRoute = '' }: Website) => component((
     competitionNov2021LowestPercentage,
     competitionNov2021HighestCumulative,
     competitionNov2021LowestCumulative,
-
-    spaceOddity
   })
 
   const walletStore = rootStore<'metamask' | 'walletConnect' | null, 'walletStore'>('walletStore', null)
@@ -134,11 +129,6 @@ export default ({ baseRoute = '' }: Website) => component((
   )
 
 
-  const msgToGc = 'major tom to ground control'
-  const majorTom = merge(
-    now(msgToGc),
-    switchLatest(map(msg => at(27000, msgToGc), clientApi.spaceOddity))
-  )
 
   function competitionHeadline(title: string, description: string) {
     return $column(style({ padding: '0 10px' }))(
@@ -155,7 +145,6 @@ export default ({ baseRoute = '' }: Website) => component((
   return [
 
     mergeArray([
-      switchLatest(map(xxx => empty(), spaceOddityTether()(majorTom))),
       $node(designSheet.main, style({ backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
         router.match(rootRoute)(
           $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(

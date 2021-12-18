@@ -13,6 +13,7 @@ import { $ethScan, $twitter } from "../../elements/$icons"
 import { $ProfitLossText, $TokenIndex, timeSince } from "../common"
 import { $TradeCardPreview } from "./$TradeCardPreview"
 import { $Table2 } from "../../common/$Table2"
+import { EXPLORER_URL } from "@gambitdao/wallet-link/src/const"
 
 
 export interface ITrade {
@@ -25,9 +26,12 @@ export interface ITrade {
 }
 
 
-const $explorer = (txHash: string) => $anchor(attr({ href: wallet.getTxExplorerUrl(wallet.CHAIN.ARBITRUM, txHash) }))(
-  $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
-)
+const $explorer = (txHash: string) => {
+  const href = EXPLORER_URL[wallet.CHAIN.ARBITRUM] + txHash
+  return $anchor(attr({ href }))(
+    $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
+  )
+}
 
 export const $Trade = (config: ITrade) => component((
   [changeRoute, changeRouteTether]: Behavior<string, string>,
@@ -93,7 +97,7 @@ export const $Trade = (config: ITrade) => component((
               $labelUSD('Collateral', summary.collateral),
 
               $buttonAnchor(attr({
-                href: `https://twitter.com/intent/tweet?text=$${formatReadableUSD(summary.collateral)} ${token.symbol} trade on GMX \n${document.location.href}`
+                href: `https://twitter.com/intent/tweet?text=$${formatReadableUSD(summary.size)} ${summary.isLong ? 'Long' : 'Short'} ${token.symbol} trade on GMX \n${document.location.href}`
               }))(  
                 $icon({
                   $content: $twitter,

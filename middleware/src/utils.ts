@@ -184,7 +184,7 @@ export function bnToHex(n: bigint) {
 
   let hex = n.toString(16)
   if (hex.length % 2) {
-    hex = '0' + hex
+    hex = 'x' + hex
   }
   return hex
 }
@@ -232,7 +232,7 @@ export function unixTimeTzOffset(ms: number): UTCTimestamp {
 }
 
 
-type TimelineTime = {
+export type TimelineTime = {
   time: number
 }
 

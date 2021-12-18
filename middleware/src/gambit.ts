@@ -1,5 +1,5 @@
 import { BaseProvider } from "@ethersproject/providers"
-import { Vault__factory } from "gmx-contracts"
+import { Vault__factory } from "@gambitdao/gmx-contracts"
 import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
 import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
 import { listen } from "./contract"
