@@ -132,7 +132,7 @@ export const $Trade = (config: ITrade) => component((
 
             if (isLiqqed) {
               const { markPrice, id } = trade.settledPosition as IPositionLiquidated
-              const upadte: IPositionDecrease = {
+              const update: IPositionDecrease = {
                 ...trade.initialPosition,
                 collateralDelta: 0n,
                 fee: 0n,
@@ -140,7 +140,7 @@ export const $Trade = (config: ITrade) => component((
                 price: markPrice,
                 id
               }
-              actionList.unshift(upadte)
+              actionList.unshift(update)
             }
 
             return $column(layoutSheet.spacingBig, style({ padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(
