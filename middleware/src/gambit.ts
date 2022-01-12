@@ -1,10 +1,10 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { Vault__factory } from "@gambitdao/gmx-contracts"
 import { ARBITRUM_CONTRACT, groupByMapMany } from "./address"
-import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE } from "./constant"
+import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE } from "./constant"
 import { listen } from "./contract"
 import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource, IPositionClose, IPositionLiquidated } from "./types"
-import { intervalListFillOrderMap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
+import { formatFixed, isAddress } from "./utils"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
