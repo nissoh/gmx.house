@@ -236,37 +236,70 @@ export type TimelineTime = {
   time: number
 }
 
-export function fillIntervalGap<T extends TimelineTime, R extends TimelineTime>(
-  interval: intervalInMsMap, fillMap: (next: T) => R, fillGapMap: (prev: R, next: T) => R, squashMap: (prev: R, next: T) => R = fillGapMap
-) {
-  return (timeline: R[], next: T) => {
+export interface IFillGap<T, R extends TimelineTime> {
+  interval: intervalInMsMap
+  getTime: (t: T) => number
+  seed: R
+  source: T[]
+  
+  fillMap: (prev: R, next: T) => R
+  fillGapMap?: (prev: R, next: T) => R
+  squashMap?: (prev: R, next: T) => R
+}
+
+
+export function intervalListFillOrderMap<T, R extends { time: number }>({
+  source, getTime, seed, interval,
+
+  fillMap, squashMap = fillMap, fillGapMap = (prev, _next) => prev
+}: IFillGap<T, R>) {
+
+  const sortedSource = [...source].sort((a, b) => getTime(a) - getTime(b))
+  const slot = Math.floor(seed.time / interval)
+  const normalizedSeed = { ...seed, time: slot * interval }
+
+  const timeslotMap: { [k: number]: R } = {
+    [slot]: normalizedSeed
+  }
+
+  return sortedSource.reduce((timeline: R[], next: T) => {
     const lastIdx = timeline.length - 1
-    const prev = timeline[lastIdx]
+    const slot = Math.floor(getTime(next) / interval)
 
-    const barSpan = (next.time - prev.time) / interval
+    const squashPrev = timeslotMap[slot]
+    
 
-    if (barSpan > 1) {
-      const barSpanCeil = Math.ceil(barSpan)
+    if (squashPrev) {
+      const newSqush = { ...squashMap(squashPrev, next), time: squashPrev.time }
+      timeslotMap[slot] = newSqush
+      timeline.splice(lastIdx, 1, newSqush)
+    } else {
+      const prev = timeline[timeline.length - 1]
 
-      for (let index = 1; index < barSpanCeil; index++) {
-        timeline.push({ ...fillGapMap(prev, next), time: prev.time + interval * index })
+      const time = slot * interval
+      const barSpan = (time - prev.time) / interval
+      const barSpanCeil = barSpan - 1
+
+      for (let index = 1; index <= barSpanCeil; index++) {
+        const fillNext = fillGapMap(timeline[timeline.length - 1], next)
+        const gapTime = interval * index
+        const newTime = prev.time + gapTime
+        const newTick = { ...fillNext, time: newTime }
+        const newSlot = Math.floor(newTime / interval)
+
+        timeslotMap[newSlot] ??= newTick
+        timeline.push(newTick)
+
       }
 
-      const time = timeline[timeline.length - 1].time + interval
-
-      timeline.push({ ...fillMap(next), time })
-
-      return timeline
-    }
-    
-    if (barSpan < 1) {
-      timeline.splice(lastIdx, 1, squashMap(prev, next))
-    } else {
-      timeline.push(fillMap(next))
+      const lastTick = fillMap(prev, next)
+      timeslotMap[slot] = lastTick
+      timeline.push({ ...lastTick, time })
     }
 
     return timeline
-  }
+  },
+  [normalizedSeed])
 }
 
 

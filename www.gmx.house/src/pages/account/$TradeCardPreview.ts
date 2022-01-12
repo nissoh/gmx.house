@@ -5,11 +5,11 @@ import { pallete } from "@aelea/ui-components-theme"
 import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import {
-  calculatePositionDelta, calculateSettledPositionDelta, fillIntervalGap, formatFixed, formatReadableUSD,
+  calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD,
   getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
   IAggregatedTradeOpen,
   IAggregatedTradeSettledAll,
-  IChainlinkPrice, IClaim, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
+  IChainlinkPrice, IClaim, intervalListFillOrderMap, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
   unixTimeTzOffset
 } from "@gambitdao/gmx-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
@@ -129,23 +129,22 @@ export const $TradeCardPreview = ({
     }
 
 
-    const filled = pricefeed
-      .reduce(
-        fillIntervalGap(
-          intervalTime,
-          (priceFeed) => {
-            return getVal(priceFeed)
-          },
-          (prev, priceFeed) => {
-            return getVal(priceFeed)
-          },
-          (prev, priceFeed) => {
-            return { ...getVal(priceFeed), time: prev.time }
-          }
-        ),
-        [initialTick]
-      )
-      // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
+    const filled = intervalListFillOrderMap({
+      source: pricefeed,
+      interval: intervalTime,
+      seed: initialTick,
+      getTime: x => x.time,
+      fillMap: (prev, priceFeed) => {
+        return getVal(priceFeed)
+      },
+      fillGapMap: (prev, priceFeed) => {
+        return getVal(priceFeed)
+      },
+      squashMap: (prev, priceFeed) => {
+        return { ...getVal(priceFeed), time: prev.time }
+      },
+    })
+    // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
 
     return filled
   }, aggregatedTradeState, parsedPricefeed)))
@@ -324,10 +323,11 @@ export const $TradeCardPreview = ({
       switchLatest(combineArray((data, tradeSummary) =>
         $Chart({
           initializeSeries: map((api) => {
-            const series = api.addAreaBaselineSeries({
+            const series = api.addBaselineSeries({
               // topFillColor1: pallete.positive,
               // topFillColor2: pallete.positive,
               topLineColor: pallete.positive,
+              bottomLineColor: pallete.negative,
               baseValue: {
                 type: 'price',
                 price: 0,

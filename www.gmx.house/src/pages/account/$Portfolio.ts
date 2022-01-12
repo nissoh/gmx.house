@@ -6,7 +6,7 @@ import { pallete } from "@aelea/ui-components-theme"
 import { at, constant, empty, filter, fromPromise, map, mergeArray, multicast, now, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, formatReadableUSD, fromJson, groupByMapMany, historicalPnLMetric, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "@gambitdao/gmx-middleware"
+import { AccountHistoricalDataApi, formatFixed, formatReadableUSD, fromJson, groupByMapMany, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, intervalListFillOrderMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "@gambitdao/gmx-middleware"
 import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
 import { IWalletLink } from "@gambitdao/wallet-link"
 import { fetchHistoricKline } from "../../binance-api"
@@ -83,7 +83,24 @@ export const $Portfolio = (config: IAccount) => component((
   const historicalPnl = multicast(
     combineArray((historicalData, interval) => {
       const tradeList = [...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds].map(toAggregatedTradeSettledSummary)
-      return historicalPnLMetric(tradeList, interval, INTERVAL_TICKS)
+
+      const intervalInSecs = Math.floor((interval / INTERVAL_TICKS) / 1000)
+      const initialDataStartTime = (Date.now() / 1000 | 0) - intervalInSecs * INTERVAL_TICKS
+      const sortedParsed = [...tradeList]
+        .filter(pos => pos.trade.settledPosition.indexedAt > initialDataStartTime)
+        .sort((a, b) => a.trade.settledPosition.indexedAt - b.trade.settledPosition.indexedAt)
+
+      const filled = intervalListFillOrderMap({
+        source: sortedParsed,
+        seed: { time: initialDataStartTime, value: 0 },
+        interval: intervalInSecs,
+        getTime: pos => pos.trade.settledPosition.indexedAt,
+        fillMap: (prev, next) => {
+          return { time: next.trade.settledPosition.indexedAt, value: prev.value + formatFixed(next.realisedPnl, 30) }
+        },
+      })
+
+      return filled
     }, accountHistoryPnL, chartInterval)
   )
 
@@ -96,8 +113,6 @@ export const $Portfolio = (config: IAccount) => component((
     [intervalInMsMap.MONTH]: intervalInMsMap.HR4,
     [intervalInMsMap.MONTH2]: intervalInMsMap.HR24,
   }
-
-
 
   
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
@@ -155,7 +170,7 @@ export const $Portfolio = (config: IAccount) => component((
               $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', overflow: 'hidden', }))(
                 switchLatest(map(data => $Chart({
                   initializeSeries: map((api) => {
-                    const series = api.addAreaBaselineSeries({
+                    const series = api.addBaselineSeries({
                       topLineColor: pallete.positive,
                       baseValue: {
                         type: 'price',
@@ -167,6 +182,7 @@ export const $Portfolio = (config: IAccount) => component((
                       priceLineVisible: false,
                     })
 
+                    // @ts-ignore
                     series.setData(data)
                     api.timeScale().fitContent()
 

@@ -1,7 +1,8 @@
 import { ARBITRUM_TRADEABLE_ADDRESS } from "."
 import { Token, TradeableToken } from "../types"
-import { ARBITRUM_ADDRESS, STABLE_COINS } from "./contract"
+import { ARBITRUM_USD_COINS } from "./arbitrum"
 import { TOKEN_SYMBOL } from "./symbol"
+
 
 export const AddressZero = "0x0000000000000000000000000000000000000000"
 
@@ -11,7 +12,7 @@ export const TOKENS_ARBITRUM = [
     name: "USD Coin",
     symbol: TOKEN_SYMBOL.BUSD,
     decimals: 6,
-    address: STABLE_COINS.USDC
+    address: ARBITRUM_USD_COINS.USDC
   }
 ] as Token[]
 

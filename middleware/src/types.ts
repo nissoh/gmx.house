@@ -1,5 +1,5 @@
 import { intervalInMsMap } from "."
-import { ARBITRUM_TRADEABLE_ADDRESS, STABLE_COINS, TOKEN_SYMBOL } from "./address"
+import { ARBITRUM_TRADEABLE_ADDRESS, ARBITRUM_USD_COINS, TOKEN_SYMBOL } from "./address"
 
 
 
@@ -11,7 +11,7 @@ export interface TokenAbstract {
   decimals: number
 }
 export interface Token extends TokenAbstract {
-  address: STABLE_COINS
+  address: ARBITRUM_USD_COINS
 }
 
 export interface TradeableToken extends TokenAbstract {

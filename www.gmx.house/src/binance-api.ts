@@ -1,6 +1,6 @@
 import { http } from "@aelea/ui-components"
 import { filter, multicast, now, skipRepeatsWith } from "@most/core"
-import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, intervalInMsMap, TOKEN_SYMBOL } from "@gambitdao/gmx-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, intervalInMsMap, TOKEN_SYMBOL } from "@gambitdao/gmx-middleware"
 
 export const PRICE_EVENT_TICKER_MAP = {
   [ARBITRUM_TRADEABLE_ADDRESS.WBTC]: 'BTCUSDT',

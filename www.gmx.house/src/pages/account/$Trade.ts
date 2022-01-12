@@ -86,7 +86,6 @@ export const $Trade = (config: ITrade) => component((
             const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, summary.trade.initialPosition.indexToken)
 
 
-
             return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center', alignItems: 'center', }))(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
                 isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),

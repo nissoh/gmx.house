@@ -1,19 +1,19 @@
 import { BaseProvider } from "@ethersproject/providers"
 import { Vault__factory } from "@gambitdao/gmx-contracts"
-import { ARBITRUM_ADDRESS, groupByMapMany } from "./address"
-import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE, USD_DECIMALS } from "./constant"
+import { ARBITRUM_CONTRACT, groupByMapMany } from "./address"
+import { BASIS_POINTS_DIVISOR, FUNDING_RATE_PRECISION, intervalInMsMap, MARGIN_FEE_BASIS_POINTS, MAX_LEVERAGE } from "./constant"
 import { listen } from "./contract"
 import { IAggregatedAccountSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeOpen, IPositionDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAbstractPosition, IAggregatedTradeSettledAll, IAggregatedTradeAll, IClaim, IClaimSource, IPositionClose, IPositionLiquidated } from "./types"
-import { fillIntervalGap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
+import { intervalListFillOrderMap, formatFixed, isAddress, unixTimeTzOffset, UTCTimestamp } from "./utils"
 
 
 export const gambitContract = (jsonProvider: BaseProvider) => {
-  const contract = Vault__factory.connect(ARBITRUM_ADDRESS.Vault, jsonProvider)
+  const contract = Vault__factory.connect(ARBITRUM_CONTRACT.Vault, jsonProvider)
   const vaultEvent = listen(contract)
 
   return {
     contract,
-    address: ARBITRUM_ADDRESS.Vault,
+    address: ARBITRUM_CONTRACT.Vault,
     increasePosition: vaultEvent('IncreasePosition'),
     decreasePosition: vaultEvent('DecreasePosition'),
     updatePosition: vaultEvent('UpdatePosition'),
@@ -201,54 +201,6 @@ export function toAggregatedAccountSummary(list: IAggregatedTradeSettledAll[]): 
 }
 
 
-export function historicalPnLMetric(list: IAggregatedPositionSettledSummary[], interval: intervalInMsMap, ticks: number, endtime = Date.now() / 1000 | 0) {
-  let accumulated = 0n
-
-  const intervalInSecs = Math.floor((interval / ticks) / 1000)
-  const initialDataStartTime = endtime - intervalInSecs * ticks
-  const closedPosList = list
-    .map(aggTrade => {
-      const time = aggTrade.trade.settledPosition.indexedAt
-      return { value: aggTrade.realisedPnl, time }
-    })
-
-  const sortedByTime = closedPosList
-    .filter(pos => pos.time > initialDataStartTime)
-    .sort((a, b) => a.time - b.time)
-  
-  const sortedParsed = sortedByTime
-    .map(x => {
-      accumulated += x.value
-      return { value: accumulated, time: x.time }
-    })
-
-
-  if (sortedParsed.length) {
-    sortedParsed.push({ value: sortedParsed[sortedParsed.length - 1].value, time: endtime as UTCTimestamp })
-  }
-
-
-  const filled = sortedParsed
-    .reduce(
-      fillIntervalGap(
-        intervalInSecs,
-        (next) => {
-          return { time: next.time, value: next.value }
-        },
-        (prev) => {
-          return { time: prev.time, value: prev.value }
-        },
-        (prev, next) => {
-          return { time: prev.time, value: next.value }
-        }
-      ),
-      [{ time: initialDataStartTime, value: 0n }] as { time: number; value: bigint} []
-    )
-    .map(t => ({ time: unixTimeTzOffset(t.time), value: formatFixed(t.value, 30) }))
-          
-
-  return filled
-}
 
 function easeInExpo(x: number) {
   return x === 0 ? 0 : Math.pow(2, 10 * x - 10)

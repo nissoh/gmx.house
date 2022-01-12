@@ -1,5 +1,5 @@
 import { $Node, $svg, attr } from "@aelea/dom"
-import { ARBITRUM_ADDRESS, ARBITRUM_TRADEABLE_ADDRESS, STABLE_COINS } from "@gambitdao/gmx-middleware"
+import { ARBITRUM_TRADEABLE_ADDRESS, ARBITRUM_USD_COINS } from "@gambitdao/gmx-middleware"
 
 
 export interface IIcon {
@@ -60,7 +60,10 @@ export const $eth = $svg('g')(
 export const $tokenIconMap = {
   [ARBITRUM_TRADEABLE_ADDRESS.WBTC]: $btc,
   [ARBITRUM_TRADEABLE_ADDRESS.WETH]: $eth,
-  [STABLE_COINS.USDC]: $usd,
+  [ARBITRUM_USD_COINS.USDT]: $usd,
+  [ARBITRUM_USD_COINS.USDC]: $usd,
+  [ARBITRUM_USD_COINS.MIM]: $usd,
+  [ARBITRUM_USD_COINS.FRAX]: $usd,
   [ARBITRUM_TRADEABLE_ADDRESS.UNI]: $uni,
   [ARBITRUM_TRADEABLE_ADDRESS.LINK]: $link,
 }
