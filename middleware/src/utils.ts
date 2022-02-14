@@ -236,15 +236,15 @@ export type TimelineTime = {
   time: number
 }
 
-export interface IFillGap<T, R extends TimelineTime> {
+export interface IFillGap<T, R, RTime extends R & TimelineTime = R & TimelineTime> {
   interval: intervalInMsMap
   getTime: (t: T) => number
-  seed: R
+  seed: RTime
   source: T[]
   
-  fillMap: (prev: R, next: T) => R
-  fillGapMap?: (prev: R, next: T) => R
-  squashMap?: (prev: R, next: T) => R
+  fillMap: (prev: RTime, next: T) => R
+  fillGapMap?: (prev: RTime, next: T) => R
+  squashMap?: (prev: RTime, next: T) => R
 }
 
 

@@ -92,9 +92,9 @@ type AggregatedTradeOpen @entity {
   
   initialPosition: IncreasePosition!
 
-  increaseList: [IncreasePosition]!
-  decreaseList: [DecreasePosition]!
-  updateList: [UpdatePosition]!
+  increaseList: [IncreasePosition!]!
+  decreaseList: [DecreasePosition!]!
+  updateList: [UpdatePosition!]!
 }
 
 type AggregatedTradeClosed @entity {
@@ -106,9 +106,9 @@ type AggregatedTradeClosed @entity {
   initialPositionBlockTimestamp: Int!
   initialPosition: IncreasePosition!
 
-  increaseList: [IncreasePosition]!
-  decreaseList: [DecreasePosition]!
-  updateList: [UpdatePosition]!
+  increaseList: [IncreasePosition!]!
+  decreaseList: [DecreasePosition!]!
+  updateList: [UpdatePosition!]!
 
   settledPosition: ClosePosition!
 }
@@ -122,9 +122,9 @@ type AggregatedTradeLiquidated @entity {
   initialPositionBlockTimestamp: Int!
   initialPosition: IncreasePosition!
 
-  increaseList: [IncreasePosition]!
-  decreaseList: [DecreasePosition]!
-  updateList: [UpdatePosition]!
+  increaseList: [IncreasePosition!]!
+  decreaseList: [DecreasePosition!]!
+  updateList: [UpdatePosition!]!
 
   settledPosition: LiquidatePosition!
 }
@@ -135,9 +135,9 @@ type AccountAggregation @entity {
 
   totalRealisedPnl: BigInt!
 
-  aggregatedTradeOpens: [AggregatedTradeOpen]!
-  aggregatedTradeCloseds: [AggregatedTradeClosed]!
-  aggregatedTradeLiquidateds: [AggregatedTradeLiquidated]!
+  aggregatedTradeOpens: [AggregatedTradeOpen!]!
+  aggregatedTradeCloseds: [AggregatedTradeClosed!]!
+  aggregatedTradeLiquidateds: [AggregatedTradeLiquidated!]!
 }
 
 
