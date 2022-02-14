@@ -1,5 +1,5 @@
 
-# Puppet - Mirror Trading https://puppet.finance
+# Puppet - Mirror Trading Platform
 
 Introduction to a new social financial instrument by Gambit/GMX DAO
 
@@ -13,6 +13,12 @@ a trader gets additional payment based on his performance and the amount of inve
 We provide a symmetic risk and incentives for both trader and mirror investor, trader's use collateral in order to trade(on GMX) where Mirror(Puppets) stake liquidity into a mirror pool, choose multiple traders to mirror and set a threshold per trader(% of portfolio to trade)
 
 > Defi 2.0 has been trending as the protocol owned liquidity. we think version 3.0 will step into harvesting powerful minds to work for the protocol for the shared benefits
+
+## https://puppet.finance
+
+Puppet accesses all of the trading activity that is happening on GMX, this allows the visibility of any trader's historic track record, we use the data to build a platform that allow it's users the ability to pick and choose traders that are likely to give them profit by mirroring their trading strategy
+
+Puppet is a Structured Product of GMX.io, they are meant to benefit from each-other as puppet brings new type of investors through it's utility and social marketing features. Mirror Investors(puppets) are inherintly performing the actions of the trader that they have chosen to mirror, they pay the equivelent fees to gmx.io and additional mirroring fees to Puppet
 
 ## Trader
 
