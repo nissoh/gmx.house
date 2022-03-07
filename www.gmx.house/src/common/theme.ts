@@ -1,5 +1,5 @@
 
-import type { Theme } from '@aelea/ui-components-theme'
+import { colorAlpha, Theme } from '@aelea/ui-components-theme'
 
 
 const light: Theme = {
@@ -11,7 +11,7 @@ const light: Theme = {
 
     background: '#ffffff',
     horizon: '#e1e5f1',
-    middleground: '#b7daff',
+    middleground: colorAlpha('#000', .15),
     foreground: '#3b565f',
 
     positive: '#0cab00',
@@ -29,7 +29,7 @@ const dark: Theme = {
 
     background: '#0e0f20',
     horizon: '#16273a',
-    middleground: '#502b86',
+    middleground: colorAlpha('#fff', .15),
     foreground: '#75849f',
 
     positive: '#38E567',

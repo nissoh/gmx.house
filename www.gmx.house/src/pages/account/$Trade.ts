@@ -3,54 +3,56 @@ import { $text, attr, component, style } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $card, $column, $icon, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { empty, map, multicast, now, switchLatest } from "@most/core"
+import { constant, empty, map, multicast, now, periodic, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatReadableUSD, fromJson, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedTradeAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IPositionDecrease, IPositionIncrease, IPositionLiquidated, IRequestAggregatedTradeQueryparam, isLiquidated, isTradeSettled, strictGet, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType } from "@gambitdao/gmx-middleware"
-import * as wallet from "@gambitdao/wallet-link"
+import {
+  ARBITRUM_TRADEABLE_ADDRESS, formatReadableUSD, IPricefeed, IClaim, getMappedKeyByValue, IPositionDecrease, IPositionIncrease, IRequestTradeQueryparam, isTradeSettled, isTradeLiquidated,
+  ITrade, CHAIN, IPriceLatestMap, getTokenDescription, IChainParamApi, TOKEN_ADDRESS_TO_SYMBOL, TOKEN_SYMBOL, IPricefeedParamApi, AVALANCHE_TRADEABLE_ADDRESS,
+  CHAIN_TOKEN_ADDRESS_TO_SYMBOL, intervalInMsMap, unixTimestampNow, getTxExplorerUrl
+} from "@gambitdao/gmx-middleware"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"
 import { $ethScan, $twitter } from "../../elements/$icons"
-import { $ProfitLossText, $TokenIndex, timeSince } from "../common"
+import { $ProfitLossText, $TokenIndex, getPricefeedVisibleColumns, timeSince } from "../common"
 import { $TradeCardPreview } from "./$TradeCardPreview"
 import { $Table2 } from "../../common/$Table2"
-import { EXPLORER_URL } from "@gambitdao/wallet-link/src/const"
+import { CHAIN_LABEL_ID } from "../../types"
 
 
-export interface ITrade {
+
+export interface ITradeView {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
-  aggregatedTrade: Stream<IAggregatedTradeAll>
-  chainlinkPricefeed: Stream<IChainlinkPrice[]>
-  claimMap: Stream<Map<string, IClaim>>
+  trade: Stream<ITrade>
+  pricefeedRange: Stream<IPricefeed[]>
+  claimMap: Stream<{ [k: string]: IClaim }>
+  latestPriceMap: Stream<IPriceLatestMap>
 
   parentRoute?: Route
 }
 
 
-const $explorer = (txHash: string) => {
-  const href = EXPLORER_URL[wallet.CHAIN.ARBITRUM] + txHash
-  return $anchor(attr({ href }))(
-    $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
-  )
-}
 
-export const $Trade = (config: ITrade) => component((
+export const $Trade = (config: ITradeView) => component((
   [changeRoute, changeRouteTether]: Behavior<string, string>,
 
 ) => {
 
-
   const urlFragments = document.location.pathname.split('/')
-  const tradeId = urlFragments[urlFragments.length - 1]
+  const [chainLabel, ticker, tradeId, from, to] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID, TOKEN_SYMBOL, string, string, string]
 
-  const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
-  const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
 
-  const settledPosition = multicast(config.aggregatedTrade)
-  const tradeSummary: Stream<IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary | null> = multicast(map(res => {
-    return res ? fromJson.toAggregatedTradeAllSummary(res) : null
-  }, settledPosition))
+  // @ts-ignore
+  const chain: CHAIN.AVALANCHE | CHAIN.ARBITRUM = CHAIN_LABEL_ID[chainLabel.toLowerCase()]
 
-  const $container = screenUtils.isDesktopScreen
+  // @ts-ignore
+  const tokenAddress = getMappedKeyByValue(CHAIN_TOKEN_ADDRESS_TO_SYMBOL[chain], ticker) as ARBITRUM_TRADEABLE_ADDRESS | AVALANCHE_TRADEABLE_ADDRESS
+
+
+  const tradeSummary: Stream<ITrade | null> = multicast(config.trade)
+
+  const requestLatestPriceMap: Stream<IChainParamApi> = constant({ chain }, periodic(5000))
+
+  const $mainContainer = screenUtils.isDesktopScreen
     ? $row(style({ flexDirection: 'row-reverse', alignSelf: 'center', width: '100%', maxWidth: '720px', gap: '6vw' }))
     : $column
   
@@ -67,36 +69,41 @@ export const $Trade = (config: ITrade) => component((
 
   // const $labelNumber = (label: string, value: bigint) => $label(label, value)
   const $labelUSD = (label: string, value: bigint) => $label(label, '$' + formatReadableUSD(value))
+
+
+  const toParsed = Number(to || unixTimestampNow())
+  const fromParsed = Number(from)
+
   
+  const requestPricefeed: Stream<IPricefeedParamApi> = now({
+    from: fromParsed, to: toParsed,
+    chain, tokenAddress,
+    interval: getPricefeedVisibleColumns(80, fromParsed, toParsed)
+  })
+
   return [
-    $container(
+    $mainContainer(
 
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
 
         switchLatest(
-          map(summary => {
-            if (summary === null) {
+          map(trade => {
+            if (trade === null) {
               return empty()
             }
 
-            const trade = summary.trade
             const isSettled = isTradeSettled(trade)
-
-            const txHash = (isSettled ? summary.trade.id : summary.trade.initialPosition.id).split('-')[1]
-            const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, summary.trade.initialPosition.indexToken)
-
+            const token = getTokenDescription(trade.indexToken)
 
             return $row(layoutSheet.spacingBig, style({ fontSize: '.85em', placeContent: 'center', alignItems: 'center', }))(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'self-end' }))(
-                isSettled ? $label('Settled', timeSince(trade.settledPosition.indexedAt)) : $label('Opened', timeSince(summary.startTimestamp)),
-
-                $explorer(txHash),
+                $label(isSettled ? 'Settled' : 'Opened', timeSince(trade.timestamp)),
               ),
 
-              $labelUSD('Collateral', summary.collateral),
+              $labelUSD('Collateral', trade.collateral),
 
               $buttonAnchor(attr({
-                href: `https://twitter.com/intent/tweet?text=$${formatReadableUSD(summary.size)} ${summary.isLong ? 'Long' : 'Short'} ${token.symbol} trade on GMX \n${document.location.href}`
+                href: `https://twitter.com/intent/tweet?text=$${formatReadableUSD(trade.size)} ${trade.isLong ? 'Long' : 'Short'} ${token.symbol} trade on GMX \n${document.location.href}`
               }))(  
                 $icon({
                   $content: $twitter,
@@ -110,9 +117,10 @@ export const $Trade = (config: ITrade) => component((
         ),
 
         $TradeCardPreview({
-          chainlinkPricefeed: config.chainlinkPricefeed,
-          aggregatedTrade: tradeSummary,
+          pricefeed: config.pricefeedRange,
+          tradeSource: tradeSummary,
           containerOp: style({ position: 'relative', width: '100%', zIndex: 0, height: '326px', overflow: 'hidden', alignSelf: 'center', boxShadow: `rgb(0 0 0 / 15%) 0px 2px 11px 0px, rgb(0 0 0 / 11%) 0px 5px 45px 16px`, borderRadius: '6px', backgroundColor: pallete.background, }),
+          latestPriceMap: config.latestPriceMap,
           accountPreview: {
             parentRoute: config.parentRoute
           },
@@ -120,23 +128,21 @@ export const $Trade = (config: ITrade) => component((
         })({ accountPreviewClick: changeRouteTether() }),
 
         switchLatest(
-          map(summary => {
-            if (summary === null) {
+          map(trade => {
+            if (trade === null) {
               return empty()
             }
 
-            const trade = summary.trade
-            const isLiqqed = isTradeSettled(trade) && isLiquidated(trade.settledPosition)
-            const actionList: (IPositionIncrease | IPositionDecrease)[] = [...summary.trade.increaseList, ...summary.trade.decreaseList].sort((a, b) => b.indexedAt - a.indexedAt)
+            const actionList: (IPositionIncrease | IPositionDecrease)[] = [...trade.increaseList, ...trade.decreaseList].sort((a, b) => b.timestamp - a.timestamp)
 
-            if (isLiqqed) {
-              const { markPrice, id } = trade.settledPosition as IPositionLiquidated
+            if (isTradeLiquidated(trade)) {
+              const { id } = trade
               const upadte: IPositionDecrease = {
-                ...trade.initialPosition,
+                ...trade,
                 collateralDelta: 0n,
                 fee: 0n,
                 __typename: "DecreasePosition",
-                price: markPrice,
+                price: trade.decreaseList[trade.decreaseList.length - 1].price,
                 id
               }
               actionList.unshift(upadte)
@@ -144,93 +150,98 @@ export const $Trade = (config: ITrade) => component((
 
             return $column(layoutSheet.spacingBig, style({ padding: screenUtils.isDesktopScreen ? '' : '0 8px' }))(
               $row(layoutSheet.spacing, style({ fontSize: '.85em', placeContent: 'space-between', flex: 1, alignSelf: 'stretch' }))(
-                $label('Open Date', new Date(summary.startTimestamp * 1000).toUTCString()),
+                $label('Open Date', new Date(trade.timestamp * 1000).toUTCString()),
 
-                $labelUSD('Paid fees', summary.fee),
+                $labelUSD('Paid fees', trade.fee),
                 // $labelUSD('Average Price', summary.averagePrice),
               ),
 
-              $card($Table2({
-                dataSource: now(actionList),
-                bodyContainerOp: layoutSheet.spacing,
-                scrollConfig: {
-                  containerOps: O(layoutSheet.spacingBig)
-                },
-                columns: [
-                  {
-                    $head: $text('Timestamp'),
-                    columnOp: O(style({  flex: 1 })),
-
-                    $body: map((pos) => {
-                      return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-                        $text(timeSince(pos.indexedAt)),
-                        $text(new Date(pos.indexedAt * 1000).toLocaleDateString()),  
-                      )
-                    })
+              $card(
+                $Table2({
+                  dataSource: now(actionList),
+                  bodyContainerOp: layoutSheet.spacing,
+                  scrollConfig: {
+                    containerOps: O(layoutSheet.spacingBig)
                   },
-                  {
-                    $head: $text('Action'),
-                    columnOp: O(style({ flex: 1.2 })),
+                  columns: [
+                    {
+                      $head: $text('Timestamp'),
+                      columnOp: O(style({  flex: 1 })),
+
+                      $body: map((pos) => {
+                        return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+                          $text(timeSince(pos.timestamp)),
+                          $text(new Date(pos.timestamp * 1000).toLocaleDateString()),  
+                        )
+                      })
+                    },
+                    {
+                      $head: $text('Action'),
+                      columnOp: O(style({ flex: 1.2 })),
                     
-                    $body: map((pos) => {
-                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      $body: map((pos) => {
+                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-                      const actionType = pos.__typename === "DecreasePosition"
-                        ? pos.collateralDelta === 0n ? actionList.indexOf(pos) === 0 ? pos.fee === 0n ? 'Liquidated' : 'Close' : 'Decrease' : 'Decrease'
-                        : actionList.indexOf(pos) === actionList.length - 1 ? 'Open' : 'Increase'
+                        const actionType = pos.__typename === "DecreasePosition"
+                          ? pos.collateralDelta === 0n ? actionList.indexOf(pos) === 0 ? pos.fee === 0n ? 'Liquidated' : 'Close' : 'Decrease' : 'Decrease'
+                          : actionList.indexOf(pos) === actionList.length - 1 ? 'Open' : 'Increase'
 
-                      return $container(
-                        $text(actionType),
-                        $explorer(pos.id.split('-')[1])
-                      )
-                    })
-                  },
-                  {
-                    $head: $text('Collateral Delta'),
-                    columnOp: O(style({ flex: 1.2 })),
-                    $body: map((pos) => {
+                        const [_, txHash] = pos.id.split(':')
+                        return $container(
+                          $text(actionType),
+                          $anchor(attr({ href: getTxExplorerUrl(chain, txHash) }))(
+                            $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
+                          )
+                        )
+                      })
+                    },
+                    {
+                      $head: $text('Collateral Delta'),
+                      columnOp: O(style({ flex: 1.2 })),
+                      $body: map((pos) => {
 
-                      if (pos.collateralDelta === 0n) {
-                        return $text('')
-                      }
+                        if (pos.collateralDelta === 0n) {
+                          return $text('')
+                        }
 
-                      const $token = $TokenIndex(pos.collateralToken as ARBITRUM_TRADEABLE_ADDRESS, { width: '18px' })
-                      const $container = $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))
-                      const isDecrease = pos.__typename === "DecreasePosition"
+                        const $token = $TokenIndex(TOKEN_ADDRESS_TO_SYMBOL[pos.collateralToken], { width: '18px' })
+                        const $container = $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))
+                        const isDecrease = pos.__typename === "DecreasePosition"
 
-                      return $container(
-                        $token,
-                        $ProfitLossText(isDecrease ? -pos.collateralDelta : pos.collateralDelta, false),
-                      )
-                    })
-                  },
-                  {
-                    $head: $text('Size Delta'),
-                    columnOp: O(style({ flex: 1.2 })),
+                        return $container(
+                          $token,
+                          $ProfitLossText(isDecrease ? -pos.collateralDelta : pos.collateralDelta, false),
+                        )
+                      })
+                    },
+                    {
+                      $head: $text('Size Delta'),
+                      columnOp: O(style({ flex: 1.2 })),
                     
-                    $body: map((pos) => {
-                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      $body: map((pos) => {
+                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-                      const isDecrease = pos.__typename === "DecreasePosition"
+                        const isDecrease = pos.__typename === "DecreasePosition"
 
-                      return $container(
-                        $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.sizeDelta, false),
-                      )
-                    })
-                  },
-                  {
-                    $head: $text('Market Price'),
-                    columnOp: O(style({ flex: .5 })),
+                        return $container(
+                          $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.sizeDelta, false),
+                        )
+                      })
+                    },
+                    {
+                      $head: $text('Market Price'),
+                      columnOp: O(style({ flex: .5 })),
                     
-                    $body: map((pos) => {
-                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
-                      return $container(
-                        $text(formatReadableUSD(pos.price)),
-                      )
-                    })
-                  },
-                ]
-              })({}))
+                      $body: map((pos) => {
+                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                        return $container(
+                          $text(formatReadableUSD(pos.price)),
+                        )
+                      })
+                    },
+                  ]
+                })({})
+              )
             )
           }, tradeSummary)
         ),
@@ -239,8 +250,9 @@ export const $Trade = (config: ITrade) => component((
     ),
 
     {
-      requestChainlinkPricefeed: now(<IPageChainlinkPricefeed>{ feedAddress, from: Number(from), to: tradeType === TradeType.OPEN ? null : Number(to), orderBy: 'unixTimestamp' }),
-      requestAggregatedTrade: now(<IRequestAggregatedTradeQueryparam>{ id: tradeId, tradeType, }),
+      requestPricefeed,
+      requestTrade: now(<IRequestTradeQueryparam>{ id: tradeId, chain }),
+      requestLatestPriceMap,
       changeRoute
     }
   ]

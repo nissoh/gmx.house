@@ -1,6 +1,6 @@
 {
-    "name": "@gambitdao/gmx-middleware",
-    "version": "0.5.1",
+    "name": "common",
+    "version": "0.7.0",
     "license": "MIT",
     "module": ".dist/esm/index.js",
     "main": ".dist/cjs/index.js",
@@ -30,6 +30,7 @@
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
         "@types/isomorphic-fetch": "^0.0.35",
+        "@urql/core": "^2.4.2",
         "isomorphic-fetch": "^3.0.0"
     }
 }

@@ -3,40 +3,43 @@ import { $column, $row, http, layoutSheet } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { fromPromise, map, now } from '@most/core'
 import { Stream } from '@most/types'
-import { ARBITRUM_TRADEABLE_ADDRESS, CHAINLINK_USD_FEED_ADRESS, formatFixed, fromJson, IAggregatedTradeSettledAll, IChainlinkPrice, IClaim, IPageChainlinkPricefeed, IRequestAggregatedTradeQueryparam, TradeType } from '@gambitdao/gmx-middleware'
+import { ARBITRUM_TRADEABLE_ADDRESS, formatFixed, ITrade, IPricefeed, IClaim, IPricefeedParamApi, IRequestTradeQueryparam, intervalInMsMap, IPriceLatestMap } from '@gambitdao/gmx-middleware'
 import { $TradeCardPreview } from "./account/$TradeCardPreview"
+import { CHAIN_LABEL_ID } from "../types"
 
 
 
 export interface ICard {
-  chainlinkPricefeed: Stream<IChainlinkPrice[]>
-  aggregatedTrade: Stream<IAggregatedTradeSettledAll>
+  chainlinkPricefeed: Stream<IPricefeed[]>
+  trade: Stream<ITrade>
+  latestPriceMap: Stream<IPriceLatestMap>
 
-  claimMap: Stream<Map<string, IClaim>>
+  claimMap: Stream<{ [k: string]: IClaim }>
 }
 
 
 
-export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
+export const $Card = ({ trade, claimMap, latestPriceMap }: ICard) => component(() => {
 
   const urlFragments = document.location.pathname.split('/')
+  const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
+  const chain = CHAIN_LABEL_ID[chainLabel]
+  
   const tradeId = urlFragments[urlFragments.length - 1]
 
-  const [token, tradeType, from, to] = urlFragments[urlFragments.length - 2].split('-')
-  const feedAddress = CHAINLINK_USD_FEED_ADRESS[token as ARBITRUM_TRADEABLE_ADDRESS]
-  const tradeSummary = map(fromJson.toAggregatedTradeAllSummary, aggregatedTrade)
+  const [token, status, from, to] = urlFragments[urlFragments.length - 2].split('-')
+  const tokenAddress = token as ARBITRUM_TRADEABLE_ADDRESS
 
 
-  const feed: Stream<IChainlinkPrice[]> = fromPromise(http.fetchJson('/api/feed', {
+  const pricefeed: Stream<IPricefeed[]> = fromPromise(http.fetchJson('/api/feed', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(<IPageChainlinkPricefeed>{
-      feedAddress,
-      from: Number(from),
-      to: tradeType === TradeType.OPEN ? null : Number(to),
-      orderBy: 'unixTimestamp'
+    body: JSON.stringify(<IPricefeedParamApi>{
+      tokenAddress: tokenAddress,
+      chain,
+      interval: intervalInMsMap.HR4
     })
   }))
 
@@ -50,11 +53,9 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
       ),
 
       $TradeCardPreview({
-        chainlinkPricefeed: feed,
-        aggregatedTrade: tradeSummary,
-        latestPositionPrice: map(feed => {
-          return formatFixed(BigInt(feed[feed.length - 1].value), 8)
-        }, feed),
+        pricefeed,
+        tradeSource: trade,
+        latestPriceMap,
         containerOp: style({ position: 'absolute', letterSpacing: '2px', inset: `0px 0px 35px`, }),
         accountPreview: {
           avatarSize: '45px'
@@ -88,7 +89,7 @@ export const $Card = ({ aggregatedTrade, claimMap }: ICard) => component(() => {
     ),
 
     {
-      requestAggregatedTrade: now({ id: tradeId, tradeType, }) as Stream<IRequestAggregatedTradeQueryparam>
+      requestTrade: now({ id: tradeId, }) as Stream<IRequestTradeQueryparam>
     }
   ]
 })

@@ -4,18 +4,19 @@ import { Route } from "@aelea/router"
 import { $column, $icon, $Popover, $row, $TextField, http, layoutSheet, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { BaseProvider } from "@ethersproject/providers"
-import { awaitPromises, constant, delay, empty, fromPromise, map, merge, mergeArray, multicast, now, skip, snapshot, switchLatest, tap } from "@most/core"
 import { Stream } from "@most/types"
-import { IEthereumProvider } from "eip1193-provider"
-import { getGatewayUrl, getIdentityFromENS, IClaim, IClaimSource, IEnsClaim, intervalInMsMap, parseTwitterClaim, validateIdentityName } from "@gambitdao/gmx-middleware"
-import * as wallet from "@gambitdao/wallet-link"
-import { getAccountExplorerUrl, IWalletLink } from "@gambitdao/wallet-link"
-import { $jazzicon } from "../common/avatar"
+import { CHAIN, IClaim, IClaimSource, intervalInMsMap, parseTwitterClaim, validateIdentityName, getAccountExplorerUrl } from "@gambitdao/gmx-middleware"
+import { IWalletLink } from "@gambitdao/wallet-link"
 import { $alert, $anchor, $labeledDivider } from "../elements/$common"
 import { $ethScan, $twitter } from "../elements/$icons"
-import { $IntermediateConnect } from "./$ConnectAccount"
 import { $Link } from "./$Link"
+import { isAddress } from "@ethersproject/address"
+import { $jazzicon } from "../common/avatar"
+import { awaitPromises, constant, empty, fromPromise, map, merge, mergeArray, now, snapshot, switchLatest } from "@most/core"
+import { IEthereumProvider } from "eip1193-provider"
 import { $ButtonPrimary, $ButtonSecondary } from "./form/$Button"
+import { $IntermediateConnect } from "./$ConnectAccount"
+import { getGatewayUrl, getIdentityFromENS, IEnsClaim } from "common"
 
 
 export interface IAccountPreview {
@@ -23,6 +24,7 @@ export interface IAccountPreview {
   labelSize?: string
   avatarSize?: string
   parentRoute?: Route
+  chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE
   claim?: IClaim
 }
 
@@ -32,7 +34,7 @@ export interface IAccountClaim extends IAccountPreview {
 
 export interface IProfile extends IAccountClaim {
   tempFix?: boolean
-  claimMap: Stream<Map<string, IClaim>>
+  claimMap: Stream<{ [k: string]: IClaim }>
 
   walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
 }
@@ -40,7 +42,7 @@ export interface IProfile extends IAccountClaim {
 
 const $photoContainer = $element('img')(style({ display: 'block', backgroundColor: pallete.background, position: 'relative', backgroundSize: 'cover', borderRadius: '50%', overflow: 'hidden' }))
 
-export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') => {
+export const $AccountPhoto = (address: string | null, claim?: IClaim, size = '42px') => {
   const claimType = claim?.sourceType
 
   if (claimType) {
@@ -55,9 +57,9 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
       const data: IEnsClaim = claim.data ? JSON.parse(claim.data) : {}
       const imageUrl = data.imageUrl
 
-      return imageUrl
-        ? $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ minWidth: size, height: size }))()
-        : $jazzicon(address, size)
+      if (imageUrl) {
+        return $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ minWidth: size, height: size }))()
+      }     
     }
 
   }
@@ -65,20 +67,29 @@ export const $AccountPhoto = (address: string, claim?: IClaim, size = '42px') =>
   return $jazzicon(address, size)
 }
 
-export const $AccountLabel = (address: string, claim?: IClaim, adressOp: Op<INode, INode> = O()) => {
+export const $AccountLabel = (address: string | null, claim?: IClaim, adressOp: Op<INode, INode> = O()) => {
+  const isAddressValid = address && isAddress(address)
+
+  if (!isAddressValid) {
+    return $column(
+      $text(style({ fontSize: '.75em' }))('0x----'),
+      $text(adressOp, style({ fontSize: '1em' }))('----')
+    )
+  }
+
   if (claim) {
     return $text(style({ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }), adressOp)(claim.name)
   }
 
   return $column(
-    $text(style({ fontSize: '.65em' }))(address.slice(0, 6)),
+    $text(style({ fontSize: '.75em' }))(address.slice(0, 6)),
     $text(adressOp, style({ fontSize: '1em' }))(address.slice(address.length -4, address.length))
   )
 }
 
 
-export const $ProfileLinks = (address: string, claim?: IClaim) => {
-  const $explorer = $anchor(attr({ href: getAccountExplorerUrl(wallet.CHAIN.ARBITRUM, address) }))(
+export const $ProfileLinks = (address: string, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, claim?: IClaim) => {
+  const $explorer = $anchor(attr({ href: getAccountExplorerUrl(chain, address) }))(
     $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
   )
 
@@ -103,12 +114,11 @@ export const $ProfileLinks = (address: string, claim?: IClaim) => {
 
 
 export const $AccountPreview = ({
-  address, labelSize = '16px', avatarSize = '38px',
-  parentRoute, claim,
+  address, parentRoute, claim, chain,
+  labelSize = '16px', avatarSize = '38px',
 }: IAccountPreview) => component((
   [profileClick, profileClickTether]: Behavior<string, string>
 ) => {
-
   const $preview = $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
     $AccountPhoto(address, claim, avatarSize),
     $AccountLabel(address, claim, parentRoute ? style({ color: pallete.primary, fontSize: labelSize }) : style({ fontSize: labelSize }))
@@ -120,7 +130,7 @@ export const $AccountPreview = ({
         ? $Link({ route: parentRoute.create({ fragment: '2121212' }),
           $content: $preview,
           anchorOp: style({ minWidth: 0, overflow: 'hidden' }),
-          url: `/p/account/${address}`,
+          url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${address}`,
         })({ click: profileClickTether() })
         : $preview,
       // parentRoute ? $ProfileLinks(address) : empty()
@@ -132,7 +142,7 @@ export const $AccountPreview = ({
 
 
 
-export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap, walletLink, walletStore }: IProfile) => component((
+export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap, walletLink, walletStore, chain }: IProfile) => component((
   [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
   [dismissPopover, dismissPopoverTether]: Behavior<any, any>,
   [display, displayTether]: Behavior<any, string>,
@@ -142,7 +152,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
 ) => {
 
 
-  const claimFromMap = map(map => map.get(address.toLocaleLowerCase()), claimMap)
+  const claimFromMap = map(map => map[address.toLocaleLowerCase()], claimMap)
   const claimChange: Stream<IClaim | undefined> = mergeArray([
     claimFromMap,
     claimedAccount,
@@ -181,7 +191,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
 
                 $AccountLabel(address, claimChange, style({ fontSize: labelSize, lineHeight: 1 })),
                 $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                  $ProfileLinks(address, claimChange),
+                  $ProfileLinks(address, chain, claimChange),
                   switchLatest(
                     map((claimerAddress) => {
                       const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
@@ -235,7 +245,7 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
               $display: switchLatest(
                 combineArray((claim, provider) => {
 
-                  if (!wallet || !provider) {
+                  if (!provider) {
                     return empty()
                   }
 

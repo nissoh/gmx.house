@@ -3,7 +3,7 @@ import { awaitPromises, map } from "@most/core"
 import { fromJson, pagingQuery, groupByMap, parseFixed } from "@gambitdao/gmx-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
-import { tradeByTimespan } from "./aggregatedTradeList"
+import { tradeByTimespan } from "./trade"
 
 
 const fetchCompeitionResults = O(
@@ -14,14 +14,14 @@ const fetchCompeitionResults = O(
     const query = Promise.all([claimQuery, listQuery]).then(([claimList, list]) => {
       const minCollateralRequired = parseFixed(90, 30)
     
-      const formattedList = [...list.aggregatedTradeCloseds, ...list.aggregatedTradeLiquidateds]
-        .map(fromJson.toAggregatedTradeSettledSummary)
+      const formattedList = list
+        .map(fromJson.toTradeJson)
         .filter(summary => {
-          const minCollateral = summary.trade.updateList.reduce((seed, b) => {
+          const minCollateral = summary.updateList.reduce((seed, b) => {
             const current = b.realisedPnl < 0n ? b.collateral + b.realisedPnl * -1n : b.collateral
 
             return seed < current ? seed : current
-          }, summary.trade.updateList[0].collateral)
+          }, summary.updateList[0].collateral)
 
           return minCollateral >= minCollateralRequired
         })
@@ -44,11 +44,11 @@ export const competitionNov2021HighestPercentage = O(
 
     const claimPriority = query.then(res => 
       res.formattedList
-        .filter(trade => trade.delta.deltaPercentage > 0n)
+        .filter(trade => trade.realisedPnlPercentage > 0n)
         .sort((a, b) => {
 
-          const aN = res.claimMap.get(a.account) ? bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
-          const bN = res.claimMap.get(b.account) ? bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
+          const aN = res.claimMap[a.account] ? bigNumberForPriority + a.realisedPnlPercentage : a.realisedPnlPercentage
+          const bN = res.claimMap[b.account] ? bigNumberForPriority + b.realisedPnlPercentage : b.realisedPnlPercentage
 
           return Number(bN) - Number(aN)
         })
@@ -65,11 +65,11 @@ export const competitionNov2021LowestPercentage = O(
 
     const claimPriority = query.then(res =>
       res.formattedList
-        .filter(trade => trade.delta.deltaPercentage < 0n)
+        .filter(trade => trade.realisedPnlPercentage < 0n)
         .sort((a, b) => {
 
-          const aN = res.claimMap.get(a.account) ? -bigNumberForPriority + a.delta.deltaPercentage : a.delta.deltaPercentage
-          const bN = res.claimMap.get(b.account) ? -bigNumberForPriority + b.delta.deltaPercentage : b.delta.deltaPercentage
+          const aN = res.claimMap[a.account] ? -bigNumberForPriority + a.realisedPnlPercentage : a.realisedPnlPercentage
+          const bN = res.claimMap[b.account] ? -bigNumberForPriority + b.realisedPnlPercentage : b.realisedPnlPercentage
 
           return Number(aN) - Number(bN)
         })

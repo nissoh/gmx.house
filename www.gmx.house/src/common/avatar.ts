@@ -1,10 +1,22 @@
-import { $wrapNativeElement, style } from "@aelea/dom"
+import { $text, $wrapNativeElement, style } from "@aelea/dom"
+import { $row } from "@aelea/ui-components"
+import { pallete } from "@aelea/ui-components-theme"
+import { isAddress } from "@gambitdao/gmx-middleware"
 import { map } from "@most/core"
 // @ts-ignore
 import jazzicon from 'jazzicon'
 
 
-export function $jazzicon(address: string, size = '24px') {
+export function $jazzicon(address: string | null, size = '24px') {
+
+  const isAddressValid = address && isAddress(address)
+
+  if (!isAddressValid) {
+    return $row(style({ minWidth: size, minHeight: size, borderRadius: '50%', border: `1px solid ${pallete.foreground}`, placeContent: 'center', alignItems: 'center' }))(
+      $text(style({ fontWeight: 800, color: pallete.foreground }))('?')
+    )
+  }
+
 
   const cnt = parseInt(address.slice(2, 10), 16)
   const el = jazzicon(parseInt(size), cnt)

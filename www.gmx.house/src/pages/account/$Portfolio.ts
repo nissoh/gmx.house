@@ -3,20 +3,24 @@ import { $node, $text, component, IBranch, INode, motion, MOTION_NO_WOBBLE, node
 import { Route } from "@aelea/router"
 import { $card, $column, $icon, $NumberTicker, $Popover, $row, layoutSheet, screenUtils, state } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { at, constant, empty, filter, fromPromise, map, mergeArray, multicast, now, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
+import { at, combine, constant, filter, map, mergeArray, multicast, now, periodic, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
-import { AccountHistoricalDataApi, formatFixed, formatReadableUSD, fromJson, groupByMapMany, IAccountAggregationMap, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IAggregatedSettledTradeSummary, IAggregatedTradeClosed, IAggregatedTradeLiquidated, IAggregatedTradeSummary, IClaim, intervalInMsMap, intervalListFillOrderMap, isLiquidated, parseFixed, strictGet, toAggregatedTradeSettledSummary, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP, TradeType, unixTimeTzOffset } from "@gambitdao/gmx-middleware"
-import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts-baseline"
+import {
+  formatFixed, formatReadableUSD, groupByMapMany, ITrade, IClaim, intervalInMsMap, intervalListFillOrderMap, TokenDescription,
+  unixTimeTzOffset, isTradeSettled, ITradeOpen, isTradeOpen, ITradeSettled, ARBITRUM_TRADEABLE_ADDRESS, isTradeLiquidated,
+  isTradeClosed, IAccountTradeListParamApi, unixTimestampNow, IPricefeed, IPricefeedParamApi, IPriceLatestMap, getTokenDescription, TOKEN_ADDRESS_TO_SYMBOL, getMappedKeyByValue, AVALANCHE_TRADEABLE_ADDRESS, getChainName, CHAIN_TOKEN_ADDRESS_TO_SYMBOL, readableNumber
+} from "@gambitdao/gmx-middleware"
+import { CrosshairMode, LineStyle, MouseEventParams, PriceScaleMode, SeriesMarker, Time } from "lightweight-charts"
 import { IWalletLink } from "@gambitdao/wallet-link"
-import { fetchHistoricKline } from "../../binance-api"
 import { $Table2 } from "../../common/$Table2"
 import { $ProfilePreviewClaim } from "../../components/$AccountProfile"
 import { $Link } from "../../components/$Link"
-import { $Chart } from "../../components/chart/$Chart"
+import { $Chart } from "../../components/$Chart"
 import { $anchor, $tokenLabelFromSummary } from "../../elements/$common"
 import { $caretDown } from "../../elements/$icons"
-import { $Entry, $LivePnl, $SummaryProfitLoss, $Risk, $RiskLiquidator, filterByIndexToken, priceChange, timeSince } from "../common"
+import { $Entry, $livePnl, $ProfitLossText, $Risk, $RiskLiquidator, getPricefeedVisibleColumns, timeSince } from "../common"
+import { CHAIN_LABEL_ID } from "../../types"
 
 
 
@@ -24,11 +28,13 @@ export interface IAccount {
   parentStore: <T, TK extends string>(key: string, intitialState: T) => state.BrowserStore<T, TK>
   parentRoute: Route
 
-  accountAggregation: Stream<IAccountAggregationMap>
+  accountTradeList: Stream<ITrade[]>
   walletLink: IWalletLink
   walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
+  pricefeed: Stream<IPricefeed[]>
+  latestPriceMap: Stream<IPriceLatestMap>
 
-  claimMap: Stream<Map<string, IClaim>>
+  claimMap: Stream<{ [k: string]: IClaim }>
 }
 
 
@@ -38,81 +44,63 @@ const INTERVAL_TICKS = 140
 export const $Portfolio = (config: IAccount) => component((
   [pnlCrosshairMove, pnlCrosshairMoveTether]: Behavior<MouseEventParams, MouseEventParams>,
   [timeFrame, timeFrameTether]: Behavior<INode, intervalInMsMap>,
-  [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, TradeableToken>,
+  [selectedTokenChange, selectedTokenChangeTether]: Behavior<IBranch, TokenDescription>,
   [selectOtherTimeframe, selectOtherTimeframeTether]: Behavior<IBranch, intervalInMsMap>,
   [changeRoute, changeRouteTether]: Behavior<string, string>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider, IEthereumProvider>,
 
 ) => {
 
-
   const urlFragments = document.location.pathname.split('/')
+  const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
+  const chain = CHAIN_LABEL_ID[chainLabel]
+
   const accountAddress = urlFragments[urlFragments.length - 1]
 
-  const nonNullAccount = filter(Boolean, config.accountAggregation)
-
   const timeFrameStore = config.parentStore('portfolio-chart-interval', intervalInMsMap.DAY7)
-
   const chartInterval = startWith(timeFrameStore.state, replayLatest(timeFrameStore.store(timeFrame, map(x => x))))
 
+  const accountTradeList = multicast(filter(list => list.length > 0, config.accountTradeList))
 
-  const accountHistoryPnL = multicast(filter(arr => {
-    return arr.aggregatedTradeCloseds.length > 0 || arr.aggregatedTradeLiquidateds.length > 0
-  }, nonNullAccount))
+  const settledTradeList = map(list => list.filter(isTradeSettled), accountTradeList)
+  const openTradeList = map(list => list.filter(isTradeOpen), accountTradeList)
 
 
   const latestInitiatedPosition = map(h => {
-    const token = h.aggregatedTradeCloseds[0]?.initialPosition.indexToken || h.aggregatedTradeLiquidateds[0]?.initialPosition.indexToken
+    return getTokenDescription(h[0].indexToken)
+  }, accountTradeList)
 
-    return strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, token)
-  }, accountHistoryPnL)
+  const selectedToken = mergeArray([latestInitiatedPosition, selectedTokenChange])
 
-  const selectedToken = mergeArray([
-    latestInitiatedPosition,
-    selectedTokenChange
-  ])
+  const latestPrice = (trade: ITrade) => map(priceMap => priceMap[trade.indexToken].value, config.latestPriceMap)
 
-  
-  const historicKline = multicast(switchLatest(combineArray((token, interval) => {
-    // @ts-ignore
-    const klineData = fromPromise(fetchHistoricKline(token.symbol, { interval: timeFrameToInterval[interval], limit: INTERVAL_TICKS }))
-    return klineData
-  }, selectedToken, chartInterval)))
 
 
   const historicalPnl = multicast(
-    combineArray((historicalData, interval) => {
-      const tradeList = [...historicalData.aggregatedTradeCloseds, ...historicalData.aggregatedTradeLiquidateds].map(toAggregatedTradeSettledSummary)
 
-      const intervalInSecs = Math.floor((interval / INTERVAL_TICKS) / 1000)
-      const initialDataStartTime = (Date.now() / 1000 | 0) - intervalInSecs * INTERVAL_TICKS
+    combineArray((tradeList, interval) => {
+      const intervalInSecs = Math.floor((interval / INTERVAL_TICKS))
+      const initialDataStartTime = unixTimestampNow() - interval
       const sortedParsed = [...tradeList]
-        .filter(pos => pos.trade.settledPosition.indexedAt > initialDataStartTime)
-        .sort((a, b) => a.trade.settledPosition.indexedAt - b.trade.settledPosition.indexedAt)
+        .filter(pos => {
+          return pos.settledTimestamp > initialDataStartTime
+        })
+        .sort((a, b) => a.settledTimestamp - b.settledTimestamp)
 
       const filled = intervalListFillOrderMap({
         source: sortedParsed,
-        seed: { time: initialDataStartTime, value: 0 },
+        seed: { time: initialDataStartTime, value: 0n },
         interval: intervalInSecs,
-        getTime: pos => pos.trade.settledPosition.indexedAt,
+        getTime: pos => pos.settledTimestamp,
         fillMap: (prev, next) => {
-          return { time: next.trade.settledPosition.indexedAt, value: prev.value + formatFixed(next.realisedPnl, 30) }
+          return { time: next.settledTimestamp, value: prev.value + next.realisedPnl - next.fee }
         },
       })
 
       return filled
-    }, accountHistoryPnL, chartInterval)
+    }, settledTradeList, chartInterval)
   )
 
-
-  const timeFrameToInterval = {
-    [intervalInMsMap.HR4]: intervalInMsMap.SEC60,
-    [intervalInMsMap.HR8]: intervalInMsMap.SEC60,
-    [intervalInMsMap.HR24]: intervalInMsMap.MIN15,
-    [intervalInMsMap.DAY7]: intervalInMsMap.MIN60,
-    [intervalInMsMap.MONTH]: intervalInMsMap.HR4,
-    [intervalInMsMap.MONTH2]: intervalInMsMap.HR24,
-  }
 
   
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
@@ -122,8 +110,7 @@ export const $Portfolio = (config: IAccount) => component((
       return Number.isFinite(cross) ? cross : acc
     },
     map(x => {
-      const newLocal = Math.floor(x[x.length - 1].value)
-      return newLocal
+      return formatFixed(x[x.length - 1].value, 30)
     }, historicalPnl),
     mergeArray([
       map(s => {
@@ -158,8 +145,13 @@ export const $Portfolio = (config: IAccount) => component((
 
         $column(
           $row(style({ marginBottom: '-20px', marginLeft: '20px' }))(
-            $ProfilePreviewClaim({ address: accountAddress, claimMap: config.claimMap, avatarSize: '100px', labelSize: '1.2em', walletStore: config.walletStore, walletLink: config.walletLink })({
-              walletChange: walletChangeTether()
+            $ProfilePreviewClaim({
+              address: accountAddress,
+              chain,
+              claimMap: config.claimMap, walletStore: config.walletStore, walletLink: config.walletLink,
+              avatarSize: '100px', labelSize: '1.2em'
+            })({
+              // walletChange: walletChangeTether()
             }),
           ),
 
@@ -169,7 +161,7 @@ export const $Portfolio = (config: IAccount) => component((
             $row(layoutSheet.spacingBig, style({ width: '100%', alignItems: 'center', placeContent: 'space-evenly' }))(
               $row(style({ position: 'relative', width: '100%', zIndex: 0, height: '126px', overflow: 'hidden', }))(
                 switchLatest(map(data => $Chart({
-                  initializeSeries: map((api) => {
+                  initializeSeries: map(api => {
                     const series = api.addBaselineSeries({
                       topLineColor: pallete.positive,
                       baseValue: {
@@ -182,9 +174,7 @@ export const $Portfolio = (config: IAccount) => component((
                       priceLineVisible: false,
                     })
 
-                    // @ts-ignore
-                    series.setData(data)
-                    api.timeScale().fitContent()
+                    series.setData(data.map(({ time, value }) => ({ time: time as Time, value: formatFixed(value, 30) })))
 
                     const high = data[data.reduce((seed, b, idx) => b.value > data[seed].value ? idx : seed, Math.min(6, data.length - 1))]
                     const low = data[data.reduce((seed, b, idx) => b.value <= data[seed].value ? idx : seed, 0)]
@@ -193,6 +183,7 @@ export const $Portfolio = (config: IAccount) => component((
                       series.createPriceLine({
                         price: 0,
                         color: pallete.foreground,
+                        lineVisible: true,
                         lineWidth: 1,
                         axisLabelVisible: true,
                         title: '',
@@ -206,6 +197,10 @@ export const $Portfolio = (config: IAccount) => component((
                         bottom: 0
                       }
                     })
+
+                    setTimeout(() => {
+                      api.timeScale().fitContent()
+                    }, 50)
 
                     return series
                   }),
@@ -257,7 +252,7 @@ export const $Portfolio = (config: IAccount) => component((
 
 
         $row(layoutSheet.spacing, style({ fontSize: '0.85em', placeContent: 'center' }))(
-          $text(style({ color: pallete.foreground }))('Time Frame:'),
+          $text(style({ color: pallete.foreground }))('Period:'),
 
 
           // $alert($text('Binance')),
@@ -274,7 +269,7 @@ export const $Portfolio = (config: IAccount) => component((
             timeFrameTether(nodeEvent('click'), constant(intervalInMsMap.MONTH))
           )($text('1Month')),
           $Popover({
-            $$popContent: map(x => {
+            $$popContent: map(() => {
               return $column(layoutSheet.spacingSmall)(
                 $anchor(
                   styleBehavior(map(tf => intervalInMsMap.HR4 === tf ? activeTimeframe : null, chartInterval)),
@@ -310,73 +305,66 @@ export const $Portfolio = (config: IAccount) => component((
         $node(),     
 
 
-        switchLatest(
-          map(res => {
-
-            return res.aggregatedTradeOpens.length
-              ? $card(layoutSheet.spacingBig)(
-                $Table2<IAggregatedOpenPositionSummary>({
-                  bodyContainerOp: layoutSheet.spacing,
-                  scrollConfig: {
-                    containerOps: O(layoutSheet.spacingBig)
-                  },
-                  dataSource: now(res.aggregatedTradeOpens.map(O(fromJson.toAggregatedOpenTradeSummary))),
-                  // headerCellOp: style({ fontSize: '.65em' }),
-                  // bodyRowOp: O(layoutSheet.spacing),
-                  columns: [
-                    {
-                      $head: $text('Entry'),
-                      columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                      $body: map((pos) =>
-                        $Link({
-                          anchorOp: style({ position: 'relative' }),
-                          $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                          url: `/p/account/${pos.trade.initialPosition.indexToken}-${TradeType.OPEN}-${pos.trade.initialPosition.indexedAt}-${Math.floor(Date.now() / 1000)}/${pos.trade.id}`,
-                          route: config.parentRoute.create({ fragment: '2121212' })
-                        })({ click: changeRouteTether() })
-                      )
-                    },
-                    {
-                      $head: $text('Risk'),
-                      columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                      $body: map((pos: IAggregatedOpenPositionSummary) => {
-                        const positionMarkPrice = map(priceUsd => parseFixed(priceUsd.p, 30), filterByIndexToken(pos.indexToken)(priceChange))
+        $card(layoutSheet.spacingBig)(
+          $Table2<ITradeOpen>({
+            bodyContainerOp: layoutSheet.spacing,
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            dataSource: openTradeList,
+            columns: [
+              {
+                $head: $text('Entry'),
+                columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+                $body: map((pos) => {
+                  return $Link({
+                    anchorOp: style({ position: 'relative' }),
+                    $content: style({ pointerEvents: 'none' }, $Entry(pos)),
+                    url: `/${getChainName(chain).toLowerCase()}/${TOKEN_ADDRESS_TO_SYMBOL[pos.indexToken]}/${pos.id}/${pos.timestamp}`,
+                    route: config.parentRoute.create({ fragment: '2121212' })
+                  })({ click: changeRouteTether() })
+                })
+              },
+              {
+                $head: $text('Risk'),
+                columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+                $body: map(trade => {
+                  const positionMarkPrice = latestPrice(trade)
                   
-                        return $RiskLiquidator(pos, positionMarkPrice)({})
-                      })
-                    },
-                    {
-                      $head: $text('PnL $'),
-                      columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                      $body: map((pos) => $LivePnl(pos)({}))
-                    },
-                  ],
-                })({  })
-              )
-              : empty()
+                  return $RiskLiquidator(trade, positionMarkPrice)({})
+                })
+              },
+              {
+                $head: $text('PnL $'),
+                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+                $body: map((trade) => {
 
-          }, nonNullAccount)
+                  const newLocal = latestPrice(trade)
+                  return $livePnl(trade, newLocal)
+                })
+              },
+            ],
+          })({})
         ),
 
         $column(
           switchLatest(
             combineArray((pnlData, activeToken) => {
-              const tokens = groupByMapMany([...pnlData.aggregatedTradeCloseds, ...pnlData.aggregatedTradeLiquidateds], pos => pos.initialPosition.indexToken)
+              const tokens = groupByMapMany(pnlData, trade => trade.indexToken)
 
-              const $tokenChooser = Object.entries(tokens).map(([contract, positions]) => {
-                const fstTrade = positions[0]
-                const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, fstTrade.initialPosition.indexToken)
+              const $tokenChooser = Object.values(tokens).map(tradeList => {
+                const tokenDesc = getTokenDescription(tradeList[0].indexToken)
+                
                 const selectedTokenBehavior = O(
-                  style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${activeToken.address === contract ? pallete.primary : 'transparent'}` }),
+                  style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${tokenDesc === activeToken ? pallete.primary : 'transparent'}` }),
                   selectedTokenChangeTether(
                     nodeEvent('click'),
-                    constant(token)
+                    constant(tokenDesc)
                   )
                 )
 
                 return selectedTokenBehavior(
-                  $tokenLabelFromSummary(fstTrade, $text(String(positions.length)))
-                  // $tokenLabel(token, $tokenIcon, $text(String(positions.length)))
+                  $tokenLabelFromSummary(tokenDesc, $text(String(tradeList.length)))
                 )
               })
             
@@ -384,30 +372,25 @@ export const $Portfolio = (config: IAccount) => component((
               return $row(style({ maxWidth: '412px' }))(
                 ...$tokenChooser
               )
-            }, accountHistoryPnL, selectedToken)
+            }, accountTradeList, selectedToken)
           ),
 
           $card(layoutSheet.spacingBig, style({ padding: '16px 8px' }))(
-            $Table2<IAggregatedPositionSettledSummary<IAggregatedTradeClosed | IAggregatedTradeLiquidated>>({
+            $Table2<ITradeSettled>({
               bodyContainerOp: layoutSheet.spacing,
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
               
-              dataSource: map((data: IAccountAggregationMap) => {
-                const settledList = [...data.aggregatedTradeCloseds, ...data.aggregatedTradeLiquidateds]
-                  // .filter(trade => trade.initialPosition.indexToken === token.address)
-                  .sort((a, b) => b.settledPosition.indexedAt - a.settledPosition.indexedAt)
-                  .map(toAggregatedTradeSettledSummary)
+              dataSource: map((data) => {
+                const settledList = data.sort((a, b) => b.settledTimestamp - a.settledTimestamp)
                 return settledList
-
-              }, nonNullAccount),
+              }, settledTradeList),
               columns: [
                 {
                   $head: $text('Settled'),
                   columnOp: O(style({  flex: 1.2 })),
-
-                  $body: map((pos) => {
+                  $body: map(pos => {
                     return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
                       $text(timeSince(pos.settledTimestamp)),
                       $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),  
@@ -417,15 +400,11 @@ export const $Portfolio = (config: IAccount) => component((
                 {
                   $head: $text('Entry'),
                   columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-
-                  $body: map((pos: IAggregatedPositionSettledSummary) => {
-                    const settlement = pos.trade.settledPosition
-                    const type = isLiquidated(settlement) ? TradeType.LIQUIDATED : TradeType.CLOSED
-
+                  $body: map(trade => {
                     return $Link({
                       anchorOp: style({ position: 'relative' }),
-                      $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                      url: `/p/account/${pos.trade.initialPosition.indexToken}-${type}-${pos.trade.initialPosition.indexedAt}-${settlement.indexedAt}/${pos.trade.id.split('-')[1]}`,
+                      $content: style({ pointerEvents: 'none' }, $Entry(trade)),
+                      url: `/${getChainName(chain).toLowerCase()}/${TOKEN_ADDRESS_TO_SYMBOL[trade.indexToken]}/${trade.id}/${trade.timestamp}/${trade.settledTimestamp}`,
                       route: config.parentRoute.create({ fragment: '2121212' })
                     })({
                       click: changeRouteTether()
@@ -435,14 +414,14 @@ export const $Portfolio = (config: IAccount) => component((
                 {
                   $head: $text('Risk'),
                   columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
-                  $body: map((pos: IAggregatedTradeSummary) => {
+                  $body: map((pos: ITrade) => {
                     return $Risk(pos)({})
                   })
                 },
                 {
                   $head: $text('PnL $'),
                   columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map((pos: IAggregatedSettledTradeSummary) => $SummaryProfitLoss(pos))
+                  $body: map(pos => $ProfitLossText(pos.realisedPnl - pos.fee))
                 }
               ],
             })({
@@ -452,12 +431,12 @@ export const $Portfolio = (config: IAccount) => component((
       ),
       $column(style({ position: 'relative', flex: 1 }))(
         $chartContainer(
-          switchLatest(snapshot(({ chartInterval, selectedToken, accountHistoryPnL }, data) => {
+          switchLatest(snapshot(({ chartInterval, selectedToken, settledTradeList }, data) => {
             return $Chart({
               initializeSeries: map(api => {
 
-                const endDate = Date.now()
-                const startDate = Math.floor(endDate - chartInterval) / 1000
+                const endDate = unixTimestampNow()
+                const startDate = endDate - chartInterval
                 const series = api.addCandlestickSeries({
                   upColor: pallete.foreground,
                   downColor: 'transparent',
@@ -467,8 +446,19 @@ export const $Portfolio = (config: IAccount) => component((
                   wickUpColor: pallete.foreground,
                 })
 
-                series.setData(data.map(d => ({ ...d, time: unixTimeTzOffset(d.time) })))
+                const chartData = data.map(({ o, h, l, c, timestamp }) => {
+                  const open = formatFixed(o, 30)
+                  const high = formatFixed(h, 30)
+                  const low = formatFixed(l, 30)
+                  const close = formatFixed(c, 30)
 
+                  return { open, high, low, close, time: timestamp }
+                }).sort((a, b) => a.time - b.time)
+
+                
+
+                // @ts-ignore
+                series.setData(chartData)
 
                 const priceScale = series.priceScale()
 
@@ -484,47 +474,42 @@ export const $Portfolio = (config: IAccount) => component((
                     }
                 })
 
-                const timescale = api.timeScale()
 
-
-
-                const closedTradeList = accountHistoryPnL.aggregatedTradeCloseds.filter(pos => pos.settledPosition.indexedAt > startDate).map(toAggregatedTradeSettledSummary)
-                const liquidatedTradeList = accountHistoryPnL.aggregatedTradeLiquidateds.filter(pos => pos.settledPosition.indexedAt > startDate).map(toAggregatedTradeSettledSummary)
-
-                const settledList = [...closedTradeList, ...liquidatedTradeList]
+                const selectedSymbolList = settledTradeList.filter(trade => selectedToken.symbol === getTokenDescription(trade.indexToken).symbol).filter(pos => pos.settledTimestamp > startDate)
+                const closedTradeList = selectedSymbolList.filter(isTradeClosed)
+                const liquidatedTradeList = selectedSymbolList.filter(isTradeLiquidated)
 
                 setTimeout(() => {
-                  const increasePosMarkers = settledList
-                    .filter(summary => selectedToken.address === summary.trade.initialPosition.indexToken)
-                    .map((summary): SeriesMarker<Time> => {
+
+                  const increasePosMarkers = selectedSymbolList
+                    .map((trade): SeriesMarker<Time> => {
                       return {
-                        color: summary.trade.initialPosition.isLong ? pallete.positive : pallete.negative,
+                        color: trade.isLong ? pallete.positive : pallete.negative,
                         position: "aboveBar",
-                        shape: summary.trade.initialPosition.isLong ? 'arrowUp' : 'arrowDown',
-                        time: unixTimeTzOffset(summary.trade.initialPositionBlockTimestamp),
+                        shape: trade.isLong ? 'arrowUp' : 'arrowDown',
+                        time: unixTimeTzOffset(trade.timestamp),
                       }
                     })
-                  const closePosMarkers = closedTradeList
-                    .filter(summary => selectedToken.address === summary.trade.initialPosition.indexToken && summary.trade.settledPosition && !(isLiquidated(summary.trade.settledPosition)))
-                    .map((summary): SeriesMarker<Time> => {
 
+                  const closePosMarkers = closedTradeList
+                    .map((trade): SeriesMarker<Time> => {
                       return {
                         color: pallete.message,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$' + formatReadableUSD(summary.realisedPnl),
-                        time: unixTimeTzOffset(summary.trade.indexedAt),
+                        text: '$' + formatReadableUSD(trade.realisedPnl),
+                        time: unixTimeTzOffset(trade.settledTimestamp),
                       }
                     })
+
                   const liquidatedPosMarkers = liquidatedTradeList
-                    .filter(summmary => selectedToken.address === summmary.trade.initialPosition.indexToken && summmary.trade.settledPosition && isLiquidated(summmary.trade.settledPosition))
                     .map((pos): SeriesMarker<Time> => {
                       return {
                         color: pallete.negative,
                         position: "belowBar",
                         shape: 'square',
-                        text: '$-' + formatReadableUSD(pos.trade.settledPosition.collateral),
-                        time: unixTimeTzOffset(pos.trade.indexedAt),
+                        text: '$-' + formatReadableUSD(pos.collateral),
+                        time: unixTimeTzOffset(pos.settledTimestamp),
                       }
                     })
                   
@@ -532,11 +517,12 @@ export const $Portfolio = (config: IAccount) => component((
 
                   const markers = [...increasePosMarkers, ...closePosMarkers, ...liquidatedPosMarkers].sort((a, b) => a.time as number - (b.time as number))
                   series.setMarkers(markers)
+                  // api.timeScale().fitContent()
 
-                  timescale.setVisibleRange({
-                    from: startDate as Time,
-                    to: endDate / 1000 as Time
-                  })
+                  // timescale.setVisibleRange({
+                  //   from: startDate as Time,
+                  //   to: endDate as Time
+                  // })
                 }, 50)
 
                 return series
@@ -580,16 +566,30 @@ export const $Portfolio = (config: IAccount) => component((
             // crosshairMove: sampleChartCrosshair(),
             // click: sampleClick()
             })
-          }, combineObject({ chartInterval, selectedToken, accountHistoryPnL }), historicKline))
+          }, combineObject({ chartInterval, selectedToken, settledTradeList }), config.pricefeed))
         ),
       )
     ),
 
     {
-      requestAccountAggregation: now({
+      pricefeed: combine((token, selectedInterval): IPricefeedParamApi => {
+
+        // @ts-ignore
+        const tokenAddress = getMappedKeyByValue(CHAIN_TOKEN_ADDRESS_TO_SYMBOL[chain], token.symbol) as ARBITRUM_TRADEABLE_ADDRESS | AVALANCHE_TRADEABLE_ADDRESS
+
+        const to = unixTimestampNow()
+        const from = to - selectedInterval
+
+        const interval = getPricefeedVisibleColumns(160, from, to)
+
+        return { chain, interval, tokenAddress, from, to }
+      }, selectedToken, chartInterval),
+      requestAccountTradeList: now({
         account: accountAddress,
-        timeInterval: timeFrameStore.state
-      }) as Stream<AccountHistoricalDataApi>,
+        timeInterval: timeFrameStore.state,
+        chain,
+      }) as Stream<IAccountTradeListParamApi>,
+      requestLatestPriceMap: constant({ chain }, periodic(5000)),
       changeRoute,
       walletChange
     }

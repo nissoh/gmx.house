@@ -1,7 +1,7 @@
+import { NETWORK_METADATA } from "@gambitdao/gmx-middleware"
 import detectEthereumProvider from "@metamask/detect-provider"
 import WalletConnectProvider from "@walletconnect/ethereum-provider"
 import { IEthereumProvider } from "eip1193-provider"
-import { NETWORK_METADATA } from "@gambitdao/wallet-link"
 
 
 export const walletConnect = new WalletConnectProvider({

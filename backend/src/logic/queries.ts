@@ -1,6 +1,7 @@
 import { gql, TypedDocumentNode } from "@urql/core"
-import { IAccountAggregationMap, IPageable, ITimerange, IAccountQueryParamApi, IAggregatedTradeOpenListMap, IAggregatedTradeSettledListMap, IAggregatedTradeLiquidated, IIdentifiableEntity, IAggregatedTradeOpen, IAggregatedTradeClosed, IChainlinkPrice, IPageChainlinkPricefeed } from "@gambitdao/gmx-middleware"
+import { IPagePositionParamApi, ITimerangeParamApi, IIdentifiableEntity, IPricefeed, ITrade, TradeStatus, IAccountQueryParamApi, IChainParamApi, IPriceTimelineParamApi, IPricefeedParamApi, IPriceLatest } from "@gambitdao/gmx-middleware"
 
+export type IAccountTradeListParamApi = IChainParamApi & IAccountQueryParamApi & {status: TradeStatus};
 
 
 
@@ -8,39 +9,38 @@ const schemaFragments = `
 
 fragment increasePositionFields on IncreasePosition {
   id
+  timestamp
   account
-
-  indexedAt
-
   collateralToken
   indexToken
-  key
   isLong
+  key
   collateralDelta
   sizeDelta
-  price
   fee
+  price
 }
 
 fragment decreasePositionFields on DecreasePosition {
   id
-  indexedAt
-
+  timestamp
   account
   collateralToken
   indexToken
   isLong
+  key
   collateralDelta
   sizeDelta
-  price
   fee
+  price
 }
 
 fragment updatePositionFields on UpdatePosition {
   id
-
-  indexedAt
+  timestamp
+  key
   size
+  markPrice
   collateral
   reserveAmount
   realisedPnl
@@ -50,9 +50,8 @@ fragment updatePositionFields on UpdatePosition {
 
 fragment closePositionFields on ClosePosition {
   id
-
-  indexedAt
-
+  timestamp
+  key
   size
   collateral
   reserveAmount
@@ -63,9 +62,8 @@ fragment closePositionFields on ClosePosition {
 
 fragment liquidatePositionFields on LiquidatePosition {
   id
-
-  indexedAt
-
+  timestamp
+  key
   account
   collateralToken
   indexToken
@@ -77,226 +75,144 @@ fragment liquidatePositionFields on LiquidatePosition {
   markPrice
 }
 
-fragment aggregatedTradeClosedFields on AggregatedTradeClosed {
+fragment tradeFields on Trade {
   id
-  indexedAt
-
+  timestamp
   account
+  collateralToken
+  indexToken
+  isLong
+  key
+  status
 
-  indexedAt
-
-  initialPositionBlockTimestamp
-  initialPosition { ...increasePositionFields }
-
-  settledPosition {
-    ...closePositionFields
-  }
-
-  settledPosition { ...closePositionFields }
-  initialPosition { ...increasePositionFields }
-  settledPosition { ...closePositionFields }
   increaseList { ...increasePositionFields }
   decreaseList { ...decreasePositionFields }
   updateList { ...updatePositionFields }
-}
 
-fragment aggregatedTradeLiquidatedFields on AggregatedTradeLiquidated {
-  id
-  indexedAt
+  sizeDelta
+  collateralDelta
+  fee
+  size
+  collateral
+  averagePrice
 
-  account
-
-  initialPositionBlockTimestamp
-  initialPosition { ...increasePositionFields }
-
-  settledPosition { ...liquidatePositionFields }
-  initialPosition { ...increasePositionFields }
-  increaseList { ...increasePositionFields }
-  decreaseList { ...decreasePositionFields }
-  updateList { ...updatePositionFields }
-}
-
-fragment aggregatedTradeOpenFields on AggregatedTradeOpen {
-  id
-  indexedAt
-
-  account
-
-  initialPosition { ...increasePositionFields }
-  increaseList { ...increasePositionFields }
-  decreaseList { ...decreasePositionFields }
-  updateList { ...updatePositionFields }
-}
-
-fragment accountAggregationFields on AccountAggregation {
-  id
-  indexedAt
+  realisedPnl
+  realisedPnlPercentage
+  settledTimestamp
+  closedPosition { ...closePositionFields }
+  liquidatedPosition { ...liquidatePositionFields }
   
-  totalRealisedPnl
-
-  aggregatedTradeCloseds {
-    ...aggregatedTradeClosedFields
-  }
-  aggregatedTradeLiquidateds {
-    ...aggregatedTradeLiquidatedFields
-  }
-  aggregatedTradeOpens {
-    ...aggregatedTradeOpenFields
-  }
 }
-
 `
 
-export const accountAggregationQuery: TypedDocumentNode<{accountAggregation: IAccountAggregationMap}, IPageable & ITimerange & IAccountQueryParamApi> = gql`
+
+export const tradeListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi & {status: TradeStatus}>> = gql`
 ${schemaFragments}
 
-query ($account: ID, $from: Int = 0, $to: Int = 9e10,  $offset: Int = 0, $pageSize: Int = 1000) {
-  accountAggregation(id: $account) {
-    ...accountAggregationFields
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999 $status: Status = "closed") {
+  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, timestamp_lte: $to, status: $status}) {
+      ...tradeFields
   }
 }
-
 `
 
-export const accountListAggregationQuery: TypedDocumentNode<{ accountAggregations: IAccountAggregationMap[] }, IPageable & ITimerange> = gql`
+export const accountTradeListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IAccountTradeListParamApi>> = gql`
 ${schemaFragments}
 
-query ($from: Int = 0, $to: Int = 9e10, $offset: Int = 0, $pageSize: Int = 1000, $orderBy: AccountAggregation_orderBy = totalRealisedPnl, $orderDirection: OrderDirection = desc) {
-  accountAggregations(first: $pageSize, skip: $offset, orderBy: $orderBy, orderDirection: $orderDirection) {
-    ...accountAggregationFields
+query ($pageSize: Int = 1000, $account: String) {
+  trades(first: $pageSize, skip: $offset, where: {account: $account}) {
+      ...tradeFields
   }
 }
 `
 
-export const openAggregateTradesQuery: TypedDocumentNode<IAggregatedTradeOpenListMap> = gql`
-${schemaFragments}
-
-query($from: Int = 0, $to: Int = 9e10) {
-  aggregatedTradeOpens(first: 1000) {
-    ...aggregatedTradeOpenFields
-  }
-}
-`
-
-export const aggregatedSettledTradesMapQuery: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
-${schemaFragments}
-
-query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
-  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {indexedAt_gt: $from, indexedAt_lt: $to}) {
-      ...aggregatedTradeClosedFields
-  }
-  aggregatedTradeLiquidateds(first: 1000, where: {indexedAt_gt: $from, indexedAt_lt: $to}) {
-    ...aggregatedTradeLiquidatedFields
-  }
-}
-`
-export const tradeListTimespanMapQuery: TypedDocumentNode<IAggregatedTradeSettledListMap, IPageable & ITimerange> = gql`
-${schemaFragments}
-
-query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 9e10) {
-  aggregatedTradeCloseds(first: 1000, skip: $offset, where: {initialPositionBlockTimestamp_gt: $from, indexedAt_lt: $to}) {
-      ...aggregatedTradeClosedFields
-  }
-  aggregatedTradeLiquidateds(first: 1000, where: {initialPositionBlockTimestamp_gt: $from, indexedAt_lt: $to}) {
-    ...aggregatedTradeLiquidatedFields
-  }
-}
-`
-
-export const openAggregateLiquidatedTradeQuery: TypedDocumentNode<{aggregatedTradeLiquidated: IAggregatedTradeLiquidated}, IIdentifiableEntity> = gql`
+export const tradeQuery: TypedDocumentNode<{trade: ITrade}, IIdentifiableEntity> = gql`
 ${schemaFragments}
 
 query ($id: String) {
-  aggregatedTradeLiquidated(id: $id) {
-    ...aggregatedTradeLiquidatedFields
+  trade(id: $id) {
+      ...tradeFields
   }
 }
 `
 
-export const openAggregateOpenTradeQuery: TypedDocumentNode<{aggregatedTradeOpen: IAggregatedTradeOpen}, IIdentifiableEntity> = gql`
+
+export const pricefeed: TypedDocumentNode<{ pricefeeds: IPricefeed[] }, Omit<IPricefeedParamApi, 'chain'>> = gql`
 ${schemaFragments}
 
-query ($id: String) {
-  aggregatedTradeOpen(id: $id) {
-    ...aggregatedTradeOpenFields
+query($from: Int, $to: Int = 1999999999, $tokenAddress: TokenAddress, $interval: IntervalTime) {
+  pricefeeds(first: 1000, orderBy: timestamp, orderDirection: asc, where: {tokenAddress: $tokenAddress, interval: $interval, timestamp_gte: $from, timestamp_lte: $to }) {
+    id
+    timestamp
+    o
+    h
+    l
+    c
+    tokenAddress
+    interval
   }
 }
 `
 
-export const aggregatedClosedTradeQuery: TypedDocumentNode<{aggregatedTradeClosed: IAggregatedTradeClosed}, IIdentifiableEntity> = gql`
-${schemaFragments}
 
-query ($id: String) {
-  aggregatedTradeClosed(id: $id) {
-      ...aggregatedTradeClosedFields
+
+
+export const priceTimelineQuery: TypedDocumentNode<{priceTimelines: IPricefeed[]}, IPriceTimelineParamApi> = gql`
+query ($from: Int, $to: Int, $tokenAddress: TokenAddress ) {
+  priceTimelines(first: 1000, orderBy: unixTimestamp, orderDirection: asc, where: { tokenAddress: $tokenAddress, timestamp_gte: $from, timestamp_lte: $to }) {
+    timestamp,
+    value
   }
 }
 `
 
-export const chainlinkPricefeedQuery: TypedDocumentNode<{rounds: IChainlinkPrice[]}, IPageChainlinkPricefeed> = gql`
-
-query ($feedAddress: String, $from: Int, $to: Int, $offset: Int = 0, $sortDirection: OrderDirection = asc, $sortBy: Round_orderBy = unixTimestamp) {
-  rounds(first: 1000, skip: $offset, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: $feedAddress, unixTimestamp_gte: $from, unixTimestamp_lte: $to }) {
-    unixTimestamp,
-    value
-  }
-}
-
-`
 
 
-export interface IChainLinkMap {
-  WBTC: IChainlinkPrice[],
-  WETH : IChainlinkPrice[],
-  LINK : IChainlinkPrice[],
-  UNI : IChainlinkPrice[],
-}
-
-export const latestPricefeedMapQuery: TypedDocumentNode<IChainLinkMap, {}> = gql`
-
-query ($sortDirection: OrderDirection = desc, $sortBy: Round_orderBy = unixTimestamp) {
-  WBTC: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0xae74faa92cb67a95ebcab07358bc222e33a34da7" }) {
-    unixTimestamp,
-    value
-  }
-  
-  WETH: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0x37bc7498f4ff12c19678ee8fe19d713b87f6a9e6" }) {
-    unixTimestamp,
-    value
-  }
-  
-  LINK: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0xdfd03bfc3465107ce570a0397b247f546a42d0fa" }) {
-    unixTimestamp,
-    value
-  }
-  
-  UNI: rounds(first: 1000, orderBy: $sortBy, orderDirection: $sortDirection, where: { feed: "0x68577f915131087199fe48913d8b416b3984fd38" }) {
-    unixTimestamp,
-    value
-  }
-}
-
-`
-
-export const latestPricefeedMapQuery2: TypedDocumentNode<{rounds: IChainlinkPrice[]}, null> = gql`
-
+export const latestPriceTimelineQuery: TypedDocumentNode<{priceLatests: IPriceLatest[]}, {}> = gql`
 query {
-  WBTC: round(id: "0xae74faa92cb67a95ebcab07358bc222e33a34da7/10325") {
-    unixTimestamp
+  priceLatests {
+    id
     value
-  }
-  WETH: round(id: "0x37bc7498f4ff12c19678ee8fe19d713b87f6a9e6/13283") {
-    unixTimestamp,
-    value
-  }
-  LINK: round(id: "0xdfd03bfc3465107ce570a0397b247f546a42d0fa/6665") {
-    unixTimestamp,
-    value
-  }
-  UNI: round(id: "0x68577f915131087199fe48913d8b416b3984fd38/6722") {
-    unixTimestamp,
-    value
+    timestamp
   }
 }
-
 `
+
+
+// export const latestPriceTimelineArbitrumQuery: TypedDocumentNode<IPriceTimelineArbitrumMap, {}> = gql`
+// ${schemaFragments}
+
+// query {
+//   ETH: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0x82af49447d8a07e3bd95bd0d56f35241523fbab1 }) {
+//     ...pricefeedFields
+//   }
+//   LINK: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0xf97f4df75117a78c1a5a0dbb814af92458539fb4 }) {
+//     ...pricefeedFields
+//   }
+//   BTC: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f }) {
+//     ...pricefeedFields
+//   }
+//   UNI: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0 }) {
+//     ...pricefeedFields
+//   }
+// }
+// `
+
+
+// export const latestPriceTimelineAvalancheQuery: TypedDocumentNode<IPriceTimelineArbitrumMap, {}> = gql`
+// ${schemaFragments}
+
+// query {
+//   AVAX: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7 }) {
+//     ...pricefeedFields
+//   }
+//   ETH: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab }) {
+//     ...pricefeedFields
+//   }
+//   BTC: pricefeeds(first: 1, orderBy: timestamp, orderDirection: desc, where: { tokenAddress: _0x50b7545627a5162f82a992c33b87adc75187b218 }) {
+//     ...pricefeedFields
+//   }
+// }
+// `
+
+

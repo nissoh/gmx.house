@@ -1,12 +1,10 @@
 import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
-import { map } from '@most/core'
 import cors from 'cors'
 import express from 'express'
 import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
 import ws from 'ws'
-import { requestAccountAggregation, requestAccountListAggregation, requestAggregatedSettledTrade, requestAggregatedSettledTradeList, requestAggregatedTrade, requestChainlinkPricefeed, requestLeaderboardTopList, requestOpenAggregatedTrades } from './api'
 import { api } from './logic/api'
 import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
 import { competitionNov2021HighestCumulative, competitionNov2021LowestCumulative } from './logic/competition-cumulative'
@@ -14,7 +12,7 @@ import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
 import compression from 'compression'
-
+import { requestAccountTradeList, requestLatestPriceMap, requestLeaderboardTopList, requestOpenTrades, requestPricefeed, requestTrade } from './logic/trade'
 
 
 require('events').EventEmitter.prototype._maxListeners = 100
@@ -80,25 +78,22 @@ function heartbeat() {
 
 
 const apiComponent = helloFrontend(wss, {
-  requestAggregatedSettledTradeList,
-  requestAccountAggregation,
-  requestOpenAggregatedTrades,
-  requestAccountListAggregation,
+  requestOpenTrades,
+  requestAccountTradeList,
   requestLeaderboardTopList,
-  requestChainlinkPricefeed,
-  requestAggregatedSettledTrade,
-  requestAggregatedTrade,
+  requestTrade,
   competitionNov2021HighestPercentage,
   competitionNov2021LowestPercentage,
   competitionNov2021HighestCumulative,
-  competitionNov2021LowestCumulative
+  competitionNov2021LowestCumulative,
+  requestPricefeed,
+  requestLatestPriceMap,
 })
 
 
 const run = async () => {
   ORM = await MikroORM.init(config)
   EM = ORM.em
-
   
 
   apiComponent

@@ -11,13 +11,13 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": [
-      "es2020",
+      "es2021",
       "dom"
     ],
   },
   "references": [
     {
-      "path": "../middleware"
+      "path": "../common"
     }
   ]
 }

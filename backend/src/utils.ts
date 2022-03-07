@@ -1,3 +1,4 @@
+import { unixTimestampNow } from '@gambitdao/gmx-middleware'
 import http from 'http'
 import { URL } from 'url'
 
@@ -6,8 +7,7 @@ export const timespanPassedSinceInvoke = (timespan: number) => {
   let lastTimePasses = 0
 
   return () => {
-    const now = Date.now()
-
+    const now = unixTimestampNow()
     if (now - lastTimePasses > timespan) {
       lastTimePasses = now
       return true

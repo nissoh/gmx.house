@@ -1,55 +1,28 @@
 import Router from 'express-promise-router'
-import { requestChainlinkPricefeed } from './aggregatedTradeList'
-import { awaitPromises, map, merge, multicast, now, periodic, runEffects, tap } from '@most/core'
-import { scheduler } from './scheduler'
 import { verifyMessage } from "@ethersproject/wallet"
-import { getIdentityFromENS, IClaimSource, isAddress, parseTwitterClaim } from '@gambitdao/gmx-middleware'
+import { IClaimSource, isAddress, parseTwitterClaim, CHAIN } from '@gambitdao/gmx-middleware'
 import { EM } from '../server'
 import { Claim } from './dto'
 import { providerMainnet } from '../rpc'
 import { prepareClient } from './common'
-import { latestPricefeedMapQuery } from './queries'
-import { O, replayLatest } from '@aelea/core'
+import { getIdentityFromENS } from 'common'
 
 export const api = Router()
 
-
-export const vaultClient = prepareClient({
-  fetch: fetch as any,
-  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-vault',
-  // requestPolicy: 'network-only'
+export const arbitrumGraph = prepareClient({
+  fetch,
+  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-arbitrum'
+})
+export const avalancheGraph = prepareClient({
+  fetch,
+  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-avalanche'
 })
 
+export const graphMap = {
+  [CHAIN.ARBITRUM]: arbitrumGraph,
+  [CHAIN.AVALANCHE]: avalancheGraph,
+}
 
-export const chainlinkClient = prepareClient({
-  fetch: fetch as any,
-  url: 'https://api.thegraph.com/subgraphs/name/deividask/chainlink',
-  // requestPolicy: 'network-only'
-})
-
-
-
-export const latestPricefeedMap = O(
-  map(async () => {
-    const list = await chainlinkClient(latestPricefeedMapQuery, {})
-    return list
-  }),
-  awaitPromises
-)
-
-export const latestPricefeedMapSource = replayLatest(multicast(merge(
-  latestPricefeedMap(periodic(15000)),
-  latestPricefeedMap(now(null))
-)))
-
-api.post('/feed', async (req, res) => {
-
-  const stream = tap(data => {
-    res.json(data)
-  }, requestChainlinkPricefeed(now(req.body)))
-
-  runEffects(stream, scheduler)
-})
 
 
 api.get('/claim-list', async (req, res) => {

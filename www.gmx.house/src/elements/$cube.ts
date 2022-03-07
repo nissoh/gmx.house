@@ -267,7 +267,7 @@ export const $cubes = () => {
 
 
   return $node(
-    style({ position: 'absolute', color: colorAlpha(pallete.foreground, .5), left: '0', top: '50%', marginLeft: '-25w', marginTop: '-25vh' }),
+    style({ position: 'absolute', color: colorAlpha(pallete.foreground, .5), left: '25%', top: '50%', marginLeft: '-25w', marginTop: '-25vh' }),
     tap(x => {
       x.element.classList.add('cubes')
     }),

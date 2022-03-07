@@ -12,15 +12,5 @@
       "ESNext"
     ]
   },
-  "references": [
-    {
-      "path": "../middleware"
-    },
-    {
-      "path": "../backend"
-    },
-    {
-      "path": "../wallet-link"
-    }
-  ]
+  "references": []
 }

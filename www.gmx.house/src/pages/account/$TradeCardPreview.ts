@@ -2,49 +2,50 @@ import { Behavior, combineArray, O, Op, replayLatest } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, snapshot, startWith, switchLatest } from "@most/core"
+import { combine, filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import {
-  calculatePositionDelta, calculateSettledPositionDelta, formatFixed, formatReadableUSD,
-  getLiquidationPriceFromDelta, IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary,
-  IAggregatedTradeOpen,
-  IAggregatedTradeSettledAll,
-  IChainlinkPrice, IClaim, intervalListFillOrderMap, IPositionDelta, isLiquidated, isTradeSettled, parseFixed, readableNumber,
-  unixTimeTzOffset
+  calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, ITrade,
+  IPricefeed, IClaim, intervalListFillOrderMap, isTradeSettled, parseFixed, readableNumber,
+  unixTimeTzOffset, isTradeLiquidated, IPriceLatestMap, IPositionDelta, isTradeClosed, unixTimestampNow, TOKEN_ADDRESS_TO_SYMBOL, isTradeOpen
 } from "@gambitdao/gmx-middleware"
-import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts-baseline"
+import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts"
 import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfile"
-import { $Chart } from "../../components/chart/$Chart"
+import { $Chart } from "../../components/$Chart"
 import { $alert } from "../../elements/$common"
 import { $bear, $bull, $target } from "../../elements/$icons"
-import { $Risk, $RiskLiquidator, $TokenIndex, filterByIndexToken, priceChange } from "../common"
+import { $Risk, $RiskLiquidator, $TokenIndex } from "../common"
+import { CHAIN_LABEL_ID } from "../../types"
 
 interface IPricefeedTick extends IPositionDelta {
-  value: number;
-  time: number;
-  price: bigint;
+  value: number
+  time: number
+  price: bigint
+  size: bigint
+  collateral: bigint
+  averagePrice: bigint
 }
 
 export interface ITradeCardPreview {
-  chainlinkPricefeed: Stream<IChainlinkPrice[]>,
-  aggregatedTrade: Stream<IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary>,
-  latestPositionPrice?: Stream<number>
+  pricefeed: Stream<IPricefeed[]>
+  tradeSource: Stream<ITrade>,
   
   containerOp?: Op<INode, INode>,
-  chartConfig?: DeepPartial<ChartOptions>,
+  chartConfig?: DeepPartial<ChartOptions>
+  latestPriceMap?: Stream<IPriceLatestMap>
 
   animatePnl?: boolean
 
-  claimMap: Stream<Map<string, IClaim>>
+  claimMap: Stream<{ [k: string]: IClaim }>
   accountPreview?: Partial<IAccountPreview>
 }
 
 export const $TradeCardPreview = ({
-  chainlinkPricefeed,
-  aggregatedTrade,
+  pricefeed,
+  tradeSource,
   containerOp = O(),
   chartConfig = {},
-  latestPositionPrice,
+  latestPriceMap,
   animatePnl = true,
   accountPreview,
   claimMap
@@ -53,101 +54,82 @@ export const $TradeCardPreview = ({
   [accountPreviewClick, accountPreviewClickTether]: Behavior<string, string>,
 ) => {
 
-  const aggregatedTradeState = replayLatest(multicast(aggregatedTrade))
-  const nullishTrade = filter(x => x === null, aggregatedTradeState)
+  const urlFragments = document.location.pathname.split('/')
+  const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
+  const chain = CHAIN_LABEL_ID[chainLabel]
 
-  const parsedPricefeed = replayLatest(multicast(combineArray((summary, feed) => {
-    const parsedFeed = feed
-      .map(({ unixTimestamp, value }) => {
+  const tradeState = replayLatest(multicast(tradeSource))
+  const nullishTrade = filter(x => x === null, tradeState)
 
-        const parsedValue = parseFixed(Number(value) / 1e8, 30)
-        return {
-          value: parsedValue,
-          time: unixTimestamp,
-        }
-      })
-
-    parsedFeed.unshift({
-      time: summary.startTimestamp,
-      value: summary.trade.initialPosition.price
-    })
-
-    const trade = summary.trade
-    if (isTradeSettled(trade)) {
-      parsedFeed.push({
-        time: trade.settledPosition.indexedAt,
-        value: trade.decreaseList[trade.decreaseList.length - 1].price
-      })
-    }
-
-    return parsedFeed.sort((a, b) => a.time - b.time)
-  }, aggregatedTradeState, chainlinkPricefeed)))
-
-  const latestPrice = latestPositionPrice ? latestPositionPrice : switchLatest(map(summary => {
-    const trade = summary.trade
-    const isOpen = !(`settledPosition` in trade)
-
-    return isOpen
-      ? map(price => Number(price.p), filterByIndexToken(summary.trade.initialPosition.indexToken)(priceChange))
-      : map(feed => formatFixed(feed[feed.length - 1].value, 30), parsedPricefeed)
-  }, aggregatedTradeState))
-
-  const historicPnL = replayLatest(multicast(combineArray((summary, pricefeed) => {
-    const trade: IAggregatedTradeOpen | IAggregatedTradeSettledAll = { ...summary.trade }
-
-    const startTime = trade.initialPosition.indexedAt
-    const endtime = 'settledPosition' in trade ? trade.settledPosition.indexedAt : Math.floor(Date.now() / 1000)
-
-    const deltaTime = endtime - startTime
-    const intervalTime = (deltaTime) / 88
-
-    
-    type feedValue = {
-      value: bigint;
-      time: number;
+  const latestPrice = switchLatest(combine((trade, feed) => {
+    if (isTradeOpen(trade)) {
+      return latestPriceMap ?  map(tmap => tmap[trade.indexToken].value, latestPriceMap) : feed[feed.length - 1].c
     }
     
-    function getVal(priceFeed: feedValue): IPricefeedTick {
-      const matchedIncreaseIdx = trade.updateList.findIndex((ip, idx) =>
-        trade.updateList[trade.updateList.length - idx - 1].indexedAt <= priceFeed.time
-      )
+    return isTradeClosed(trade) ? trade.decreaseList[trade.decreaseList.length - 1].price : trade.liquidatedPosition.markPrice
+  }, tradeState, pricefeed))
 
-      const updateIdx = (trade.updateList.length - 1) + -matchedIncreaseIdx
-      const pos = trade.updateList[updateIdx]
-      const delta = calculatePositionDelta(priceFeed.value, trade.initialPosition.isLong, pos)
-      const value = formatFixed(delta.delta, 30)
-      // const val = formatFixed((delta.hasProfit ? delta.delta : -delta.delta) - summary.fee, 30)
+  const historicPnL = replayLatest(multicast(combineArray((trade, feed) => {
+    const startPrice = trade.increaseList[0].price
 
-      return { value, time: priceFeed.time, price: priceFeed.value, ...delta }
-    }
-    
+    const endtime = isTradeSettled(trade) ? trade.settledTimestamp : unixTimestampNow()
+
+    const deltaTime = endtime - trade.timestamp
+    const intervalTime = Math.floor((deltaTime) / 88)
+   
+    const startDelta = calculatePositionDelta(trade.increaseList[0].price, trade.averagePrice, trade.isLong, trade)
+
+    const initalUpdate = trade.updateList[0]
+
     const initialTick: IPricefeedTick = {
-      ...calculatePositionDelta(pricefeed[0].value, trade.initialPosition.isLong, summary),
-      time: startTime,
-      price: pricefeed[0].value,
-      value: 0
+      time: trade.timestamp,
+      price: startPrice,
+      value: formatFixed(startDelta.delta, 30),
+      collateral: initalUpdate.collateral,
+      size: initalUpdate.size,
+      averagePrice: initalUpdate.averagePrice,
+      ...startDelta
     }
 
-
+    
     const filled = intervalListFillOrderMap({
-      source: pricefeed,
+      source: [...feed, ...trade.updateList],
       interval: intervalTime,
       seed: initialTick,
-      getTime: x => x.time,
-      fillMap: (prev, priceFeed) => {
-        return getVal(priceFeed)
-      },
-      fillGapMap: (prev, priceFeed) => {
-        return getVal(priceFeed)
-      },
-      squashMap: (prev, priceFeed) => {
-        return { ...getVal(priceFeed), time: prev.time }
-      },
+      getTime: x => x.timestamp,
+      fillMap: (prev, next) => {
+
+        if (next.__typename === 'UpdatePosition') {
+          const delta = calculatePositionDelta(next.markPrice, trade.averagePrice, trade.isLong, next)
+
+          const value = formatFixed(delta.delta, 30)
+
+          return { ...prev, ...delta, value, price: next.markPrice, collateral: next.collateral, size: next.size, averagePrice: next.averagePrice  }
+        }
+
+        const delta = calculatePositionDelta(next.c, prev.averagePrice, trade.isLong, prev)
+        const value = formatFixed(delta.delta, 30)
+
+        return { ...prev, ...delta, value }
+      }
     })
-    // .map(t => ({ time: timeTzOffset(t.time), value: t.value }))
+
+
+    if (isTradeClosed(trade)) {
+      const prev = filled[filled.length - 1]
+      const price = trade.decreaseList[trade.decreaseList.length - 1].price
+      const delta = calculatePositionDelta(price, trade.averagePrice, trade.isLong, trade)
+
+      filled.push({ ...prev, ...delta, time: trade.closedPosition.timestamp  })
+    } else if (isTradeLiquidated(trade)) {
+      const prev = filled[filled.length - 1]
+      const price = trade.liquidatedPosition.markPrice
+      const delta = calculatePositionDelta(price, trade.averagePrice, trade.isLong, trade)
+      filled.push({ ...prev, ...delta, time: trade.liquidatedPosition.timestamp })
+    }
 
     return filled
-  }, aggregatedTradeState, parsedPricefeed)))
+  }, tradeState, pricefeed)))
 
 
   const hasSeriesFn = (cross: MouseEventParams): boolean => {
@@ -158,31 +140,27 @@ export const $TradeCardPreview = ({
   const pnlCrossHairChange = filter(hasSeriesFn, pnlCrosshairMove)
   const crosshairWithInitial = startWith(false, pnlCrosshairMoveMode)
 
-  const lastTickFromHistory = (historicPnl: IPricefeedTick[]) => map((cross: MouseEventParams) => {
-    return historicPnl.find(tick => cross.time === tick.time)!
-  })
   
-  const chartPnLCounter = multicast(switchLatest(combineArray((mode, summary, historicPnl): Stream<IPositionDelta> => {
-    if (mode) {
-      return lastTickFromHistory(historicPnl)(pnlCrossHairChange)
+  const chartPnLCounter = multicast(switchLatest(combineArray((isMoveringChart, trade, historicPnl) => {
+    if (isMoveringChart) {
+      return map(cross => {
+        return historicPnl.find(tick => cross.time === tick.time)!
+      }, pnlCrossHairChange)
     } else {
-      const trade = summary.trade
-      const isSettled = isTradeSettled(trade)
-      
-
-      if (isSettled) {
-        const initialDelta = calculateSettledPositionDelta(trade)
-        return now({ delta: initialDelta.delta - summary.fee, deltaPercentage: initialDelta.deltaPercentage })
+      if (isTradeSettled(trade)) {
+        return now({ delta: trade.realisedPnl - trade.fee, deltaPercentage: trade.realisedPnlPercentage })
       }
 
-      const initialDelta = calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.initialPosition.isLong, summary)
+      const initialDelta = calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.averagePrice, trade.isLong, trade)
 
       return merge(
-        map(price => calculatePositionDelta(parseFixed(price, 30), summary.isLong, summary), latestPositionPrice ?? latestPrice),
-        now({ delta: initialDelta.delta - summary.fee, deltaPercentage: initialDelta.deltaPercentage })
+        map(price => {
+          return calculatePositionDelta(price, trade.averagePrice, trade.isLong, trade)
+        }, latestPrice),
+        now({ delta: initialDelta.delta - trade.fee, deltaPercentage: initialDelta.deltaPercentage })
       )
     }
-  }, crosshairWithInitial, aggregatedTradeState, historicPnL)))
+  }, crosshairWithInitial, tradeState, historicPnL)))
     
 
   const tickerStyle = style({
@@ -196,13 +174,11 @@ export const $TradeCardPreview = ({
   const chartPnlPercentage = map(ss => formatFixed(ss.deltaPercentage, 2), chartPnLCounter)
 
 
-  function tradeTitle(summary: IAggregatedOpenPositionSummary | IAggregatedPositionSettledSummary): string {
-    const trade = summary.trade
-    const isSettled = `settledPosition` in trade
+  function tradeTitle(trade: ITrade): string {
+    const isSettled = isTradeSettled(trade)
 
     if (isSettled) {
-      const settledPos = trade.settledPosition
-      return isSettled ? isLiquidated(settledPos) ? 'LIQUIDATED' : 'CLOSED' : ''
+      return isSettled ? isTradeLiquidated(trade) ? 'LIQUIDATED' : 'CLOSED' : ''
     }
     
     return 'OPEN'
@@ -213,7 +189,7 @@ export const $TradeCardPreview = ({
     $column(containerOp)(
 
 
-      switchLatest(map(x => {
+      switchLatest(map(() => {
         return $row(style({ placeContent: 'center', padding: '30px' }))(
           $alert($text('Could not find trade. it may have been settled'))
         )
@@ -221,12 +197,8 @@ export const $TradeCardPreview = ({
 
       $column(
         switchLatest(
-          map(summary => {
-            const initPos = summary.trade.initialPosition
-            const trade = summary.trade
-
-            const isOpen = !(`settledPosition` in trade)
-            const isSettled = `settledPosition` in trade
+          map(trade => {
+            const isSettled = isTradeSettled(trade)
 
             return $row(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ alignItems: 'center', fontFamily: 'RelativePro', padding: screenUtils.isDesktopScreen ? '25px 35px' : '15px 15px', zIndex: 100 }))(
               $row(style({ fontFamily: 'RelativeMono', alignItems: 'center', placeContent: 'space-evenly' }))(
@@ -234,7 +206,7 @@ export const $TradeCardPreview = ({
                   $row(
                     style({ borderRadius: '2px', padding: '4px', backgroundColor: pallete.message, })(
                       $icon({
-                        $content: initPos.isLong ? $bull : $bear,
+                        $content: trade.isLong ? $bull : $bear,
                         width: '38px',
                         fill: pallete.background,
                         viewBox: '0 0 32 32',
@@ -243,11 +215,11 @@ export const $TradeCardPreview = ({
                   ),
                   $column(style({ gap: '6px' }))(
                     $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))(
-                      $TokenIndex(summary.indexToken, { width: '18px' }),
-                      $text(formatReadableUSD(summary.averagePrice))
+                      $TokenIndex(TOKEN_ADDRESS_TO_SYMBOL[trade.indexToken], { width: '18px' }),
+                      $text(formatReadableUSD(trade.averagePrice))
                     ),
                     $row(layoutSheet.spacingSmall, style({ color: isSettled ? '' : pallete.indeterminate, fontSize: '.65em' }))(
-                      $text(tradeTitle(summary)),
+                      $text(tradeTitle(trade)),
                       $row(style({ gap: '3px', alignItems: 'baseline' }))(
                         $icon({
                           $content: $target,
@@ -255,11 +227,11 @@ export const $TradeCardPreview = ({
                           fill: isSettled ? '' : pallete.indeterminate,
                           viewBox: '0 0 32 32'
                         }),
-                        $text(style(`settledPosition` in summary.trade ? {} : { color: pallete.indeterminate }))(
+                        $text(style(isSettled ? {} : { color: pallete.indeterminate }))(
                           merge(
                             now('Loading...'),
                             map(price => {
-                              return readableNumber(price)
+                              return readableNumber(formatFixed(price, 30))
                             }, latestPrice)
                           )
                         )
@@ -271,22 +243,22 @@ export const $TradeCardPreview = ({
 
               style({ alignSelf: 'stretch' }, $seperator),
 
-              isOpen
-                ? $RiskLiquidator(summary, map(feed => feed[feed.length - 1].price, historicPnL))({})
-                : $Risk(summary)({}),
+              !isSettled
+                ? $RiskLiquidator(trade, map(feed => feed[feed.length - 1].price, historicPnL))({})
+                : $Risk(trade)({}),
 
 
               $row(style({ flex: 1 }))(),
 
-              switchLatest(map(map => {
-                return $AccountPreview({ ...accountPreview, address: summary.account, claim: map.get(summary.account.toLocaleLowerCase()) })({
+              switchLatest(map(cMap => {
+                return $AccountPreview({ ...accountPreview, chain, address: trade.account, claim: cMap[trade.account.toLocaleLowerCase()] })({
                   profileClick: accountPreviewClickTether()
                 })
               }, claimMap)),
 
 
             )
-          }, aggregatedTradeState)
+          }, tradeState)
         ),
 
         $row(layoutSheet.spacing, style({ alignItems: 'baseline', placeContent: 'center', pointerEvents: 'none' }))(
@@ -320,7 +292,7 @@ export const $TradeCardPreview = ({
         )
       ),
 
-      switchLatest(combineArray((data, tradeSummary) =>
+      switchLatest(combineArray((data, trade) =>
         $Chart({
           initializeSeries: map((api) => {
             const series = api.addBaselineSeries({
@@ -332,24 +304,31 @@ export const $TradeCardPreview = ({
                 type: 'price',
                 price: 0,
               },
+              baseLineStyle: LineStyle.Dashed,
               lineWidth: 2,
-              baseLineVisible: false,
+              baseLineColor: 'red',
+              baseLineVisible: true,
               lastValueVisible: false,
               priceLineVisible: false,
             })
 
-            // @ts-ignore
-            series.setData(data)
+
+            const chartData = data
+              // .sort((a, b) => b.time - a.time)
+              .map(({ delta, time }) => ({ time: time as Time, value: formatFixed(delta, 30) }))
+              
+            series.setData(chartData)
                 
 
-            const high = data[data.reduce((seed, b, idx) => b.value > data[seed].value ? idx : seed, Math.min(6, data.length - 1))]
-            const low = data[data.reduce((seed, b, idx) => b.value <= data[seed].value ? idx : seed, 0)]
+            const high = data[data.reduce((seed, b, idx) => b.delta > data[seed].delta ? idx : seed, Math.min(6, data.length - 1))]
+            const low = data[data.reduce((seed, b, idx) => b.delta <= data[seed].delta ? idx : seed, 0)]
 
-            if (high.value > 0 && low.value < 0) {
+            if (high.delta > 0 && low.delta < 0) {
               series.createPriceLine({
                 price: 0,
                 color: pallete.foreground,
                 lineWidth: 1,
+                lineVisible: true,
                 axisLabelVisible: true,
                 title: '',
                 lineStyle: LineStyle.SparseDotted,
@@ -357,14 +336,15 @@ export const $TradeCardPreview = ({
             }
 
             if (low.delta < 0) {
-              const liquidationPrice = getLiquidationPriceFromDelta(tradeSummary.collateral, tradeSummary.size, tradeSummary.averagePrice, tradeSummary.isLong)
-              const posDelta = calculatePositionDelta(liquidationPrice, tradeSummary.isLong, tradeSummary)
+              const liquidationPrice = getLiquidationPriceFromDelta(trade.collateral, trade.size, trade.averagePrice, trade.isLong)
+              const posDelta = calculatePositionDelta(liquidationPrice, trade.averagePrice, trade.isLong, trade)
               const formatedLiqPrice = formatFixed(posDelta.delta, 30)
             
 
               series.createPriceLine({
                 price: formatedLiqPrice,
                 color: pallete.negative,
+                lineVisible: true,
                 lineWidth: 1,
                 axisLabelVisible: true,
                 title: `Liquidation $${readableNumber(formatedLiqPrice)}`,
@@ -374,9 +354,9 @@ export const $TradeCardPreview = ({
 
 
             if (data.length > 10) {
-              if (low.value !== high.value) {
+              if (low.delta !== high.delta) {
                 setTimeout(() => {
-                  const increaseList = tradeSummary.trade.increaseList
+                  const increaseList = trade.increaseList
                   const increaseMarkers = increaseList
                     .slice(1)
                     .map((ip): SeriesMarker<Time> => {
@@ -384,12 +364,12 @@ export const $TradeCardPreview = ({
                         color: pallete.foreground,
                         position: "aboveBar",
                         shape: "arrowUp",
-                        time: unixTimeTzOffset(ip.indexedAt),
+                        time: unixTimeTzOffset(ip.timestamp),
                         text:  '$' + formatReadableUSD(ip.collateralDelta)
                       }
                     })
 
-                  const decreaseList = isTradeSettled(tradeSummary.trade) ? tradeSummary.trade.decreaseList.slice(0, -1) : tradeSummary.trade.decreaseList
+                  const decreaseList = isTradeSettled(trade) ? trade.decreaseList.slice(0, -1) : trade.decreaseList
 
                   const decreaseMarkers = decreaseList
                     .map((ip): SeriesMarker<Time> => {
@@ -397,7 +377,7 @@ export const $TradeCardPreview = ({
                         color: pallete.foreground,
                         position: 'belowBar',
                         shape: "arrowDown",
-                        time: unixTimeTzOffset(ip.indexedAt),
+                        time: unixTimeTzOffset(ip.timestamp),
                         text:  '$' + formatReadableUSD(ip.collateralDelta)
                       }
                     })
@@ -406,9 +386,8 @@ export const $TradeCardPreview = ({
 
                   api.timeScale().fitContent()
 
-   
 
-                }, 50)
+                }, 90)
               }
                 
             }
@@ -454,7 +433,7 @@ export const $TradeCardPreview = ({
             multicast
           )
         })
-      , historicPnL, aggregatedTradeState)),
+      , historicPnL, tradeState)),
     ),
 
     {

@@ -7,9 +7,13 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
-  AccountHistoricalDataApi, fromJson, groupByMap, IAggregatedAccountSummary,
-  IAggregatedOpenPositionSummary, IAggregatedPositionSettledSummary, IIdentifiableEntity, ILeaderboardRequest, IPagableResponse,
-  IPageable, IPageChainlinkPricefeed, ITimerange, TradeType, TX_HASH_REGEX
+  ARBITRUM_TRADEABLE_ADDRESS,
+  AVALANCHE_TRADEABLE_ADDRESS,
+  fromJson, groupByMap, IAccountSummary,
+  IAccountTradeListParamApi,
+  IChainParamApi,
+  IIdentifiableEntity, ILeaderboardRequest, IPageParapApi,
+  IPagePositionParamApi, IPricefeed, IPricefeedParamApi, IPriceLatestMap, ITimerangeParamApi, ITradeOpen, TradeStatus, TX_HASH_REGEX
 } from '@gambitdao/gmx-middleware'
 import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
@@ -23,10 +27,11 @@ import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
 import { $Leaderboard } from './$Leaderboard'
 import { $Account } from './account/$Account'
-import { $CompetitionCumulative } from "./competition/$cumulative"
-import { $CompetitionSingle } from "./competition/$single"
+// import { $CompetitionCumulative } from "./competition/$cumulative"
+// import { $CompetitionSingle } from "./competition/$single"
 import { $CompeititonInfo, BATCH_1_END, BATCH_2_START, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
 import { Stream } from "@most/types"
+import { $Trade } from "./account/$Trade"
 
 
 
@@ -47,15 +52,16 @@ interface Website {
 export default ({ baseRoute = '' }: Website) => component((
   [routeChanges, linkClickTether]: Behavior<any, string>,
 
+  [requestAccountTradeList, requestAccountTradeListTether]: Behavior<IAccountTradeListParamApi, IAccountTradeListParamApi>,
   [requestLeaderboardTopList, requestLeaderboardTopListTether]: Behavior<ILeaderboardRequest, ILeaderboardRequest>,
-  [requestOpenAggregatedTrades, requestOpenAggregatedTradesTether]: Behavior<IPageable, IPageable[]>,
-  [requestAccountAggregation, requestAccountAggregationTether]: Behavior<AccountHistoricalDataApi, AccountHistoricalDataApi>,
-  [requestChainlinkPricefeed, requestChainlinkPricefeedTether]: Behavior<IPageChainlinkPricefeed, IPageChainlinkPricefeed>,
-  [competitionNov2021HighestPercentage, competitionNov2021HighestPercentageTether]: Behavior<IPageable, IPageable & ITimerange>,
-  [competitionNov2021HighestCumulative, competitionNov2021HighestCumulativeTether]: Behavior<IPageable, IPageable & ITimerange>,
-  [competitionNov2021LowestCumulative, competitionNov2021LowestCumulativeTether]: Behavior<IPageable, IPageable & ITimerange>,
-  [competitionNov2021LowestPercentage, competitionNov2021LowestPercentageTether]: Behavior<IPageable, IPageable & ITimerange>,
-  [requestAggregatedTrade, requestAggregatedTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
+  [requestOpenTrades, requestOpenTradesTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi[]>,
+  [requestPricefeed, requestPricefeedTether]: Behavior<IPricefeedParamApi, IPricefeedParamApi>,
+  [requestLatestPriceMap, requestLatestPriceMapTether]: Behavior<IChainParamApi, IChainParamApi>,
+  [competitionNov2021HighestPercentage, competitionNov2021HighestPercentageTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionNov2021HighestCumulative, competitionNov2021HighestCumulativeTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionNov2021LowestCumulative, competitionNov2021LowestCumulativeTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionNov2021LowestPercentage, competitionNov2021LowestPercentageTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [requestTrade, requestTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
 
@@ -70,23 +76,29 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
   const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
-  const pagesRoute = rootRoute.create({ fragment: 'p', title: 'aelea' })
-  const leaderboardRoute = pagesRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
-  const accountRoute = pagesRoute.create({ fragment: 'account', title: 'Portfolio' })
+  const chainRoute = rootRoute.create({ fragment: /avalanche|arbitrum/, title: '' })
+  const leaderboardRoute = chainRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
+  const accountRoute = chainRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   // competition
-  const competitionTopSingle1Route = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single-1', title: 'Red vs. Green November competition' })
-  const competitionTopCumulative1Route = pagesRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-1', title: 'Red vs. Green November competition' })
-  const competitionTopSingle2Route = pagesRoute.create({ fragment: 'redvsgreen-nov2021-single-2', title: 'Red vs. Green November competition' })
-  const competitionTopCumulative2Route = pagesRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-2', title: 'Red vs. Green November competition' })
+  const competitionTopSingle1Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-single-1', title: 'Red vs. Green November competition' })
+  const competitionTopCumulative1Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-1', title: 'Red vs. Green November competition' })
+  const competitionTopSingle2Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-single-2', title: 'Red vs. Green November competition' })
+  const competitionTopCumulative2Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-2', title: 'Red vs. Green November competition' })
+
+  const tradeRoute = chainRoute
+    .create({ fragment: /^Trade:0x([A-Fa-f0-9]{64})$/i })
+    .create({
+      title: 'Trade',
+      fragment: /^\d+$/
+    })
 
   const cardRoute = rootRoute
     .create({ fragment: 'card' })
     .create({
-      fragment: new RegExp(`^(${TradeType.OPEN}|${TradeType.CLOSED}|${TradeType.LIQUIDATED})$`)
+      fragment: new RegExp(`^(${TradeStatus.OPEN}|${TradeStatus.CLOSED}|${TradeStatus.LIQUIDATED})$`)
     })
     .create({ fragment: TX_HASH_REGEX, title: 'Trade Details' })
-
 
 
   const rootStore = state.createLocalStorageChain('store-3')
@@ -96,15 +108,16 @@ export default ({ baseRoute = '' }: Website) => component((
   )
 
   const clientApi = helloBackend({
-    requestAccountAggregation,
     requestLeaderboardTopList,
-    requestOpenAggregatedTrades,
-    requestChainlinkPricefeed,
-    requestAggregatedTrade,
+    requestOpenTrades,
+    requestTrade,
+    requestAccountTradeList,
     competitionNov2021HighestPercentage,
     competitionNov2021LowestPercentage,
     competitionNov2021HighestCumulative,
     competitionNov2021LowestCumulative,
+    requestPricefeed,
+    requestLatestPriceMap,
   })
 
   const walletStore = rootStore<'metamask' | 'walletConnect' | null, 'walletStore'>('walletStore', null)
@@ -141,13 +154,17 @@ export default ({ baseRoute = '' }: Website) => component((
     )
   }
   
+  const latestPriceMap = replayLatest(multicast(map((res: IPriceLatestMap) => Object.entries(res).reduce((seed, [key, price]) => {
+    const k = key as ARBITRUM_TRADEABLE_ADDRESS | AVALANCHE_TRADEABLE_ADDRESS
+    seed[k] = fromJson.priceLatestJson(price)
+    return seed
+  }, {} as IPriceLatestMap), clientApi.requestLatestPriceMap)))
 
   return [
-
     mergeArray([
       $node(designSheet.main, style({ backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
         router.match(rootRoute)(
-          $column(style({ minHeight: '100vh', overflow: 'hidden', position: 'relative', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
+          $column(style({ minHeight: '100vh', overflow: 'hidden', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
             $row(style({ alignItems: 'center', width: '100%' }))(
               $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center', color: pallete.foreground }))(
@@ -168,7 +185,7 @@ export default ({ baseRoute = '' }: Website) => component((
             $node(),
             $node(),
 
-            $row(style({ width: '100%', padding: '26px', alignItems: 'center', zIndex: 1000, borderRadius: '12px', backdropFilter: 'blur(8px)', backgroundColor: colorAlpha(pallete.background, 0.50) }))(
+            $row(style({ width: '100%', padding: '26px', alignItems: 'center', zIndex: 1000, borderRadius: '12px', backgroundColor: colorAlpha(pallete.background, .9) }))(
               $row(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
                 $RouterAnchor({ url: '/', route: rootRoute, $anchor: $element('a')($icon({ $content: $logo, width: '45px', viewBox: '0 0 32 32' })) })({
                   click: linkClickTether()
@@ -177,7 +194,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
                 ),
                 $node(),
-                $MainMenu({ walletLink, claimMap, parentRoute: pagesRoute, showAccount: false, walletStore })({
+                $MainMenu({ walletLink, claimMap, parentRoute: chainRoute, showAccount: false, walletStore })({
                   routeChange: linkClickTether(),
                   walletChange: walletChangeTether()
                 })
@@ -188,7 +205,7 @@ export default ({ baseRoute = '' }: Website) => component((
           )
         ),
 
-        router.contains(pagesRoute)(
+        router.contains(chainRoute)(
           $column(layoutSheet.spacingBig, style({ maxWidth: '1080px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
             $row(layoutSheet.spacing, style({ padding: screenUtils.isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
               screenUtils.isDesktopScreen
@@ -197,7 +214,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 })
                 : empty(),
               screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
-              $MainMenu({ walletLink, walletStore, claimMap, parentRoute: pagesRoute, containerOp: style({ padding: '34px, 20px' }) })({
+              $MainMenu({ walletLink, walletStore, claimMap, parentRoute: chainRoute, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether(),
                 walletChange: walletChangeTether()
               })
@@ -206,16 +223,19 @@ export default ({ baseRoute = '' }: Website) => component((
               $Leaderboard({
                 claimMap,
                 parentRoute: rootRoute,
+                walletLink,
+                latestPriceMap,
                 parentStore: rootStore,
-                openAggregatedTrades: map((x: IPagableResponse<IAggregatedOpenPositionSummary>) => ({ ...x, page: x.page.map(fromJson.toAggregatedPositionSummary) }), clientApi.requestOpenAggregatedTrades),
-                requestLeaderboardTopList: map((data: IPagableResponse<IAggregatedAccountSummary>) => ({
+                openTrades: map((x: IPageParapApi<ITradeOpen>) => ({ ...x, page: x.page.map(fromJson.toTradeJson) }), clientApi.requestOpenTrades),
+                requestLeaderboardTopList: map((data: IPageParapApi<IAccountSummary>) => ({
                   page: data.page.map(fromJson.accountSummaryJson),
                   offset: data.offset,
                   pageSize: data.pageSize
                 }), clientApi.requestLeaderboardTopList),
               })({
                 requestLeaderboardTopList: requestLeaderboardTopListTether(),
-                requestOpenAggregatedTrades: requestOpenAggregatedTradesTether(),
+                requestOpenTrades: requestOpenTradesTether(),
+                requestLatestPriceMap: requestLatestPriceMapTether(),
                 routeChange: linkClickTether()
               })
             ),
@@ -223,92 +243,92 @@ export default ({ baseRoute = '' }: Website) => component((
             router.match(competitionTopSingle1Route)(
               $column(
                 competitionHeadline('Highest or Lowest Percentage PnL for a single trade', '+$100 Trades settled during Nov 3-16'),
-                $CompetitionSingle({
-                  claimMap,
-                  parentRoute: rootRoute,
-                  parentStore: rootStore,
-                  competitionNov2021HighestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                    ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
-                  competitionNov2021LowestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                    ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
-                })({
-                  competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
+                // $CompetitionSingle({
+                //   claimMap,
+                //   parentRoute: rootRoute,
+                //   parentStore: rootStore,
+                //   competitionNov2021HighestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
+                //   competitionNov2021LowestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
+                // })({
+                //   competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
 
-                    return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                  })),
-                  competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
-                    return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                  })),
-                  routeChange: linkClickTether()
-                })
+                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
+                //   })),
+                //   competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
+                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
+                //   })),
+                //   routeChange: linkClickTether()
+                // })
               )
             ),
             router.match(competitionTopCumulative1Route)(
               $column(
-                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades aggregated per account during Nov 3-16'),
-                $CompetitionCumulative({
-                  claimMap,
-                  parentRoute: rootRoute,
-                  parentStore: rootStore,
-                  competitionNov2021HighestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
-                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
-                  competitionNov2021LowestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
-                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
-                })({
-                  competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
-                    return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                  })),
-                  competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
-                    return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                  })),
-                  routeChange: linkClickTether()
-                })
+                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades  per account during Nov 3-16'),
+                // $CompetitionCumulative({
+                //   claimMap,
+                //   parentRoute: rootRoute,
+                //   parentStore: rootStore,
+                //   competitionNov2021HighestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
+                //   competitionNov2021LowestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
+                // })({
+                //   competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
+                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
+                //   })),
+                //   competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
+                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
+                //   })),
+                //   routeChange: linkClickTether()
+                // })
               )
             ),
 
             router.match(competitionTopSingle2Route)(
               $column(
                 competitionHeadline('Highest or Lowest Percentage PnL for a single trade', '+$100 Trades settled during Nov 17-30'),
-                $CompetitionSingle({
-                  claimMap,
-                  parentRoute: rootRoute,
-                  parentStore: rootStore,
-                  competitionNov2021HighestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                    ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
-                  competitionNov2021LowestPercentage: map((x: IPagableResponse<IAggregatedPositionSettledSummary>) => ({
-                    ...x, page: x.page.map(fromJson.toAggregatedPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
-                })({
-                  competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
+                // $CompetitionSingle({
+                //   claimMap,
+                //   parentRoute: rootRoute,
+                //   parentStore: rootStore,
+                //   competitionNov2021HighestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
+                //   competitionNov2021LowestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
+                // })({
+                //   competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
 
-                    return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                  })),
-                  competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
-                    return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                  })),
-                  routeChange: linkClickTether()
-                })
+                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
+                //   })),
+                //   competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
+                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
+                //   })),
+                //   routeChange: linkClickTether()
+                // })
               )
             ),
             router.match(competitionTopCumulative2Route)(
               $column(
-                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades aggregated per account during Nov 17-30'),
-                $CompetitionCumulative({
-                  claimMap,
-                  parentRoute: rootRoute,
-                  parentStore: rootStore,
-                  competitionNov2021HighestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
-                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
-                  competitionNov2021LowestCumulative: map((x: IPagableResponse<IAggregatedAccountSummary>) => ({
-                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
-                })({
-                  competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
-                    return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                  })),
-                  competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
-                    return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                  })),
-                  routeChange: linkClickTether()
-                })
+                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades  per account during Nov 17-30'),
+                // $CompetitionCumulative({
+                //   claimMap,
+                //   parentRoute: rootRoute,
+                //   parentStore: rootStore,
+                //   competitionNov2021HighestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
+                //   competitionNov2021LowestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
+                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
+                // })({
+                //   competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
+                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
+                //   })),
+                //   competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
+                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
+                //   })),
+                //   routeChange: linkClickTether()
+                // })
               )
             ),
 
@@ -318,17 +338,35 @@ export default ({ baseRoute = '' }: Website) => component((
                 claimMap,
                 parentRoute: accountRoute,
                 parentStore: rootStore,
-                aggregatedTradeList: map(res => res ? fromJson.toAccountAggregationJson(res): null, clientApi.requestAccountAggregation),
-                settledPosition: clientApi.requestAggregatedTrade,
-                chainlinkPricefeed: clientApi.requestChainlinkPricefeed,
+                latestPriceMap,
+                tradeList: map((res: ITradeOpen[]) => res.map(fromJson.toTradeJson), clientApi.requestAccountTradeList),
+                settledPosition: clientApi.requestTrade,
+                pricefeed: map((feed: IPricefeed[]) => feed.map(fromJson.pricefeedJson), clientApi.requestPricefeed),
                 walletLink,
-                walletStore
+                walletStore,
               })({
-                requestAggregatedTrade: requestAggregatedTradeTether(),
-                requestChainlinkPricefeed: requestChainlinkPricefeedTether(),
-                requestAccountAggregation: requestAccountAggregationTether(),
+                requestTrade: requestTradeTether(),
+                requestPricefeed: requestPricefeedTether(),
+                requestAccountTradeList: requestAccountTradeListTether(),
+                requestLatestPriceMap: requestLatestPriceMapTether(),
                 changeRoute: linkClickTether(),
                 walletChange: walletChangeTether()
+              })
+            ),
+            
+            router.match(tradeRoute)(
+              $Trade({
+                claimMap,
+                parentRoute: tradeRoute,
+                parentStore: rootStore,
+                trade: map(trade => trade ? fromJson.toTradeJson(trade) : null, clientApi.requestTrade),
+                latestPriceMap: latestPriceMap,
+                pricefeedRange: map((feed: IPricefeed[]) => feed.map(fromJson.pricefeedJson), clientApi.requestPricefeed)
+              })({
+                requestPricefeed: requestPricefeedTether(),
+                requestTrade: requestTradeTether(),
+                requestLatestPriceMap: requestLatestPriceMapTether(),
+                changeRoute: linkClickTether(),
               })
             ),
           )
@@ -339,10 +377,11 @@ export default ({ baseRoute = '' }: Website) => component((
         $node(designSheet.main, style({ overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
           $Card({
             claimMap,
-            aggregatedTrade: clientApi.requestAggregatedTrade,
+            trade: clientApi.requestTrade,
+            latestPriceMap,
             chainlinkPricefeed: clientApi.requestChainlinkPricefeed
           })({
-            requestAggregatedTrade: requestAggregatedTradeTether(),
+            requestTrade: requestTradeTether(),
           })
         )
       )

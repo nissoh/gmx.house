@@ -3,7 +3,7 @@ import { $ButtonIcon, $column, $icon, $row, layoutSheet, $seperator as $uiSepera
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map } from "@most/core"
 import { Stream } from "@most/types"
-import { IAggregatedTradeOpen, IAggregatedTradeSummary, strictGet, Token, TradeableToken, TRADEABLE_TOKEN_ADDRESS_MAP } from "@gambitdao/gmx-middleware"
+import { getLeverage, IAbstractTrade, readableNumber, TokenDescription } from "@gambitdao/gmx-middleware"
 import { $tokenIconMap } from "../common/$icons"
 import { $alertIcon, $caretDblDown, $trash } from "./$icons"
 
@@ -41,7 +41,7 @@ export const $labeledDivider = (label: string) => {
   )
 }
 
-export const $tokenLabel = (token: Token | TradeableToken, $iconG: $Node, $label?: $Node) => {
+export const $tokenLabel = (token: TokenDescription, $iconG: $Node, $label?: $Node) => {
   return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center' }))(
     $icon({ $content: $iconG, width: '34px', viewBox: '0 0 32 32' }),
     $column(layoutSheet.flex)(
@@ -52,23 +52,21 @@ export const $tokenLabel = (token: Token | TradeableToken, $iconG: $Node, $label
   )
 }
 
-export const $tokenLabelFromSummary = (trade: IAggregatedTradeOpen, $label?: $Node) => {
-  const indextoken = trade.initialPosition.indexToken
-  const $iconG = $tokenIconMap[indextoken]
-  const token = strictGet(TRADEABLE_TOKEN_ADDRESS_MAP, indextoken)
+export const $tokenLabelFromSummary = (tokendesc: TokenDescription, $label?: $Node) => {
+  const $iconG = $tokenIconMap[tokendesc.symbol]
 
   return $row(layoutSheet.spacing, style({ cursor: 'pointer', alignItems: 'center', }))(
     $icon({ $content: $iconG, width: '34px', viewBox: '0 0 32 32' }),
     $column(layoutSheet.flex)(
-      $text(style({ fontWeight: 'bold' }))(token.symbol),
-      $text(style({ fontSize: '75%', color: pallete.foreground }))(token.symbol)
+      $text(style({ fontWeight: 'bold' }))(tokendesc.symbol),
+      $text(style({ fontSize: '75%', color: pallete.foreground }))(tokendesc.symbol)
     ),
     style({ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }, $label || empty())
   )
 }
 
-export const $leverage = (pos: IAggregatedTradeSummary) =>
-  $text(style({ fontWeight: 'bold' }))(`${String(Math.round(pos.leverage))}x`)
+export const $leverage = (pos: IAbstractTrade) =>
+  $text(style({ fontWeight: 'bold' }))(`${readableNumber(getLeverage(pos), false)}x`)
   
 
 export function $liquidationSeparator(liqWeight: Stream<number>) {
