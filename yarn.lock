@@ -1586,7 +1586,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/client@npm:^1.7.1, @walletconnect/client@npm:^1.7.4":
+"@walletconnect/client@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/client@npm:1.7.4"
   dependencies:
@@ -1639,7 +1639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/ethereum-provider@npm:^1.7.1":
+"@walletconnect/ethereum-provider@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/ethereum-provider@npm:1.7.4"
   dependencies:
@@ -1725,7 +1725,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/qrcode-modal@npm:^1.7.1, @walletconnect/qrcode-modal@npm:^1.7.4":
+"@walletconnect/qrcode-modal@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/qrcode-modal@npm:1.7.4"
   dependencies:
@@ -1804,7 +1804,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/web3-provider@npm:^1.7.1":
+"@walletconnect/web3-provider@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/web3-provider@npm:1.7.4"
   dependencies:
@@ -3961,7 +3961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enhanced-resolve@npm:^5.8.3":
+"enhanced-resolve@npm:^5.9.2":
   version: 5.9.2
   resolution: "enhanced-resolve@npm:5.9.2"
   dependencies:
@@ -4357,7 +4357,7 @@ __metadata:
   dependencies:
     bn.js: ^4.11.8
     ethereumjs-util: ^6.0.0
-  checksum: 03127d09960e5f8a44167463faf25b2894db2f746376dbb8195b789ed11762f93db9c574eaa7c498c400063508e9dfc1c80de2edf5f0e1406b25c87d860ff2f1
+  checksum: ae074be0bb012857ab5d3ae644d1163b908a48dd724b7d2567cfde309dc72222d460438f2411936a70dc949dc604ce1ef7118f7273bd525815579143c907e336
   languageName: node
   linkType: hard
 
@@ -8565,9 +8565,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-loader@npm:9.2.6":
-  version: 9.2.6
-  resolution: "ts-loader@npm:9.2.6"
+"ts-loader@npm:9.2.7":
+  version: 9.2.7
+  resolution: "ts-loader@npm:9.2.7"
   dependencies:
     chalk: ^4.1.0
     enhanced-resolve: ^5.0.0
@@ -8576,7 +8576,7 @@ __metadata:
   peerDependencies:
     typescript: "*"
     webpack: ^5.0.0
-  checksum: 309d8fb6348c0c3a7166d42c1238c585ede00f816155b24217dbca489406a72409395d7954bc5801ddb9ca71c71e7e0b2375dbc342337e0ab1a461944598a7fe
+  checksum: ef2c2a8e3c2d90025dae0838d20411b961a550ee6eee7fcafc5e8dbbcd8bf814d18519bb25cf0be72f483e8f5f485be9681e6d1c02392f34c2c55af8d4e70351
   languageName: node
   linkType: hard
 
@@ -9104,9 +9104,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.69.1":
-  version: 5.69.1
-  resolution: "webpack@npm:5.69.1"
+"webpack@npm:5.70.0":
+  version: 5.70.0
+  resolution: "webpack@npm:5.70.0"
   dependencies:
     "@types/eslint-scope": ^3.7.3
     "@types/estree": ^0.0.51
@@ -9117,7 +9117,7 @@ __metadata:
     acorn-import-assertions: ^1.7.6
     browserslist: ^4.14.5
     chrome-trace-event: ^1.0.2
-    enhanced-resolve: ^5.8.3
+    enhanced-resolve: ^5.9.2
     es-module-lexer: ^0.9.0
     eslint-scope: 5.1.1
     events: ^3.2.0
@@ -9137,7 +9137,7 @@ __metadata:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 490a6e9e4cd9d0ed3b6c7ca08015da2628919fda8fcf9c36f0f6c0e3ad71eaaaf4b0d12753109f22a4faf79fe9a9063552d9708e0ee2352cf8568433b8e296a7
+  checksum: 00439884a9cdd5305aed3ce93735635785a15c5464a6d2cfce87e17727a07585de02420913e82aa85ddd2ae7322175d2cfda6ac0878a17f061cb605e6a7db57a
   languageName: node
   linkType: hard
 
@@ -9358,10 +9358,10 @@ __metadata:
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
     "@urql/core": ^2.4.2
-    "@walletconnect/client": ^1.7.1
-    "@walletconnect/ethereum-provider": ^1.7.1
-    "@walletconnect/qrcode-modal": ^1.7.1
-    "@walletconnect/web3-provider": ^1.7.1
+    "@walletconnect/client": ^1.7.4
+    "@walletconnect/ethereum-provider": ^1.7.4
+    "@walletconnect/qrcode-modal": ^1.7.4
+    "@walletconnect/web3-provider": ^1.7.4
     common: "workspace:*"
     construct-style-sheets-polyfill: 3.1.0
     copy-webpack-plugin: 10.2.4
@@ -9372,9 +9372,9 @@ __metadata:
     html-webpack-plugin: 5.5.0
     jazzicon: ^1.5.0
     lightweight-charts: 3.8.0
-    ts-loader: 9.2.6
+    ts-loader: 9.2.7
     tsconfig-paths-webpack-plugin: 3.5.2
-    webpack: 5.69.1
+    webpack: 5.70.0
     webpack-cli: 4.9.2
     webpack-dev-server: 4.7.4
   languageName: unknown
