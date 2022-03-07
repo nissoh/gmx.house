@@ -1586,7 +1586,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/client@npm:^1.7.4":
+"@walletconnect/client@npm:^1.7.1, @walletconnect/client@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/client@npm:1.7.4"
   dependencies:
@@ -1639,7 +1639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/ethereum-provider@npm:^1.7.4":
+"@walletconnect/ethereum-provider@npm:^1.7.1":
   version: 1.7.4
   resolution: "@walletconnect/ethereum-provider@npm:1.7.4"
   dependencies:
@@ -1725,7 +1725,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/qrcode-modal@npm:^1.7.4":
+"@walletconnect/qrcode-modal@npm:^1.7.1, @walletconnect/qrcode-modal@npm:^1.7.4":
   version: 1.7.4
   resolution: "@walletconnect/qrcode-modal@npm:1.7.4"
   dependencies:
@@ -1804,7 +1804,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@walletconnect/web3-provider@npm:^1.7.4":
+"@walletconnect/web3-provider@npm:^1.7.1":
   version: 1.7.4
   resolution: "@walletconnect/web3-provider@npm:1.7.4"
   dependencies:
@@ -2721,7 +2721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"browserslist@npm:^4.14.5, browserslist@npm:^4.17.5, browserslist@npm:^4.19.1":
+"browserslist@npm:^4.14.5":
   version: 4.19.3
   resolution: "browserslist@npm:4.19.3"
   dependencies:
@@ -2733,6 +2733,21 @@ __metadata:
   bin:
     browserslist: cli.js
   checksum: c28958313dd17f345dd6e26379cc863126cd7d855588e57a1ed9e552a1135d64f05ec57063b48fff0d94a9b785bd248e9472c2d63ce8460ca56fc2444f5a1e66
+  languageName: node
+  linkType: hard
+
+"browserslist@npm:^4.17.5, browserslist@npm:^4.19.1":
+  version: 4.20.0
+  resolution: "browserslist@npm:4.20.0"
+  dependencies:
+    caniuse-lite: ^1.0.30001313
+    electron-to-chromium: ^1.4.76
+    escalade: ^3.1.1
+    node-releases: ^2.0.2
+    picocolors: ^1.0.0
+  bin:
+    browserslist: cli.js
+  checksum: 6d77f54bd43e7e1b86c3f10a3aa84b6c198f2ecc8b345ebd42cb9feb1c143554ad62a0eaf1365f28d14589a4d1fb12b367ade3798fa493dab5cff4ca525384aa
   languageName: node
   linkType: hard
 
@@ -2912,6 +2927,13 @@ __metadata:
   version: 1.0.30001312
   resolution: "caniuse-lite@npm:1.0.30001312"
   checksum: 753fb9ea1e02e999430b323a71b5acab5120f3b5fc0161b01669f54a3ef5c5296240b6ae9b79b12a3742e3aed216aa9ee3d5398a23c16d08625ccd376b79545d
+  languageName: node
+  linkType: hard
+
+"caniuse-lite@npm:^1.0.30001313":
+  version: 1.0.30001313
+  resolution: "caniuse-lite@npm:1.0.30001313"
+  checksum: 49f2dcd1fa493a09a5247dcf3a4da3b9df355131b1fc1fd08b67ae7683c300ed9b9eef6a5424b4ac7e5d1ff0e129d2a0b4adf2a6a5a04ab5c2c0b2c590e935be
   languageName: node
   linkType: hard
 
@@ -3868,6 +3890,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"electron-to-chromium@npm:^1.4.76":
+  version: 1.4.76
+  resolution: "electron-to-chromium@npm:1.4.76"
+  checksum: eef4305665e095610f6e913fad1efc73473b7c383f1cfa5e1e005b19c4133006d5492013b38dbcb1e4cdb0e3cd3d0ff94c4c52630fd088464eb2ebd1e210e0eb
+  languageName: node
+  linkType: hard
+
 "elliptic@npm:6.5.4, elliptic@npm:^6.5.2, elliptic@npm:^6.5.4":
   version: 6.5.4
   resolution: "elliptic@npm:6.5.4"
@@ -3932,7 +3961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enhanced-resolve@npm:^5.9.2":
+"enhanced-resolve@npm:^5.8.3":
   version: 5.9.2
   resolution: "enhanced-resolve@npm:5.9.2"
   dependencies:
@@ -8536,9 +8565,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ts-loader@npm:9.2.7":
-  version: 9.2.7
-  resolution: "ts-loader@npm:9.2.7"
+"ts-loader@npm:9.2.6":
+  version: 9.2.6
+  resolution: "ts-loader@npm:9.2.6"
   dependencies:
     chalk: ^4.1.0
     enhanced-resolve: ^5.0.0
@@ -8547,7 +8576,7 @@ __metadata:
   peerDependencies:
     typescript: "*"
     webpack: ^5.0.0
-  checksum: ef2c2a8e3c2d90025dae0838d20411b961a550ee6eee7fcafc5e8dbbcd8bf814d18519bb25cf0be72f483e8f5f485be9681e6d1c02392f34c2c55af8d4e70351
+  checksum: 309d8fb6348c0c3a7166d42c1238c585ede00f816155b24217dbca489406a72409395d7954bc5801ddb9ca71c71e7e0b2375dbc342337e0ab1a461944598a7fe
   languageName: node
   linkType: hard
 
@@ -9075,9 +9104,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.70.0":
-  version: 5.70.0
-  resolution: "webpack@npm:5.70.0"
+"webpack@npm:5.69.1":
+  version: 5.69.1
+  resolution: "webpack@npm:5.69.1"
   dependencies:
     "@types/eslint-scope": ^3.7.3
     "@types/estree": ^0.0.51
@@ -9088,7 +9117,7 @@ __metadata:
     acorn-import-assertions: ^1.7.6
     browserslist: ^4.14.5
     chrome-trace-event: ^1.0.2
-    enhanced-resolve: ^5.9.2
+    enhanced-resolve: ^5.8.3
     es-module-lexer: ^0.9.0
     eslint-scope: 5.1.1
     events: ^3.2.0
@@ -9108,7 +9137,7 @@ __metadata:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 00439884a9cdd5305aed3ce93735635785a15c5464a6d2cfce87e17727a07585de02420913e82aa85ddd2ae7322175d2cfda6ac0878a17f061cb605e6a7db57a
+  checksum: 490a6e9e4cd9d0ed3b6c7ca08015da2628919fda8fcf9c36f0f6c0e3ad71eaaaf4b0d12753109f22a4faf79fe9a9063552d9708e0ee2352cf8568433b8e296a7
   languageName: node
   linkType: hard
 
@@ -9329,10 +9358,10 @@ __metadata:
     "@most/scheduler": 1.3.0
     "@most/types": 1.1.0
     "@urql/core": ^2.4.2
-    "@walletconnect/client": ^1.7.4
-    "@walletconnect/ethereum-provider": ^1.7.4
-    "@walletconnect/qrcode-modal": ^1.7.4
-    "@walletconnect/web3-provider": ^1.7.4
+    "@walletconnect/client": ^1.7.1
+    "@walletconnect/ethereum-provider": ^1.7.1
+    "@walletconnect/qrcode-modal": ^1.7.1
+    "@walletconnect/web3-provider": ^1.7.1
     common: "workspace:*"
     construct-style-sheets-polyfill: 3.1.0
     copy-webpack-plugin: 10.2.4
@@ -9343,9 +9372,9 @@ __metadata:
     html-webpack-plugin: 5.5.0
     jazzicon: ^1.5.0
     lightweight-charts: 3.8.0
-    ts-loader: 9.2.7
+    ts-loader: 9.2.6
     tsconfig-paths-webpack-plugin: 3.5.2
-    webpack: 5.70.0
+    webpack: 5.69.1
     webpack-cli: 4.9.2
     webpack-dev-server: 4.7.4
   languageName: unknown
