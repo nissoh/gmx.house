@@ -453,7 +453,7 @@ export const $Portfolio = (config: IAccount) => component((
                   const close = formatFixed(c, 30)
 
                   return { open, high, low, close, time: timestamp }
-                }).sort((a, b) => a.time - b.time)
+                })
 
                 
 

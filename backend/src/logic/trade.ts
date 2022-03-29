@@ -91,9 +91,8 @@ export const requestAccountTradeList = O(
 
 export const requestLatestPriceMap = O(
   map(async (queryParams: IChainParamApi): Promise<IPriceLatestMap> => {
-    const priceList = await graphMap[queryParams.chain](latestPriceTimelineQuery, {})
+    const priceList = await graphMap[queryParams.chain](latestPriceTimelineQuery, {}, { requestPolicy: 'network-only', fetchOptions: { cache: 'no-cache', } })
     const gmap = groupByMap(priceList.priceLatests.map(fromJson.priceLatestJson), price => price.id)
-
     return gmap
   }),
   awaitPromises
@@ -155,7 +154,7 @@ export const requestPricefeed = O(
 
     const priceFeedQuery = await graphMap[queryParams.chain](pricefeed, params as any)
 
-    return priceFeedQuery.pricefeeds.reverse()
+    return priceFeedQuery.pricefeeds
   }),
   awaitPromises
 )

@@ -2,7 +2,7 @@ import { Behavior, combineArray, O, Op, replayLatest } from "@aelea/core"
 import { $text, component, INode, motion, MOTION_NO_WOBBLE, style, styleBehavior } from "@aelea/dom"
 import { $column, $icon, $NumberTicker, $row, $seperator, layoutSheet, screenUtils } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
-import { combine, filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
+import { filter, map, merge, multicast, now, skip, skipRepeats, skipRepeatsWith, startWith, switchLatest } from "@most/core"
 import { Stream } from "@most/types"
 import {
   calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, ITrade,
@@ -61,13 +61,15 @@ export const $TradeCardPreview = ({
   const tradeState = replayLatest(multicast(tradeSource))
   const nullishTrade = filter(x => x === null, tradeState)
 
-  const latestPrice = switchLatest(combine((trade, feed) => {
+
+  const latestPrice = latestPriceMap ? replayLatest(multicast(combineArray((trade, priceMap) => {
     if (isTradeOpen(trade)) {
-      return latestPriceMap ?  map(tmap => tmap[trade.indexToken].value, latestPriceMap) : feed[feed.length - 1].c
+      const latest = priceMap[trade.indexToken]
+      return latest.value
     }
     
     return isTradeClosed(trade) ? trade.decreaseList[trade.decreaseList.length - 1].price : trade.liquidatedPosition.markPrice
-  }, tradeState, pricefeed))
+  }, tradeState, latestPriceMap))) : map(feed => feed[feed.length - 1].c, pricefeed)
 
   const historicPnL = replayLatest(multicast(combineArray((trade, feed) => {
     const startPrice = trade.increaseList[0].price
@@ -151,14 +153,7 @@ export const $TradeCardPreview = ({
         return now({ delta: trade.realisedPnl - trade.fee, deltaPercentage: trade.realisedPnlPercentage })
       }
 
-      const initialDelta = calculatePositionDelta(historicPnl[historicPnl.length - 1].price, trade.averagePrice, trade.isLong, trade)
-
-      return merge(
-        map(price => {
-          return calculatePositionDelta(price, trade.averagePrice, trade.isLong, trade)
-        }, latestPrice),
-        now({ delta: initialDelta.delta - trade.fee, deltaPercentage: initialDelta.deltaPercentage })
-      )
+      return map(price => calculatePositionDelta(price, trade.averagePrice, trade.isLong, trade), latestPrice)
     }
   }, crosshairWithInitial, tradeState, historicPnL)))
     
@@ -244,7 +239,7 @@ export const $TradeCardPreview = ({
               style({ alignSelf: 'stretch' }, $seperator),
 
               !isSettled
-                ? $RiskLiquidator(trade, map(feed => feed[feed.length - 1].price, historicPnL))({})
+                ? $RiskLiquidator(trade, latestPrice)({})
                 : $Risk(trade)({}),
 
 
