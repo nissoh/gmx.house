@@ -18,6 +18,7 @@ export const avalancheGraph = prepareClient({
   url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-avalanche'
 })
 
+
 export const graphMap = {
   [CHAIN.ARBITRUM]: arbitrumGraph,
   [CHAIN.AVALANCHE]: avalancheGraph,

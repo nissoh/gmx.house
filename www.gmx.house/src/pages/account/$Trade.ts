@@ -8,7 +8,7 @@ import { Stream } from "@most/types"
 import {
   ARBITRUM_TRADEABLE_ADDRESS, formatReadableUSD, IPricefeed, IClaim, getMappedKeyByValue, IPositionDecrease, IPositionIncrease, IRequestTradeQueryparam, isTradeSettled, isTradeLiquidated,
   ITrade, CHAIN, IPriceLatestMap, getTokenDescription, IChainParamApi, TOKEN_ADDRESS_TO_SYMBOL, TOKEN_SYMBOL, IPricefeedParamApi, AVALANCHE_TRADEABLE_ADDRESS,
-  CHAIN_TOKEN_ADDRESS_TO_SYMBOL, intervalInMsMap, unixTimestampNow, getTxExplorerUrl
+  CHAIN_TOKEN_ADDRESS_TO_SYMBOL, unixTimestampNow, getTxExplorerUrl
 } from "@gambitdao/gmx-middleware"
 import { $buttonAnchor } from "../../components/form/$Button"
 import { $anchor } from "../../elements/$common"

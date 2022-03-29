@@ -87,6 +87,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const competitionTopCumulative2Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-2', title: 'Red vs. Green November competition' })
 
   const tradeRoute = chainRoute
+    .create({ fragment: /.*/ })
     .create({ fragment: /^Trade:0x([A-Fa-f0-9]{64})$/i })
     .create({
       title: 'Trade',

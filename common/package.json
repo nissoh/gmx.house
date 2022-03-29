@@ -18,20 +18,20 @@
     },
     "dependencies": {
         "@aelea/core": "1.3.0",
-        "@ethersproject/abi": "5.5.0",
-        "@ethersproject/abstract-signer": "5.5.0",
-        "@ethersproject/bignumber": "^5.5.0",
-        "@ethersproject/bytes": "5.5.0",
-        "@ethersproject/contracts": "^5.5.0",
-        "@ethersproject/providers": "5.5.3",
+        "@ethersproject/abi": "5.6.0",
+        "@ethersproject/abstract-signer": "5.6.0",
+        "@ethersproject/bignumber": "^5.6.0",
+        "@ethersproject/bytes": "5.6.1",
+        "@ethersproject/contracts": "^5.6.0",
+        "@ethersproject/providers": "5.6.2",
         "@gambitdao/gmx-contracts": "1.0.6",
         "@most/core": "1.6.1",
         "@most/disposable": "1.3.0",
         "@most/prelude": "1.8.0",
         "@most/scheduler": "1.3.0",
         "@most/types": "1.1.0",
-        "@types/isomorphic-fetch": "^0.0.35",
-        "@urql/core": "^2.4.2",
+        "@types/isomorphic-fetch": "^0.0.36",
+        "@urql/core": "^2.4.3",
         "isomorphic-fetch": "^3.0.0"
     }
 }

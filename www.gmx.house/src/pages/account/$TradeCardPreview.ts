@@ -6,7 +6,7 @@ import { combine, filter, map, merge, multicast, now, skip, skipRepeats, skipRep
 import { Stream } from "@most/types"
 import {
   calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, ITrade,
-  IPricefeed, IClaim, intervalListFillOrderMap, isTradeSettled, parseFixed, readableNumber,
+  IPricefeed, IClaim, intervalListFillOrderMap, isTradeSettled, readableNumber,
   unixTimeTzOffset, isTradeLiquidated, IPriceLatestMap, IPositionDelta, isTradeClosed, unixTimestampNow, TOKEN_ADDRESS_TO_SYMBOL, isTradeOpen
 } from "@gambitdao/gmx-middleware"
 import { ChartOptions, DeepPartial, LineStyle, MouseEventParams, SeriesMarker, Time } from "lightweight-charts"

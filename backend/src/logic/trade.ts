@@ -67,7 +67,6 @@ export const requestLeaderboardTopList = O(
 
     const cacheQuery = fetchTrades(queryParams.chain, 0, from, to).then(list => {
       const formattedList = list.map(fromJson.toTradeJson)
-      console.log('fetches new ', formattedList.length, ' items')
 
       const summary = toAccountSummary(formattedList)
 
@@ -118,7 +117,7 @@ export const lightningLatestPricesMap = replayLatest(multicast(merge(
 export const requestOpenTrades = O(
   snapshot(async (feedMap, queryParams: IOpenTradesParamApi) => {
     const to = await createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => unixTimestampNow())
-    const cacheQuery = graphMap[queryParams.chain](tradeListQuery, { to: 1999999999, pageSize: 1000, status: TradeStatus.OPEN })
+    const cacheQuery = graphMap[queryParams.chain](tradeListQuery, { to, pageSize: 1000, status: TradeStatus.OPEN }, { fetchOptions: { cache: 'no-cache' } })
 
     const queryResults = cacheQuery.then(resp => resp.trades.map(tradeJson => {
       const trade = fromJson.toTradeJson(tradeJson)

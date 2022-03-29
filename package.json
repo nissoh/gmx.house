@@ -25,11 +25,11 @@
         "g:parallel": "cd $INIT_CWD && concurrently"
     },
     "devDependencies": {
-        "@typescript-eslint/eslint-plugin": "5.13.0",
-        "@typescript-eslint/parser": "5.13.0",
+        "@typescript-eslint/eslint-plugin": "5.17.0",
+        "@typescript-eslint/parser": "5.17.0",
         "concurrently": "^7.0.0",
-        "eslint": "8.10.0",
-        "typescript": "^4.6.2"
+        "eslint": "8.12.0",
+        "typescript": "^4.6.3"
     },
     "engines": {
         "node": "16.x"
