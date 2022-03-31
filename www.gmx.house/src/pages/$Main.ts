@@ -355,7 +355,7 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
             
-            router.match(tradeRoute)(
+            router.contains(tradeRoute)(
               $Trade({
                 claimMap,
                 parentRoute: tradeRoute,
