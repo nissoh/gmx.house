@@ -11,9 +11,9 @@ import { tradeQuery, tradeListQuery, accountTradeListQuery, IAccountTradeListPar
 
 const createCache = cacheMap({})
 
+
 const fetchTrades = async (chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, from: number, to: number): Promise<ITrade[]> => {
   const deltaTime = to - from
-
 
   // splits the queries because the-graph's result limit of 5k items
   if (deltaTime >= intervalInMsMap.DAY7) {
@@ -24,7 +24,7 @@ const fetchTrades = async (chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: numb
     return (await Promise.all([query0, query1])).flatMap(res => res)
   }
 
-  const list = (await graphMap[chain](tradeListQuery, { from, to, pageSize: 1000, offset })).trades
+  const list = (await graphMap[chain](tradeListQuery, { from, to, pageSize: 1000, offset }, { requestPolicy: 'network-only' })).trades
 
   if (list.length === 1000) {
     const newPage = await fetchTrades(chain, offset + 1000, from, to)
@@ -59,10 +59,7 @@ export const requestLeaderboardTopList = O(
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
     const cacheKey = 'requestLeaderboardTopList' + queryParams.timeInterval + queryParams.chain
 
-    const to = await createCache(cacheKey, cacheLife, async () => {
-      return unixTimestampNow()
-    })
-
+    const to = await createCache(cacheKey, cacheLife, async () => unixTimestampNow())
     const from = to - queryParams.timeInterval
 
     const cacheQuery = fetchTrades(queryParams.chain, 0, from, to).then(list => {
@@ -91,7 +88,7 @@ export const requestAccountTradeList = O(
 
 export const requestLatestPriceMap = O(
   map(async (queryParams: IChainParamApi): Promise<IPriceLatestMap> => {
-    const priceList = await graphMap[queryParams.chain](latestPriceTimelineQuery, {}, { requestPolicy: 'network-only', fetchOptions: { cache: 'no-cache', } })
+    const priceList = await graphMap[queryParams.chain](latestPriceTimelineQuery, {}, { requestPolicy: 'network-only' })
     const gmap = groupByMap(priceList.priceLatests.map(fromJson.priceLatestJson), price => price.id)
     return gmap
   }),
@@ -116,7 +113,7 @@ export const lightningLatestPricesMap = replayLatest(multicast(merge(
 export const requestOpenTrades = O(
   snapshot(async (feedMap, queryParams: IOpenTradesParamApi) => {
     const to = await createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => unixTimestampNow())
-    const cacheQuery = graphMap[queryParams.chain](tradeListQuery, { to, pageSize: 1000, status: TradeStatus.OPEN }, { fetchOptions: { cache: 'no-cache' } })
+    const cacheQuery = graphMap[queryParams.chain](tradeListQuery, { to, pageSize: 1000, status: TradeStatus.OPEN }, { requestPolicy: 'network-only' })
 
     const queryResults = cacheQuery.then(resp => resp.trades.map(tradeJson => {
       const trade = fromJson.toTradeJson(tradeJson)
