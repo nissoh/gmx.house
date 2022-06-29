@@ -85,9 +85,9 @@ fragment tradeFields on Trade {
   key
   status
 
-  increaseList { ...increasePositionFields }
-  decreaseList { ...decreasePositionFields }
-  updateList { ...updatePositionFields }
+  increaseList(first: 1000) { ...increasePositionFields }
+  decreaseList(first: 1000) { ...decreasePositionFields }
+  updateList(first: 1000) { ...updatePositionFields }
 
   sizeDelta
   collateralDelta
@@ -106,11 +106,21 @@ fragment tradeFields on Trade {
 `
 
 
-export const tradeListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi & {status: TradeStatus}>> = gql`
+export const tradeHistoricListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
 ${schemaFragments}
 
-query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999 $status: Status = "closed") {
-  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, timestamp_lte: $to, status: $status}) {
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
+  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, settledTimestamp_lte: $to, collateral_gt: "50000000000000000000000000000000"}) {
+      ...tradeFields
+  }
+}
+`
+
+export const tradeOpenListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
+${schemaFragments}
+
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
+  trades(first: $pageSize, skip: $offset, where: {status: open, collateral_gt: "100000000000000000000000000000000"}) {
       ...tradeFields
   }
 }

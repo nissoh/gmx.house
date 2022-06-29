@@ -2,32 +2,33 @@
 import { O, replayLatest } from '@aelea/core'
 import { awaitPromises, combine, constant, map, merge, multicast, now, periodic, snapshot } from '@most/core'
 import {
-  calculatePositionDelta, fromJson, ITrade, ILeaderboardRequest,
-  intervalInMsMap, IPagePositionParamApi, IPricefeedParamApi, IRequestTradeQueryparam,
-  ITimerangeParamApi, pagingQuery, toAccountSummary, IOpenTradesParamApi, TradeStatus, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap } from '@gambitdao/gmx-middleware'
+  calculatePositionDelta, fromJson, ILeaderboardRequest,
+  intervalInMsMap, IPricefeedParamApi, IRequestTradeQueryparam,
+  pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap, IPageHistoricParamApi, IPagePositionParamApi
+} from '@gambitdao/gmx-middleware'
 import { cacheMap } from '../utils'
 import { graphMap } from './api'
-import { tradeQuery, tradeListQuery, accountTradeListQuery, IAccountTradeListParamApi, latestPriceTimelineQuery, pricefeed } from './queries'
+import { tradeQuery, accountTradeListQuery, IAccountTradeListParamApi, latestPriceTimelineQuery, pricefeed, tradeHistoricListQuery, tradeOpenListQuery } from './queries'
+import { TypedDocumentNode } from '@urql/core'
 
 const createCache = cacheMap({})
 
 
-const fetchTrades = async (chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, from: number, to: number): Promise<ITrade[]> => {
-  const deltaTime = to - from
+const fetchTrades = async <T, R extends IPagePositionParamApi, Z>(doc: TypedDocumentNode<T, R>, params: R, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, getList: (res: T) => Z[]): Promise<Z[]> => {
+  console.log('fetching offset ' + offset)
+  const resp = (await graphMap[chain](doc, { ...params, offset }, { requestPolicy: 'network-only' }))
 
-  // splits the queries because the-graph's result limit of 5k items
-  if (deltaTime >= intervalInMsMap.DAY7) {
-    const splitDelta = deltaTime / 2
-    const query0 = fetchTrades(chain, 0, from, to - splitDelta).then(list => list.map(fromJson.toTradeJson))
-    const query1 = fetchTrades(chain, 0, from + splitDelta, to).then(list => list.map(fromJson.toTradeJson))
+  const list = getList(resp)
 
-    return (await Promise.all([query0, query1])).flatMap(res => res)
+  const nextOffset = offset + 1000
+
+  if (nextOffset > 5000) {
+    console.warn(`query has exceeded 5000 offset at timefram ${intervalInMsMap.DAY7}`)
+    return list
   }
 
-  const list = (await graphMap[chain](tradeListQuery, { from, to, pageSize: 1000, offset }, { requestPolicy: 'network-only' })).trades
-
   if (list.length === 1000) {
-    const newPage = await fetchTrades(chain, offset + 1000, from, to)
+    const newPage = await fetchTrades(doc, params, chain, nextOffset, getList)
 
     return [...list, ...newPage]
   }
@@ -35,14 +36,30 @@ const fetchTrades = async (chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: numb
   return list
 }
 
+const fetchHistoricTrades = async <T, R extends IPageHistoricParamApi, Z>(doc: TypedDocumentNode<T, R>, params: R, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, getList: (res: T) => Z[]): Promise<Z[]> => {
+  const deltaTime = params.to - params.from
+
+  // splits the queries because the-graph's result limit of 5k items
+  if (deltaTime >= intervalInMsMap.DAY7) {
+    const splitDelta = deltaTime / 2
+    const query0 = fetchTrades(doc, { ...params, to: params.to - splitDelta }, chain, 0, getList)
+    const query1 = fetchTrades(doc, { ...params, from: params.to + splitDelta }, chain, 0, getList)
+
+    return (await Promise.all([query0, query1])).flatMap(res => res)
+  }
 
 
-export const tradeByTimespan = map((queryParams: IChainParamApi & IPagePositionParamApi & ITimerangeParamApi) => {
+  return fetchTrades(doc, params, chain, offset, getList)
+}
+
+
+
+export const tradeByTimespan = map((queryParams: IChainParamApi & IPageHistoricParamApi) => {
   const query = createCache('tradeByTimespan' + queryParams.from, intervalInMsMap.MIN5, async () => {
     const from = Math.floor(queryParams.from)
     const to = Math.min(unixTimestampNow(), queryParams.to)
-    
-    return fetchTrades(queryParams.chain, 0, from, to) 
+
+    return fetchTrades(tradeHistoricListQuery, { from, to, offset: 0, pageSize: 1000 }, queryParams.chain, 0, (res) => res.trades)
   })
 
   return { query, queryParams }
@@ -59,20 +76,19 @@ export const requestLeaderboardTopList = O(
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
     const cacheKey = 'requestLeaderboardTopList' + queryParams.timeInterval + queryParams.chain
 
-    const to = await createCache(cacheKey, cacheLife, async () => unixTimestampNow())
-    const from = to - queryParams.timeInterval
+    const list = createCache(cacheKey, cacheLife, async () => {
+      const timeNow = unixTimestampNow()
+      const from = timeNow - queryParams.timeInterval
 
-    const cacheQuery = fetchTrades(queryParams.chain, 0, from, to).then(list => {
-      const formattedList = list.map(fromJson.toTradeJson)
-
+      const tradeList = await fetchHistoricTrades(tradeHistoricListQuery, { from, to: timeNow, offset: 0, pageSize: 1000 }, queryParams.chain, 0, res => res.trades)
+      const formattedList = tradeList.map(fromJson.toTradeJson)
       const summary = toAccountSummary(formattedList)
 
       return summary
     })
 
 
- 
-    return pagingQuery(queryParams, cacheQuery)
+    return pagingQuery(queryParams, list)
   }),
   awaitPromises
 )
@@ -112,18 +128,18 @@ export const lightningLatestPricesMap = replayLatest(multicast(merge(
 
 export const requestOpenTrades = O(
   snapshot(async (feedMap, queryParams: IOpenTradesParamApi) => {
-    const to = await createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => unixTimestampNow())
-    const cacheQuery = graphMap[queryParams.chain](tradeListQuery, { to, pageSize: 1000, status: TradeStatus.OPEN }, { requestPolicy: 'network-only' })
+    const query = createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => {
+      const list = await  fetchTrades(tradeOpenListQuery, { offset: 0, pageSize: 1000 }, queryParams.chain, 0, res => res.trades)
+      return list.map(tradeJson => {
+        const trade = fromJson.toTradeJson(tradeJson)
+        const marketPrice = feedMap[trade.indexToken].value
+        const { delta, deltaPercentage } = calculatePositionDelta(marketPrice, trade.averagePrice, trade.isLong, trade)
 
-    const queryResults = cacheQuery.then(resp => resp.trades.map(tradeJson => {
-      const trade = fromJson.toTradeJson(tradeJson)
-      const marketPrice = feedMap[trade.indexToken].value
-      const { delta, deltaPercentage } = calculatePositionDelta(marketPrice, trade.averagePrice, trade.isLong, trade)
+        return { ...trade, realisedPnl: delta, realisedPnlPercentage: deltaPercentage }
+      })
+    })
 
-      return { ...trade, realisedPnl: delta, realisedPnlPercentage: deltaPercentage }
-    }))
-
-    return pagingQuery(queryParams, queryResults)
+    return pagingQuery(queryParams, query)
   }, lightningLatestPricesMap),
   awaitPromises
 )

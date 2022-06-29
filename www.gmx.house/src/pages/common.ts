@@ -4,7 +4,7 @@ import { $column, $icon, $row, $seperator, layoutSheet } from "@aelea/ui-compone
 import { pallete } from "@aelea/ui-components-theme"
 import { map, multicast, now } from "@most/core"
 import { Stream } from "@most/types"
-import { calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, ITrade, IPositionDelta, liquidationWeight, parseFixed, ITradeOpen, IAbstractTrade, intervalInMsMap, IPriceTimeline, IPriceLatestMap, AVALANCHE_TRADEABLE_ADDRESS, TOKEN_ADDRESS_TO_SYMBOL, TOKEN_SYMBOL } from "@gambitdao/gmx-middleware"
+import { calculatePositionDelta, formatFixed, formatReadableUSD, getLiquidationPriceFromDelta, ITrade, IPositionDelta, liquidationWeight, ITradeOpen, IAbstractTrade, intervalInMsMap, IPriceTimeline, IPriceLatestMap, AVALANCHE_TRADEABLE_ADDRESS, TOKEN_ADDRESS_TO_SYMBOL, TOKEN_SYMBOL } from "@gambitdao/gmx-middleware"
 import { $tokenIconMap } from "../common/$icons"
 import { TableColumn } from "../common/$Table2"
 import { $leverage, $liquidationSeparator } from "../elements/$common"
