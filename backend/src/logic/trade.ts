@@ -15,7 +15,6 @@ const createCache = cacheMap({})
 
 
 const fetchTrades = async <T, R extends IPagePositionParamApi, Z>(doc: TypedDocumentNode<T, R>, params: R, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, getList: (res: T) => Z[]): Promise<Z[]> => {
-  console.log('fetching offset ' + offset)
   const resp = (await graphMap[chain](doc, { ...params, offset }, { requestPolicy: 'network-only' }))
 
   const list = getList(resp)
