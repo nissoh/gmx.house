@@ -4,7 +4,7 @@ import { awaitPromises, combine, constant, map, merge, multicast, now, periodic,
 import {
   calculatePositionDelta, fromJson, ILeaderboardRequest,
   intervalInMsMap, IPricefeedParamApi, IRequestTradeQueryparam,
-  pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap, IPageHistoricParamApi, IPagePositionParamApi
+  pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap, IPagePositionParamApi, ITimerangeParamApi
 } from '@gambitdao/gmx-middleware'
 import { cacheMap } from '../utils'
 import { graphMap } from './api'
@@ -35,7 +35,7 @@ const fetchTrades = async <T, R extends IPagePositionParamApi, Z>(doc: TypedDocu
   return list
 }
 
-const fetchHistoricTrades = async <T, R extends IPageHistoricParamApi, Z>(doc: TypedDocumentNode<T, R>, params: R, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, getList: (res: T) => Z[]): Promise<Z[]> => {
+const fetchHistoricTrades = async <T, R extends IPagePositionParamApi & ITimerangeParamApi, Z>(doc: TypedDocumentNode<T, R>, params: R, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, offset: number, getList: (res: T) => Z[]): Promise<Z[]> => {
   const deltaTime = params.to - params.from
 
   // splits the queries because the-graph's result limit of 5k items
@@ -53,7 +53,7 @@ const fetchHistoricTrades = async <T, R extends IPageHistoricParamApi, Z>(doc: T
 
 
 
-export const tradeByTimespan = map((queryParams: IChainParamApi & IPageHistoricParamApi) => {
+export const tradeByTimespan = map((queryParams: IChainParamApi & IPagePositionParamApi & ITimerangeParamApi) => {
   const query = createCache('tradeByTimespan' + queryParams.from, intervalInMsMap.MIN5, async () => {
     const from = Math.floor(queryParams.from)
     const to = Math.min(unixTimestampNow(), queryParams.to)
