@@ -7,7 +7,7 @@ import { disposeWith } from '@most/disposable'
 import { Stream } from '@most/types'
 import { ChartOptions, createChart, CrosshairMode, DeepPartial, IChartApi, ISeriesApi, LineStyle, MouseEventParams, SeriesDataItemTypeMap, SeriesMarker, SeriesType, Time, TimeRange } from 'lightweight-charts'
 
-export interface IMarker extends SeriesMarker<Time> {
+export interface IMarker {
 
 }
 
@@ -30,13 +30,13 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
   const containerEl = document.createElement('chart')
 
 
-  
+
   const api = createChart(containerEl, {
     rightPriceScale: {
       visible: false,
     },
     handleScale: {
-          
+
     },
     grid: {
       horzLines: {
@@ -69,7 +69,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
       secondsVisible: true,
       timeVisible: true,
       lockVisibleTimeRangeOnResize: true,
-      
+
     },
     crosshair: {
       mode: CrosshairMode.Magnet,
@@ -90,8 +90,8 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
     },
     ...chartConfig
   })
-  
-  
+
+
 
   const crosshairMove = fromCallback<MouseEventParams>(
     cb => {
@@ -108,7 +108,7 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
 
   const timeScale = api.timeScale()
 
-  
+
   const visibleLogicalRangeChange = multicast(
     fromCallback(cb => {
       timeScale.subscribeVisibleLogicalRangeChange(cb)
@@ -124,9 +124,9 @@ export const $Chart = <T extends SeriesType>({ chartConfig, realtimeSource, init
   )
 
 
-  
+
   const init = initializeSeries(now(api))
-  
+
   const ignoreAll = filter(() => false)
   return [
     $wrapNativeElement(containerEl)(

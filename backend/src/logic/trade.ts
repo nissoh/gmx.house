@@ -94,7 +94,7 @@ export const requestLeaderboardTopList = O(
 
 export const requestAccountTradeList = O(
   map(async (queryParams: IAccountTradeListParamApi) => {
-    const allAccounts = await graphMap[queryParams.chain](accountTradeListQuery, { ...queryParams, account: queryParams.account.toLowerCase() })
+    const allAccounts = await graphMap[queryParams.chain](accountTradeListQuery, { ...queryParams, account: queryParams.account.toLowerCase() }, { requestPolicy: 'network-only' })
     return allAccounts.trades
   }),
   awaitPromises
@@ -128,7 +128,7 @@ export const lightningLatestPricesMap = replayLatest(multicast(merge(
 export const requestOpenTrades = O(
   snapshot(async (feedMap, queryParams: IOpenTradesParamApi) => {
     const query = createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => {
-      const list = await  fetchTrades(tradeOpenListQuery, { offset: 0, pageSize: 1000 }, queryParams.chain, 0, res => res.trades)
+      const list = await fetchTrades(tradeOpenListQuery, { offset: 0, pageSize: 1000 }, queryParams.chain, 0, res => res.trades)
       return list.map(tradeJson => {
         const trade = fromJson.toTradeJson(tradeJson)
         const marketPrice = feedMap[trade.indexToken].value
