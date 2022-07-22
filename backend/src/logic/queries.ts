@@ -110,7 +110,7 @@ export const tradeHistoricListQuery: TypedDocumentNode<{trades: ITrade[]}, Parti
 ${schemaFragments}
 
 query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
-  trades(first: $pageSize, skip: $offset, where: {settledTimestamp_gt: $from, settledTimestamp_lt: $to, collateral_gt: "750000000000000000000000000000000"}) {
+  trades(first: $pageSize, skip: $offset, where: {settledTimestamp_gt: $from, settledTimestamp_lt: $to, collateral_gt: "500000000000000000000000000000000"}) {
       ...tradeFields
   }
 }
