@@ -42,7 +42,7 @@ const fetchHistoricTrades = async <T, R extends IPagePositionParamApi & ITimeran
   if (deltaTime >= intervalInMsMap.DAY7) {
     const splitDelta = deltaTime / 2
     const query0 = fetchTrades(doc, { ...params, to: params.to - splitDelta }, chain, 0, getList)
-    const query1 = fetchTrades(doc, { ...params, from: params.to + splitDelta }, chain, 0, getList)
+    const query1 = fetchTrades(doc, { ...params, from: params.to - splitDelta }, chain, 0, getList)
 
     return (await Promise.all([query0, query1])).flatMap(res => res)
   }
