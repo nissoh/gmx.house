@@ -146,7 +146,7 @@ export const requestOpenTrades = O(
 export const requestTrade = O(
   map(async (queryParams: IRequestTradeQueryparam) => {
     const id = queryParams.id
-    const priceFeedQuery = await graphMap[queryParams.chain](tradeQuery, { id })
+    const priceFeedQuery = await graphMap[queryParams.chain](tradeQuery, { id }, { requestPolicy: 'network-only' })
 
     if (priceFeedQuery === null) {
       throw new Error('Trade not found')
