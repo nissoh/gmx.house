@@ -19,7 +19,7 @@ import { $Link } from "../../components/$Link"
 import { $Chart } from "../../components/$Chart"
 import { $anchor, $tokenLabelFromSummary } from "../../elements/$common"
 import { $caretDown } from "../../elements/$icons"
-import { $Entry, $livePnl, $ProfitLossText, $Risk, $RiskLiquidator, getPricefeedVisibleColumns, timeSince } from "../common"
+import { $Entry, $livePnl, $ProfitLossText, $riskLabel, $riskLiquidator, getPricefeedVisibleColumns, timeSince } from "../common"
 import { CHAIN_LABEL_ID } from "../../types"
 
 
@@ -87,6 +87,10 @@ export const $Portfolio = (config: IAccount) => component((
         })
         .sort((a, b) => a.settledTimestamp - b.settledTimestamp)
 
+      if (sortedParsed.length === 0) {
+        return []
+      }
+
       const filled = intervalListFillOrderMap({
         source: sortedParsed,
         seed: { time: initialDataStartTime, value: 0n },
@@ -102,7 +106,7 @@ export const $Portfolio = (config: IAccount) => component((
   )
 
 
-  
+
   const activeTimeframe: StyleCSS = { color: pallete.primary, pointerEvents: 'none' }
 
   const timeframePnLCounter: Stream<number> = combineArray(
@@ -133,12 +137,12 @@ export const $Portfolio = (config: IAccount) => component((
   const $chartContainer = screenUtils.isDesktopScreen
     ? $node(
       chartContainerStyle, style({
-        position: 'fixed', top: 0, right: 0, left: 0, bottom:0, height: '100vh', width: 'calc(50vw)', display: 'flex',
+        position: 'fixed', top: 0, right: 0, left: 0, bottom: 0, height: '100vh', width: 'calc(50vw)', display: 'flex',
       })
     )
     : $column(chartContainerStyle)
-  
-  
+
+
   return [
     $container(
       $column(layoutSheet.spacingBig, style({ flex: 1 }))(
@@ -191,12 +195,12 @@ export const $Portfolio = (config: IAccount) => component((
                       })
                     }
 
-                    series.applyOptions({
-                      scaleMargins: {
-                        top: .45,
-                        bottom: 0
-                      }
-                    })
+                    // series.applyOptions({
+                    //   scaleMargins: {
+                    //     top: .45,
+                    //     bottom: 0
+                    //   }
+                    // })
 
                     setTimeout(() => {
                       api.timeScale().fitContent()
@@ -208,7 +212,7 @@ export const $Portfolio = (config: IAccount) => component((
                     handleScale: false,
                     handleScroll: false,
                     timeScale: {
-                    // rightOffset: 110,
+                      // rightOffset: 110,
                       secondsVisible: false,
                       timeVisible: true,
                       // visible: false,
@@ -217,7 +221,7 @@ export const $Portfolio = (config: IAccount) => component((
                   },
                   containerOp: style({
                     display: 'flex',
-                  // position: 'absolute', left: 0, top: 0, right: 0, bottom: 0
+                    // position: 'absolute', left: 0, top: 0, right: 0, bottom: 0
                   }),
                 })({
                   crosshairMove: pnlCrosshairMoveTether(
@@ -234,8 +238,8 @@ export const $Portfolio = (config: IAccount) => component((
                         lineHeight: 1,
                         zIndex: 50,
                         position: 'relative'
-              
-                      // fontWeight: 'normal',
+
+                        // fontWeight: 'normal',
                       },
                       value$: map(Math.floor, motion({ ...MOTION_NO_WOBBLE, precision: 15, stiffness: 210 }, 0, timeframePnLCounter)),
                       incrementColor: pallete.positive,
@@ -302,7 +306,7 @@ export const $Portfolio = (config: IAccount) => component((
           )({})
         ),
 
-        $node(),     
+        $node(),
 
 
         $card(layoutSheet.spacingBig)(
@@ -326,12 +330,12 @@ export const $Portfolio = (config: IAccount) => component((
                 })
               },
               {
-                $head: $text('Risk'),
+                $head: $text('Size'),
                 columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
                 $body: map(trade => {
                   const positionMarkPrice = latestPrice(trade)
-                  
-                  return $RiskLiquidator(trade, positionMarkPrice)({})
+
+                  return $riskLiquidator(trade, positionMarkPrice)
                 })
               },
               {
@@ -354,7 +358,7 @@ export const $Portfolio = (config: IAccount) => component((
 
               const $tokenChooser = Object.values(tokens).map(tradeList => {
                 const tokenDesc = getTokenDescription(tradeList[0].indexToken)
-                
+
                 const selectedTokenBehavior = O(
                   style({ backgroundColor: pallete.background, padding: '12px', border: `1px solid ${tokenDesc === activeToken ? pallete.primary : 'transparent'}` }),
                   selectedTokenChangeTether(
@@ -367,7 +371,7 @@ export const $Portfolio = (config: IAccount) => component((
                   $tokenLabelFromSummary(tokenDesc, $text(String(tradeList.length)))
                 )
               })
-            
+
 
               return $row(style({ maxWidth: '412px' }))(
                 ...$tokenChooser
@@ -381,7 +385,7 @@ export const $Portfolio = (config: IAccount) => component((
               scrollConfig: {
                 containerOps: O(layoutSheet.spacingBig)
               },
-              
+
               dataSource: map((data) => {
                 const settledList = data.sort((a, b) => b.settledTimestamp - a.settledTimestamp)
                 return settledList
@@ -389,11 +393,11 @@ export const $Portfolio = (config: IAccount) => component((
               columns: [
                 {
                   $head: $text('Settled'),
-                  columnOp: O(style({  flex: 1.2 })),
+                  columnOp: O(style({ flex: 1.2 })),
                   $body: map(pos => {
                     return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
                       $text(timeSince(pos.settledTimestamp)),
-                      $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),  
+                      $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),
                     )
                   })
                 },
@@ -412,15 +416,15 @@ export const $Portfolio = (config: IAccount) => component((
                   })
                 },
                 {
-                  $head: $text('Risk'),
+                  $head: $text('Size'),
                   columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
                   $body: map((pos: ITrade) => {
-                    return $Risk(pos)({})
+                    return $riskLabel(pos)
                   })
                 },
                 {
                   $head: $text('PnL $'),
-                  columnOp: style({ flex:1, placeContent: 'flex-end', maxWidth: '110px' }),
+                  columnOp: style({ flex: 1, placeContent: 'flex-end', maxWidth: '110px' }),
                   $body: map(pos => $ProfitLossText(pos.realisedPnl - pos.fee))
                 }
               ],
@@ -455,7 +459,7 @@ export const $Portfolio = (config: IAccount) => component((
                   return { open, high, low, close, time: timestamp }
                 })
 
-                
+
 
                 // @ts-ignore
                 series.setData(chartData)
@@ -465,11 +469,11 @@ export const $Portfolio = (config: IAccount) => component((
                 priceScale.applyOptions({
                   scaleMargins: screenUtils.isDesktopScreen
                     ? {
-                      top:  0.3,
+                      top: 0.3,
                       bottom: 0.3
                     }
                     : {
-                      top:  0.1,
+                      top: 0.1,
                       bottom: 0.1
                     }
                 })
@@ -512,7 +516,7 @@ export const $Portfolio = (config: IAccount) => component((
                         time: unixTimeTzOffset(pos.settledTimestamp),
                       }
                     })
-                  
+
                   // console.log(new Date(closePosMarkers[0].time as number * 1000))
 
                   const markers = [...increasePosMarkers, ...closePosMarkers, ...liquidatedPosMarkers].sort((a, b) => a.time as number - (b.time as number))
@@ -535,16 +539,20 @@ export const $Portfolio = (config: IAccount) => component((
                 rightPriceScale: {
                   entireTextOnly: true,
                   borderVisible: false,
-                  mode: PriceScaleMode.Logarithmic
-                  
-                // visible: false
+                  mode: PriceScaleMode.Logarithmic,
+                  scaleMargins: {
+                    top: 0.1,
+                    bottom: 0.1
+                  }
+                  // visible: false
                 },
                 timeScale: {
                   timeVisible: chartInterval <= intervalInMsMap.DAY7,
                   secondsVisible: chartInterval <= intervalInMsMap.MIN60,
                   borderVisible: true,
                   borderColor: pallete.horizon,
-                  rightOffset: 3,
+                  rightOffset: 15,
+                  shiftVisibleRangeOnNewBar: true
                 },
                 crosshair: {
                   mode: CrosshairMode.Normal,
@@ -563,8 +571,8 @@ export const $Portfolio = (config: IAccount) => component((
                 }
               },
             })({
-            // crosshairMove: sampleChartCrosshair(),
-            // click: sampleClick()
+              // crosshairMove: sampleChartCrosshair(),
+              // click: sampleClick()
             })
           }, combineObject({ chartInterval, selectedToken, settledTradeList }), config.pricefeed))
         ),

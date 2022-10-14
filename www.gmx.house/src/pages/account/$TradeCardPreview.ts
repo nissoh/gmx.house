@@ -14,7 +14,7 @@ import { $AccountPreview, IAccountPreview } from "../../components/$AccountProfi
 import { $Chart } from "../../components/$Chart"
 import { $alert } from "../../elements/$common"
 import { $bear, $bull, $target } from "../../elements/$icons"
-import { $Risk, $RiskLiquidator, $TokenIndex } from "../common"
+import { $riskLabel, $riskLiquidator, $TokenIndex } from "../common"
 import { CHAIN_LABEL_ID } from "../../types"
 
 interface IPricefeedTick extends IPositionDelta {
@@ -239,8 +239,8 @@ export const $TradeCardPreview = ({
               style({ alignSelf: 'stretch' }, $seperator),
 
               !isSettled
-                ? $RiskLiquidator(trade, latestPrice)({})
-                : $Risk(trade)({}),
+                ? $riskLiquidator(trade, latestPrice)
+                : $riskLabel(trade),
 
 
               $row(style({ flex: 1 }))(),

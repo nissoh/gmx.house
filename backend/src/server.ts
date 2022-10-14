@@ -6,8 +6,8 @@ import http from 'http'
 import path from 'path'
 import ws from 'ws'
 import { api } from './logic/api'
-import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
-import { competitionNov2021HighestCumulative, competitionNov2021LowestCumulative } from './logic/competition-cumulative'
+// import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
+import { competitionNov2021LowestCumulative } from './logic/competition-cumulative'
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
@@ -82,9 +82,8 @@ const apiComponent = helloFrontend(wss, {
   requestAccountTradeList,
   requestLeaderboardTopList,
   requestTrade,
-  competitionNov2021HighestPercentage,
-  competitionNov2021LowestPercentage,
-  competitionNov2021HighestCumulative,
+  // competitionNov2021HighestPercentage,
+  // competitionNov2021LowestPercentage,
   competitionNov2021LowestCumulative,
   requestPricefeed,
   requestLatestPriceMap,

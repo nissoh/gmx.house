@@ -1,81 +1,136 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import { fromJson, pagingQuery, groupByMap, parseFixed, toAccountSummary } from "@gambitdao/gmx-middleware"
+import { fromJson, pagingQuery, groupByMap, groupByMapMany, ITrade, TradeStatus, IChainParamApi, intervalInMsMap, IPagePositionParamApi, ITimerangeParamApi, unixTimestampNow, IPricefeed, calculatePositionDelta, isTradeOpen, isTradeSettled } from "@gambitdao/gmx-middleware"
+import { IAccountLadderSummary } from "common"
 import { EM } from '../server'
 import { Claim } from "./dto"
-import { tradeByTimespan } from "./trade"
+import { cacheMap } from "../utils"
+import { competitionAccountListQuery } from "./queries"
+import { fetchHistoricTrades, graphMap } from "./api"
+import { gql, TypedDocumentNode } from "@urql/core"
 
 
-const fetchCompeitionResults = O(
-  tradeByTimespan,
-  map(({ query: listQuery, queryParams }) => {
-    const claimListQuery = EM.find(Claim, {})
+const bigNumberForPriority = 10n ** 50n
 
-    const query = Promise.all([claimListQuery, listQuery]).then(([claimList, list]) => {
-      const minCollateralRequired = parseFixed(950, 30)
-      const settledList = list
-        .map(fromJson.toTradeJson)
-        .filter(summary => {
-          const minCollateral = summary.updateList.reduce((seed, b) => {
-            const current = b.realisedPnl < 0n ? b.collateral + b.realisedPnl * -1n : b.collateral
-
-            return seed < current ? seed : current
-          }, summary.updateList[0].collateral)
-
-          return minCollateral >= minCollateralRequired
-        })
-
-      const formattedList = toAccountSummary(settledList)
-    
-      const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
-
-      return { formattedList, claimMap }
-    })
- 
-    return { query, queryParams }
-  })
-)
-
-const bigNumberForPriority = 1000000n 
-export const competitionNov2021HighestCumulative = O(
-  fetchCompeitionResults,
-  map(async ({ query, queryParams }) => {
-
-    const claimPriority = query.then(res => 
-      res.formattedList
-        .filter(trade => trade.realisedPnlPercentage > 0n)
-        .sort((a, b) => {
-          const aN = res.claimMap[a.account] ? bigNumberForPriority + a.realisedPnlPercentage : a.realisedPnlPercentage
-          const bN = res.claimMap[b.account] ? bigNumberForPriority + b.realisedPnlPercentage : b.realisedPnlPercentage
-
-          return Number(bN) - Number(aN)
-        })
-    )
-
-
-    return pagingQuery(queryParams, claimPriority)
-  }),
-  awaitPromises
-)
+const createCache = cacheMap({})
 
 export const competitionNov2021LowestCumulative = O(
-  fetchCompeitionResults,
-  map(async ({ query, queryParams }) => {
+  map((queryParams: IChainParamApi & IPagePositionParamApi & ITimerangeParamApi) => {
+    const query = createCache('tradeByTimespan' + queryParams.from + queryParams.chain, intervalInMsMap.MIN5, async () => {
 
-    const claimPriority = query.then(res =>
-      res.formattedList
-        .filter(trade => trade.realisedPnlPercentage < 0n)
+      const timeSlot = Math.floor(Math.min(unixTimestampNow(), queryParams.to) / intervalInMsMap.MIN5)
+      const timestamp = timeSlot * intervalInMsMap.MIN5 - intervalInMsMap.MIN5
+
+      const from = queryParams.from
+      const to = queryParams.to
+
+      const historicTradeListQuery = fetchHistoricTrades(competitionAccountListQuery, { from, to, offset: 0, pageSize: 1000 }, queryParams.chain, 0, (res) => res.trades)
+
+      const claimListQuery = EM.find(Claim, {})
+
+      const competitionPricefeedMap: TypedDocumentNode<{ pricefeeds: IPricefeed[] }, {}> = gql`
+      {
+        pricefeeds(where: { timestamp_gte: ${timestamp.toString()} }) {
+          id
+          timestamp
+          tokenAddress
+          c
+          interval
+        }
+      }
+    `
+
+      const priceMapQuery = graphMap[queryParams.chain](competitionPricefeedMap, {}).then(res => {
+        const list = groupByMap(res.pricefeeds, item => item.tokenAddress)
+        return list
+      })
+
+      const historicTradeList = await historicTradeListQuery
+      const priceMap = await priceMapQuery
+      const claimList = await claimListQuery
+      
+      const settledList: ITrade[] = historicTradeList.map(fromJson.toTradeJson)
+      const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
+
+      const formattedList = toAccountCompetitionSummary(settledList, priceMap)
+        // .filter(x => !!claimMap[x.account])
         .sort((a, b) => {
-          const aN = res.claimMap[a.account] ? -bigNumberForPriority + a.realisedPnlPercentage : a.realisedPnlPercentage
-          const bN = res.claimMap[b.account] ? -bigNumberForPriority + b.realisedPnlPercentage : b.realisedPnlPercentage
+          const aN = claimMap[a.account] ? a.realisedPnl : a.realisedPnl - bigNumberForPriority
+          const bN = claimMap[b.account] ? b.realisedPnl : b.realisedPnl - bigNumberForPriority
 
-
-          return Number(aN) - Number(bN)
+          return Number(bN - aN)
         })
-    )
 
+      return formattedList
+    })
 
-    return pagingQuery(queryParams, claimPriority)
+    return pagingQuery(queryParams, query)
   }),
   awaitPromises
 )
+
+export interface ILadderAccount {
+  winTradeCount: number
+  settledTradeCount: number
+  openTradeCount: number
+
+  size: number
+}
+
+
+export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }): IAccountLadderSummary[] {
+  const settledListMap = groupByMapMany(list, a => a.account)
+  const allPositions = Object.entries(settledListMap)
+
+  return allPositions.reduce((seed, [account, allSettled]) => {
+
+    const seedAccountSummary: IAccountLadderSummary = {
+      claim: null,
+      account,
+
+      collateral: 0n,
+      size: 0n,
+
+      fee: 0n,
+      realisedPnl: 0n,
+
+      collateralDelta: 0n,
+      sizeDelta: 0n,
+      realisedPnlPercentage: 0n,
+      roi: 0n,
+
+      winTradeCount: 0,
+      settledTradeCount: 0,
+      openTradeCount: 0,
+    }
+
+    const summary = allSettled.reduce((seed, next): IAccountLadderSummary => {
+
+      const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
+      const posDelta = calculatePositionDelta(indexTokenMarkPrice, next.averagePrice, next.isLong, next)
+
+      const isSettled = isTradeSettled(next)
+
+      return {
+        ...seed,
+        fee: seed.fee + next.fee,
+        collateral: seed.collateral + next.collateral,
+        collateralDelta: seed.collateralDelta + next.collateralDelta,
+        realisedPnl: seed.realisedPnl + (next.realisedPnl - next.fee) + posDelta.delta,
+        realisedPnlPercentage: seed.realisedPnlPercentage + next.realisedPnlPercentage,
+        size: seed.size + next.size,
+        sizeDelta: seed.sizeDelta + next.sizeDelta,
+
+        winTradeCount: seed.winTradeCount + (isSettled && next.realisedPnl > 0n ? 1 : 0),
+        settledTradeCount: seed.settledTradeCount + (isSettled ? 1 : 0),
+        openTradeCount: next.status === TradeStatus.OPEN ? seed.openTradeCount + 1 : seed.openTradeCount,
+
+      }
+    }, seedAccountSummary)
+
+    seed.push(summary)
+
+    return seed
+  }, [] as IAccountLadderSummary[])
+}
+

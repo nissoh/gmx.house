@@ -1,5 +1,5 @@
 import { gql, TypedDocumentNode } from "@urql/core"
-import { IPagePositionParamApi, ITimerangeParamApi, IIdentifiableEntity, IPricefeed, ITrade, TradeStatus, IAccountQueryParamApi, IChainParamApi, IPriceTimelineParamApi, IPricefeedParamApi, IPriceLatest } from "@gambitdao/gmx-middleware"
+import { IPagePositionParamApi, ITimerangeParamApi, IIdentifiableEntity, IPricefeed, ITrade, TradeStatus, IAccountQueryParamApi, IChainParamApi, IPricefeedParamApi, IPriceLatest, IPriceTimelineParamApi } from "@gambitdao/gmx-middleware"
 
 export type IAccountTradeListParamApi = IChainParamApi & IAccountQueryParamApi & {status: TradeStatus};
 
@@ -106,11 +106,21 @@ fragment tradeFields on Trade {
 `
 
 
-export const tradeHistoricListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
+export const tradeSettledListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
 ${schemaFragments}
 
 query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
   trades(first: $pageSize, skip: $offset, where: {settledTimestamp_gt: $from, settledTimestamp_lt: $to, collateral_gt: "1500000000000000000000000000000000"}) {
+      ...tradeFields
+  }
+}
+`
+
+export const competitionAccountListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
+${schemaFragments}
+
+query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
+  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, timestamp_lte: $to, collateral_gt: "1500000000000000000000000000000000"}) {
       ...tradeFields
   }
 }
@@ -148,8 +158,6 @@ query ($id: String) {
 
 
 export const pricefeed: TypedDocumentNode<{ pricefeeds: IPricefeed[] }, Omit<IPricefeedParamApi, 'chain'>> = gql`
-${schemaFragments}
-
 query($from: Int, $to: Int = 1999999999, $tokenAddress: TokenAddress, $interval: IntervalTime) {
   pricefeeds(first: 1000, orderBy: timestamp, orderDirection: asc, where: {tokenAddress: $tokenAddress, interval: $interval, timestamp_gte: $from, timestamp_lte: $to }) {
     id
@@ -163,8 +171,6 @@ query($from: Int, $to: Int = 1999999999, $tokenAddress: TokenAddress, $interval:
   }
 }
 `
-
-
 
 
 export const priceTimelineQuery: TypedDocumentNode<{priceTimelines: IPricefeed[]}, IPriceTimelineParamApi> = gql`

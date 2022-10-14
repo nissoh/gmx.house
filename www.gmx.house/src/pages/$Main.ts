@@ -32,7 +32,11 @@ import { $Account } from './account/$Account'
 import { $CompeititonInfo, BATCH_1_END, BATCH_2_START, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
 import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
+import { $CompetitionCumulative } from "./competition/$cumulative"
 
+const displayDate = (unixTime: number) => {
+  return `${new Date(unixTime * 1000).toDateString()} ${new Date(unixTime * 1000).toLocaleTimeString()}`
+}
 
 
 
@@ -57,10 +61,7 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestOpenTrades, requestOpenTradesTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi[]>,
   [requestPricefeed, requestPricefeedTether]: Behavior<IPricefeedParamApi, IPricefeedParamApi>,
   [requestLatestPriceMap, requestLatestPriceMapTether]: Behavior<IChainParamApi, IChainParamApi>,
-  [competitionNov2021HighestPercentage, competitionNov2021HighestPercentageTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
-  [competitionNov2021HighestCumulative, competitionNov2021HighestCumulativeTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
   [competitionNov2021LowestCumulative, competitionNov2021LowestCumulativeTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
-  [competitionNov2021LowestPercentage, competitionNov2021LowestPercentageTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
   [requestTrade, requestTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
@@ -81,10 +82,7 @@ export default ({ baseRoute = '' }: Website) => component((
   const accountRoute = chainRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   // competition
-  const competitionTopSingle1Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-single-1', title: 'Red vs. Green November competition' })
-  const competitionTopCumulative1Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-1', title: 'Red vs. Green November competition' })
-  const competitionTopSingle2Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-single-2', title: 'Red vs. Green November competition' })
-  const competitionTopCumulative2Route = chainRoute.create({ fragment: 'redvsgreen-nov2021-cumulative-2', title: 'Red vs. Green November competition' })
+  const competitionTopCumulative1Route = chainRoute.create({ fragment: 'avalanche-trading-competition', title: 'Avalanche Trading Competition' })
 
   const tradeRoute = chainRoute
     .create({ fragment: /.*/ })
@@ -113,9 +111,6 @@ export default ({ baseRoute = '' }: Website) => component((
     requestOpenTrades,
     requestTrade,
     requestAccountTradeList,
-    competitionNov2021HighestPercentage,
-    competitionNov2021LowestPercentage,
-    competitionNov2021HighestCumulative,
     competitionNov2021LowestCumulative,
     requestPricefeed,
     requestLatestPriceMap,
@@ -144,14 +139,26 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
 
-  function competitionHeadline(title: string, description: string) {
+  function competitionHeadline(title: string, description: string, prizePool: string) {
     return $column(style({ padding: '0 10px' }))(
       $CompeititonInfo(rootRoute, linkClickTether),
 
-      $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', placeContent: 'center', alignItems: 'center' }))(
-        $text(title),
-        $text(style({ fontSize: '.65em' }))(description)
+      $row(style({}))(
+
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
+          $text(title),
+          $text(style({ fontSize: '.65em' }))(description)
+        ),
+
+        $row(
+          $text(style({
+            color: pallete.positive,
+            fontSize: '1.75em',
+            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
+          }))(prizePool)
+        )
       )
+      
     )
   }
   
@@ -241,95 +248,21 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
 
-            router.match(competitionTopSingle1Route)(
-              $column(
-                competitionHeadline('Highest or Lowest Percentage PnL for a single trade', '+$100 Trades settled during Nov 3-16'),
-                // $CompetitionSingle({
-                //   claimMap,
-                //   parentRoute: rootRoute,
-                //   parentStore: rootStore,
-                //   competitionNov2021HighestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
-                //   competitionNov2021LowestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
-                // })({
-                //   competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
-
-                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                //   })),
-                //   competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
-                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                //   })),
-                //   routeChange: linkClickTether()
-                // })
-              )
-            ),
             router.match(competitionTopCumulative1Route)(
               $column(
-                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades  per account during Nov 3-16'),
-                // $CompetitionCumulative({
-                //   claimMap,
-                //   parentRoute: rootRoute,
-                //   parentStore: rootStore,
-                //   competitionNov2021HighestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
-                //   competitionNov2021LowestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
-                // })({
-                //   competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
-                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                //   })),
-                //   competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
-                //     return { ...page, from: COMPETITION_START, to: BATCH_1_END }
-                //   })),
-                //   routeChange: linkClickTether()
-                // })
-              )
-            ),
-
-            router.match(competitionTopSingle2Route)(
-              $column(
-                competitionHeadline('Highest or Lowest Percentage PnL for a single trade', '+$100 Trades settled during Nov 17-30'),
-                // $CompetitionSingle({
-                //   claimMap,
-                //   parentRoute: rootRoute,
-                //   parentStore: rootStore,
-                //   competitionNov2021HighestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021HighestPercentage),
-                //   competitionNov2021LowestPercentage: map((x: IPagableResponse<IPositionSettledSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.toPositionSettledSummary) }), clientApi.competitionNov2021LowestPercentage),
-                // })({
-                //   competitionNov2021HighestPercentage: competitionNov2021HighestPercentageTether(map(page => {
-
-                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                //   })),
-                //   competitionNov2021LowestPercentage: competitionNov2021LowestPercentageTether(map(page => {
-                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                //   })),
-                //   routeChange: linkClickTether()
-                // })
-              )
-            ),
-            router.match(competitionTopCumulative2Route)(
-              $column(
-                competitionHeadline('Highest or Lowest Cumulative Percentage PnL', '+$1000 trades  per account during Nov 17-30'),
-                // $CompetitionCumulative({
-                //   claimMap,
-                //   parentRoute: rootRoute,
-                //   parentStore: rootStore,
-                //   competitionNov2021HighestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021HighestCumulative),
-                //   competitionNov2021LowestCumulative: map((x: IPagableResponse<IAccountSummary>) => ({
-                //     ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
-                // })({
-                //   competitionNov2021HighestCumulative: competitionNov2021HighestCumulativeTether(map(page => {
-                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                //   })),
-                //   competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
-                //     return { ...page, from: BATCH_2_START, to: COMPETITION_END }
-                //   })),
-                //   routeChange: linkClickTether()
-                // })
+                competitionHeadline(`Cumulative Size Traded`, `(FOR TESTING)trades during ${displayDate(COMPETITION_START)}-${displayDate(COMPETITION_END)}`, '$250,000'),
+                $CompetitionCumulative({
+                  claimMap,
+                  parentRoute: rootRoute,
+                  parentStore: rootStore,
+                  competitionNov2021LowestCumulative: map((x: IPageParapApi<IAccountSummary>) => ({
+                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
+                })({
+                  competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
+                    return { ...page, from: COMPETITION_START, to: COMPETITION_END }
+                  })),
+                  routeChange: linkClickTether()
+                })
               )
             ),
 

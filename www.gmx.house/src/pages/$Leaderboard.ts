@@ -11,10 +11,11 @@ import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
 import { $anchor } from '../elements/$common'
-import { $Entry, $livePnl, $ProfitLossText, $Risk, $RiskLiquidator } from "./common"
+import { $Entry, $livePnl, $ProfitLossText, $riskLabel, $riskLiquidator } from "./common"
 import { CHAIN_LABEL_ID } from '../types'
 import { IWalletLink } from '@gambitdao/wallet-link'
 import { $Dropdown } from '../components/$Dropdown'
+import { $CompeititonInfo } from './competition/$rules'
 
 
 
@@ -83,7 +84,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const openPositions: Stream<TablePageResponse<ITradeOpen>> = map((res) => {
     return {
-      data: res.page,
+      page: res.page,
       pageSize: res.pageSize,
       offset: res.offset,
     }
@@ -117,7 +118,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     filterChange: merge(topPnlTimeframeChange, tableTopSettledSortByChange),
     dataSource: map((res) => {
       return {
-        data: res.page,
+        page: res.page,
         pageSize: res.pageSize,
         offset: res.offset,
       }
@@ -134,11 +135,11 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         })
       },
       {
-        $head: $text('Risk-$'),
+        $head: $text('Size'),
         sortBy: 'size',
         columnOp: style({ placeContent: 'center', minWidth: '125px' }),
         $body: map(pos => {
-          return $Risk(pos)({})
+          return $riskLabel(pos)
         })
       },
       {
@@ -173,12 +174,13 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         })
       },
       {
-        $head: $text('Risk-$'),
+        $head: $text('Size'),
         sortBy: 'size',
         columnOp: style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' }),
         $body: map(trade => {
           const positionMarkPrice = map(priceMap => priceMap[trade.indexToken].value, config.latestPriceMap)
-          return $RiskLiquidator(trade, positionMarkPrice)({})
+
+          return $riskLiquidator(trade, positionMarkPrice)
         })
       },
       {
