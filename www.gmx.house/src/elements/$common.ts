@@ -1,6 +1,6 @@
 import { $Branch, $element, $Node, $text, style, styleInline, stylePseudo } from "@aelea/dom"
 import { $ButtonIcon, $column, $icon, $row, layoutSheet, $seperator as $uiSeperator } from "@aelea/ui-components"
-import { pallete } from "@aelea/ui-components-theme"
+import { pallete, theme } from "@aelea/ui-components-theme"
 import { empty, map } from "@most/core"
 import { Stream } from "@most/types"
 import { getLeverage, IAbstractTrade, readableNumber, TokenDescription } from "@gambitdao/gmx-middleware"

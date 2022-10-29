@@ -6,16 +6,17 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, constant, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAccountSummary, IClaim, parseFixed, IPageParapApi, CHAIN, IPagePositionParamApi, IChainParamApi, IAbstractTrade } from '@gambitdao/gmx-middleware'
+import { IAccountSummary, IClaim, parseFixed, IPageParapApi, CHAIN, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'
 import { $competitionPrize } from './$rules'
 import { $riskLabel, tableRiskColumnCellBody, tableSizeColumnCellBody } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
+import { IAccountLadderSummary } from 'common'
 
 
-const prizeLadder: bigint[] = [parseFixed(100000, 30), parseFixed(30000, 30), parseFixed(15000, 30), ...Array(17).fill(parseFixed(1000, 30))]
+const prizeLadder: bigint[] = [parseFixed(65000, 30), parseFixed(30000, 30), parseFixed(15000, 30), ...Array(17).fill(parseFixed(1000, 30))]
 
 
 
@@ -24,7 +25,7 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> {
   provider?: Stream<T>
   claimMap: Stream<{ [k: string]: IClaim }>
 
-  competitionNov2021LowestCumulative: Stream<IPageParapApi<IAccountSummary>>
+  competitionCumulativePnl: Stream<IPageParapApi<IAccountLadderSummary>>
 
   parentStore: <T, TK extends string = string>(key: TK, intitialState: T) => state.BrowserStore<T, TK>;
 }
@@ -48,7 +49,7 @@ const counter = scan((seed, n: number) => seed + n, 0, constant(1, periodic(2000
 
 const blueberriesPreviewList = ['/assets/blueberriesNFT/Green.png', '/assets/blueberriesNFT/Orange.png', '/assets/blueberriesNFT/Purple.png', '/assets/blueberriesNFT/Yellow.png']
 
-export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetitonTopCumulative<T>) => component((
+export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCumulative<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
 ) => {
@@ -66,7 +67,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
     }
   })
 
-  const dataSource = replayLatest(multicast(config.competitionNov2021LowestCumulative))
+  const dataSource = replayLatest(multicast(config.competitionCumulativePnl))
   const datas = map(res => res, dataSource)
 
   return [
@@ -148,7 +149,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
               {
                 $head: $text('Win/Loss'),
                 columnOp: style({ maxWidth: '110px', alignItems: 'center', placeContent: 'center' }),
-                $body: map((pos: IAccountSummary) => {
+                $body: map(pos => {
                   return $row(
                     $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
                   )
@@ -164,18 +165,37 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
                   $body: map((pos: IAbstractTrade) => {
                     return $riskLabel(pos)
                   })
+                },
+                {
+                  $head: $text('Profit $'),
+                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+                  $body: map((pos: IAccountLadderSummary) => {
+                    const val = formatReadableUSD(pos.pnl)
+                    const isNeg = pos.pnl < 0n
+
+                    return $row(
+                      $column(style({ alignItems: 'center' }))(
+                        // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
+                        style({ color: pallete.message })(
+                          $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                            `${isNeg ? '' : '+'}${val}`
+                          )
+                        )
+                      )
+                    )
+                  })
                 }
               ] : []),
               {
                 $head: $column(style({ textAlign: 'center' }))(
                   $text('Prize $'),
-                  $text(style({ fontSize: '.65em' }))('PnL $'),
+                  $text(style({ fontSize: '.65em' }))('Profit $'),
                 ),
                 columnOp: style({ flex: 1, placeContent: 'flex-end' }),
                 $body: snapshot((list, pos) => {
                   const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
 
-                  return $competitionPrize(prizeUsd, pos.realisedPnl)
+                  return $competitionPrize(prizeUsd, pos.pnl)
                 }, datas)
               }
             ],
@@ -186,7 +206,7 @@ export const $CompetitionCumulative = <T extends BaseProvider>(config: ICompetit
     ),
 
     {
-      competitionNov2021LowestCumulative: pagerOp(highTableRequestIndex),
+      competitionCumulativePnl: pagerOp(highTableRequestIndex),
       routeChange
     }
   ]

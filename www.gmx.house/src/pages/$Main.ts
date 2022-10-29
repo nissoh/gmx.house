@@ -3,7 +3,7 @@ import { $element, $node, $text, attr, component, eventElementTarget, style } fr
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
-import { colorAlpha, pallete } from '@aelea/ui-components-theme'
+import { colorAlpha, pallete, theme } from '@aelea/ui-components-theme'
 import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
@@ -32,7 +32,9 @@ import { $Account } from './account/$Account'
 import { $CompeititonInfo, BATCH_1_END, BATCH_2_START, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
 import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
-import { $CompetitionCumulative } from "./competition/$cumulative"
+import { IAccountLadderSummary } from "common"
+import { $CompetitionRoi } from "./competition/$CumulativeRoi"
+import { $CompetitionPnl } from "./competition/$CumulativePnl"
 
 const displayDate = (unixTime: number) => {
   return `${new Date(unixTime * 1000).toDateString()} ${new Date(unixTime * 1000).toLocaleTimeString()}`
@@ -61,7 +63,8 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestOpenTrades, requestOpenTradesTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi[]>,
   [requestPricefeed, requestPricefeedTether]: Behavior<IPricefeedParamApi, IPricefeedParamApi>,
   [requestLatestPriceMap, requestLatestPriceMapTether]: Behavior<IChainParamApi, IChainParamApi>,
-  [competitionNov2021LowestCumulative, competitionNov2021LowestCumulativeTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionCumulativePnl, competitionCumulativePnlTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionCumulativeRoi, competitionCumulativeRoiTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
   [requestTrade, requestTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
@@ -82,7 +85,8 @@ export default ({ baseRoute = '' }: Website) => component((
   const accountRoute = chainRoute.create({ fragment: 'account', title: 'Portfolio' })
 
   // competition
-  const competitionTopCumulative1Route = chainRoute.create({ fragment: 'avalanche-trading-competition', title: 'Avalanche Trading Competition' })
+  const competitionCumulativeRoiRoute = chainRoute.create({ fragment: 'top-roi', title: 'Top ROI - Avalanche Trading Competition' })
+  const competitionCumulativePnlRoute = chainRoute.create({ fragment: 'top-profit', title: 'Top PnL - Avalanche Trading Competition' })
 
   const tradeRoute = chainRoute
     .create({ fragment: /.*/ })
@@ -111,7 +115,8 @@ export default ({ baseRoute = '' }: Website) => component((
     requestOpenTrades,
     requestTrade,
     requestAccountTradeList,
-    competitionNov2021LowestCumulative,
+    competitionCumulativePnl,
+    competitionCumulativeRoi,
     requestPricefeed,
     requestLatestPriceMap,
   })
@@ -248,17 +253,36 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
 
-            router.match(competitionTopCumulative1Route)(
+            router.match(competitionCumulativePnlRoute)(
               $column(
-                competitionHeadline(`Cumulative Size Traded`, `(FOR TESTING)trades during ${displayDate(COMPETITION_START)}-${displayDate(COMPETITION_END)}`, '$250,000'),
-                $CompetitionCumulative({
+                competitionHeadline(`Cumulative PnL`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
+                $CompetitionPnl({
                   claimMap,
                   parentRoute: rootRoute,
                   parentStore: rootStore,
-                  competitionNov2021LowestCumulative: map((x: IPageParapApi<IAccountSummary>) => ({
-                    ...x, page: x.page.map(fromJson.accountSummaryJson) }), clientApi.competitionNov2021LowestCumulative),
+                  competitionCumulativePnl: map((x: IPageParapApi<IAccountLadderSummary>) => ({
+                    ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl) }))
+                  }), clientApi.competitionCumulativePnl),
                 })({
-                  competitionNov2021LowestCumulative: competitionNov2021LowestCumulativeTether(map(page => {
+                  competitionCumulativePnl: competitionCumulativePnlTether(map(page => {
+                    return { ...page, from: COMPETITION_START, to: COMPETITION_END }
+                  })),
+                  routeChange: linkClickTether()
+                })
+              )
+            ),
+            router.match(competitionCumulativeRoiRoute)(
+              $column(
+                competitionHeadline(`Cumulative ROI`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
+                $CompetitionRoi({
+                  claimMap,
+                  parentRoute: rootRoute,
+                  parentStore: rootStore,
+                  competitionCumulativeRoi: map((x: IPageParapApi<IAccountLadderSummary>) => {
+                    return { ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl), roi: BigInt(obj.roi) })) }
+                  }, clientApi.competitionCumulativeRoi),
+                })({
+                  competitionCumulativeRoi: competitionCumulativeRoiTether(map(page => {
                     return { ...page, from: COMPETITION_START, to: COMPETITION_END }
                   })),
                   routeChange: linkClickTether()

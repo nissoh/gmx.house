@@ -116,7 +116,7 @@ query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) 
 }
 `
 
-export const competitionAccountListQuery: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
+export const competitionAccountListDoc: TypedDocumentNode<{trades: ITrade[]}, Partial<IPagePositionParamApi & ITimerangeParamApi>> = gql`
 ${schemaFragments}
 
 query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {

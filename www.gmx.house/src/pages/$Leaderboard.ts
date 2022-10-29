@@ -1,7 +1,7 @@
 import { Behavior, combineObject, O, replayLatest } from '@aelea/core'
 import { $text, component, nodeEvent, style, styleBehavior, StyleCSS } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $card, $caretDown, $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
+import { $caretDown, $column, $icon, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, empty, map, merge, multicast, now, periodic, snapshot, startWith, switchLatest } from '@most/core'
@@ -10,7 +10,7 @@ import { IAccountSummary,  IClaim, ILeaderboardRequest, intervalInMsMap, IPagePa
 import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
-import { $anchor } from '../elements/$common'
+import { $anchor, $card } from '../elements/$common'
 import { $Entry, $livePnl, $ProfitLossText, $riskLabel, $riskLiquidator } from "./common"
 import { CHAIN_LABEL_ID } from '../types'
 import { IWalletLink } from '@gambitdao/wallet-link'

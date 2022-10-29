@@ -7,12 +7,13 @@ import path from 'path'
 import ws from 'ws'
 import { api } from './logic/api'
 // import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
-import { competitionNov2021LowestCumulative } from './logic/competition-cumulative'
+import { competitionCumulativePnl } from './logic/competition-cumulative-pnl'
 import { scheduler } from './logic/scheduler'
 import { helloFrontend } from './messageBus'
 import config from './mikro-orm.config'
 import compression from 'compression'
 import { requestAccountTradeList, requestLatestPriceMap, requestLeaderboardTopList, requestOpenTrades, requestPricefeed, requestTrade } from './logic/trade'
+import { competitionCumulativeRoi } from './logic/competition-cumulative-roi'
 
 
 require('events').EventEmitter.prototype._maxListeners = 100
@@ -84,7 +85,8 @@ const apiComponent = helloFrontend(wss, {
   requestTrade,
   // competitionNov2021HighestPercentage,
   // competitionNov2021LowestPercentage,
-  competitionNov2021LowestCumulative,
+  competitionCumulativePnl,
+  competitionCumulativeRoi,
   requestPricefeed,
   requestLatestPriceMap,
 })

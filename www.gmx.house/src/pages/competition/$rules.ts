@@ -54,24 +54,18 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
             `Competition ${ended ? 'has ended!' : 'is Live!'} `),
           $AnchorLink({
             anchorOp: style({ position: 'relative' }),
-            $content: $text('Biggest Size'),
-            url: `/arbitrum/avalanche-trading-competition`,
-            route: parentRoute.create({ fragment: '2121212' })
-          })({ click: routeChangeTether() }),
-          $row(style({ color: pallete.foreground }))($text('|')),
-          $AnchorLink({
-            anchorOp: style({ position: 'relative', pointerEvents: 'none', opacity: '.35' }),
-            $content: $text('Top Profit +100k'),
-            url: `/arbitrum/competition-top-100k`,
-            route: parentRoute.create({ fragment: '2121212' })
-          })({ click: routeChangeTether() }),
-          $row(style({ color: pallete.foreground }))($text('|')),
-          $AnchorLink({
-            anchorOp: style({ position: 'relative', pointerEvents: 'none', opacity: '.35' }),
             $content: $text('Top Profit'),
-            url: `/arbitrum/competition-top-10k`,
+            url: `/arbitrum/top-profit`,
             route: parentRoute.create({ fragment: '2121212' })
           })({ click: routeChangeTether() }),
+          $row(style({ color: pallete.foreground }))($text('|')),
+          $AnchorLink({
+            anchorOp: style({ position: 'relative' }),
+            $content: $text('Top ROI'),
+            url: `/arbitrum/top-roi`,
+            route: parentRoute.create({ fragment: '2121212' })
+          })({ click: routeChangeTether() }),
+
         ]
     )
   }
