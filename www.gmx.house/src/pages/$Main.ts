@@ -36,9 +36,6 @@ import { IAccountLadderSummary } from "common"
 import { $CompetitionRoi } from "./competition/$CumulativeRoi"
 import { $CompetitionPnl } from "./competition/$CumulativePnl"
 
-const displayDate = (unixTime: number) => {
-  return `${new Date(unixTime * 1000).toDateString()} ${new Date(unixTime * 1000).toLocaleTimeString()}`
-}
 
 
 
@@ -255,7 +252,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
             router.match(competitionCumulativePnlRoute)(
               $column(
-                competitionHeadline(`Cumulative PnL`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
+                // competitionHeadline(`Cumulative PnL`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
                 $CompetitionPnl({
                   claimMap,
                   parentRoute: rootRoute,
@@ -273,7 +270,7 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(competitionCumulativeRoiRoute)(
               $column(
-                competitionHeadline(`Cumulative ROI`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
+                $CompeititonInfo(rootRoute, linkClickTether),
                 $CompetitionRoi({
                   claimMap,
                   parentRoute: rootRoute,

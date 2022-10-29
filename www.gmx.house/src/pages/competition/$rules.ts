@@ -33,7 +33,6 @@ export const countdown = (targetDate: number) => {
   return map(now => countdownFn(targetDate, now), everySec)
 }
 
-
 export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op<string, string>) {
 
 

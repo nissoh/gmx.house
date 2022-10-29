@@ -125,7 +125,7 @@ export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCu
 
                         return $nftPLaceholder
                       }, config.claimMap))
-                      
+
                     ),
 
                     // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
@@ -192,5 +192,9 @@ export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCu
     }
   ]
 })
+
+export function displayDate(unixTime: number) {
+  return `${new Date(unixTime * 1000).toDateString()} ${new Date(unixTime * 1000).toLocaleTimeString()}`
+}
 
 
