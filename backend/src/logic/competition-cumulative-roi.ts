@@ -16,10 +16,14 @@ const createCache = cacheMap({})
 
 export const competitionCumulativeRoi = O(
   map((queryParams: IChainParamApi & IPagePositionParamApi & ITimerangeParamApi) => {
-    // const query = createCache('tradeByTimespan' + queryParams.from + queryParams.chain, 0, async () => {
-    const query = createCache('competitionCumulativeRoi' + queryParams.from + queryParams.chain, intervalInMsMap.MIN5, async () => {
 
-      const to = Math.min(unixTimestampNow(), queryParams.to)
+    const dateNow = unixTimestampNow()
+    const isLive = queryParams.to > dateNow
+    const cacheDuration = isLive ? intervalInMsMap.MIN5 : intervalInMsMap.YEAR
+
+    const query = createCache('competitionCumulativeRoi' + queryParams.from + queryParams.chain, cacheDuration, async () => {
+
+      const to = Math.min(dateNow, queryParams.to)
       const timeSlot = Math.floor(to / intervalInMsMap.MIN5)
       const timestamp = timeSlot * intervalInMsMap.MIN5 - intervalInMsMap.MIN5
 

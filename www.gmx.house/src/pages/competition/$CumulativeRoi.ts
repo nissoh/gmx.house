@@ -199,11 +199,13 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                   const val = formatFixed(pos.roi, 2)
                   const isNeg = prizeUsd < 0n
 
-                  return $column(
-                    style({ fontSize: '1.3em' })($ProfitLossText(prizeUsd)),
-                    style({ color: pallete.message })(
-                      $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                        `${val}%`
+                  return $row(
+                    $column(
+                      style({ fontSize: '1.3em' })($ProfitLossText(prizeUsd)),
+                      style({ color: pallete.message })(
+                        $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                          `${val}%`
+                        )
                       )
                     )
                   )

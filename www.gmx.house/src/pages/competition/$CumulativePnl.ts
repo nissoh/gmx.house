@@ -1,17 +1,17 @@
-import { Behavior, combineObject, O, Op, replayLatest } from '@aelea/core'
-import { $element, $node, $text, attr, attrBehavior, component, INode, style } from "@aelea/dom"
+import { Behavior, O, Op, replayLatest } from '@aelea/core'
+import { $element, $node, $text, attrBehavior, component, INode, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $card, $column, $row, layoutSheet, screenUtils, state, TablePageResponse } from '@aelea/ui-components'
+import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { combine, constant, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
+import { constant, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAccountSummary, IClaim, parseFixed, IPageParapApi, CHAIN, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD } from '@gambitdao/gmx-middleware'
+import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'
 import { $competitionPrize } from './$rules'
-import { $riskLabel, tableRiskColumnCellBody, tableSizeColumnCellBody } from '../common'
+import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 
@@ -164,25 +164,6 @@ export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCu
                   columnOp: style({ placeContent: 'center', minWidth: '125px' }),
                   $body: map((pos: IAbstractTrade) => {
                     return $riskLabel(pos)
-                  })
-                },
-                {
-                  $head: $text('Profit $'),
-                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                  $body: map((pos: IAccountLadderSummary) => {
-                    const val = formatReadableUSD(pos.pnl)
-                    const isNeg = pos.pnl < 0n
-
-                    return $row(
-                      $column(style({ alignItems: 'center' }))(
-                        // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
-                        style({ color: pallete.message })(
-                          $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                            `${isNeg ? '' : '+'}${val}`
-                          )
-                        )
-                      )
-                    )
                   })
                 }
               ] : []),
