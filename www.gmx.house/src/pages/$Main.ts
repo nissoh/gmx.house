@@ -172,7 +172,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
   return [
     mergeArray([
-      $node(designSheet.main, style({ backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
+      $node(designSheet.main, style({ fontSize: '1.1rem', backgroundImage: `radial-gradient(570% 71% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
         router.match(rootRoute)(
           $column(style({ minHeight: '100vh', overflow: 'hidden', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 

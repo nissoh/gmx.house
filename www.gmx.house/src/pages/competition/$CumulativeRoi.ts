@@ -4,7 +4,7 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { constant, empty, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
+import { combine, constant, delay, empty, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
 import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
@@ -69,25 +69,24 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
     }
   })
 
-  const dataSource = replayLatest(multicast(config.competitionCumulativeRoi))
-
-  const tableList = map(res => {
+  const tableList = replayLatest(map(res => {
     return res
-  }, dataSource)
+  }, multicast(config.competitionCumulativeRoi))
+  )
 
+  
   return [
-
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
       $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
 
-        switchLatest(snapshot((page, claimMap) => {
+        switchLatest(combine((page, claimMap) => {
           const list = page.page
 
           return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px' }))(
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '150px')),
+                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
                   $text(style({ fontSize: '.75em' }))(`${formatFixed(list[1].roi, 2)}%`)
@@ -99,7 +98,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -20px', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `1px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '215px')),
+                style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
                   $text(style({ fontSize: '.75em' }))(`${formatFixed(list[0].roi, 2)}%`)
@@ -111,7 +110,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '150px')),
+                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
                   $text(style({ fontSize: '.75em' }))(`${formatFixed(list[2].roi, 2)}%`)
@@ -123,11 +122,11 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
           )
         }, tableList, config.claimMap)),
 
-        $column(
-          $row(style({}))(
+        $column(style({ alignItems: 'center' }))(
+          $row(style({ width: '780px', }))(
             $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-              $text(style({ fontSize: '.75em' }))(`During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`),
-              $text(style({ fontSize: '.65em' }))(`Cumulative ROI`)
+              $text(style({  }))(`Cumulative ROI(TEST)`),
+              $text(style({ fontSize: '.75em' }))(`${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`),
             ),
 
             $row(
@@ -139,136 +138,146 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             )
           ),
 
-          $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-            $Table2({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
-              },
-              dataSource: tableList,
-              columns: [
-                {
-                  $head: $text('Rank'),
-                  columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
-                  $body: snapshot((datasource, pos) => {
+          $Table2({
+            $container: $card(
+              layoutSheet.spacingBig,
+              screenUtils.isDesktopScreen
+                ? style({ padding: '28px 50px', width: '780px', })
+                : style({ padding: '16px 8px', margin: '0 -12px' })
+            ),
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
+            dataSource: tableList,
+            columns: [
 
-                    return $column(layoutSheet.spacingSmall)(
-                      $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+              {
+                $head: $text('Account'),
+                columnOp: style({ minWidth: '120px', flex: 1.2, alignItems: 'center' }),
+                $body: snapshot((datasource, pos: IAccountLadderSummary) => {
 
-                        switchLatest(map(claimMap => {
-                          const claim = claimMap[pos.account]
+                  return $row(layoutSheet.spacingSmall)(
 
-                          if (!claim) {
-                            return $row(
-                              style({ zoom: '0.7' })(
-                                $alert($text('Unclaimed'))
-                              )
+                    $row(layoutSheet.spacingSmall)(
+
+                      switchLatest(map(claimMap => {
+                        const claim = claimMap[pos.account]
+
+                        if (!claim) {
+                          return $row(
+                            style({ zoom: '0.7' })(
+                              $alert($text('Unclaimed'))
                             )
-                          }
-
-                          const rank = datasource.offset + datasource.page.indexOf(pos) + 1
-
-
-                          let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-                            $text(style({ fontSize: '1em' }))(`#`),
-                            $text(style({ fontSize: '1.5em' }))(`${rank}`),
                           )
+                        }
 
-                          if (rank < 2) {
-                            $nftPLaceholder = $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
-                          }
-
-                          if (rank < 21) {
-
-                            return $column(layoutSheet.spacingSmall)(
-                              $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                                $nftPLaceholder
-                              )
-                            )
-                          }
+                        const rank = datasource.offset + datasource.page.indexOf(pos) + 1
 
 
-                          return $nftPLaceholder
-                        }, config.claimMap))
+                        return $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                          $text(style({ fontSize: '.65em' }))(`${rank}`),
+                        )
 
-                      ),
+                        // if (rank < 2) {
+                        //   $nftPLaceholder = $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                        // }
 
-                      // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
-                      //   `$${readableNumber(getPrizePoolByRank(rank))}`
-                      // )
-                    )
-                  }, tableList)
-                },
-                {
-                  $head: $text('Account'),
-                  columnOp: style({ minWidth: '120px', flex: 1.2 }),
-                  $body: map(({ account }) => {
+                        // if (rank < 21) {
 
-                    return switchLatest(map(map => {
-                      return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
+                        //   return $column(layoutSheet.spacingSmall)(
+                        //     $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+                        //       $nftPLaceholder
+                        //     )
+                        //   )
+                        // }
+
+
+                        // return $nftPLaceholder
+                      }, config.claimMap))
+
+                    ),
+                    switchLatest(map(map => {
+                      return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
                         profileClick: routeChangeTether()
                       })
-                    }, config.claimMap))
+                    }, config.claimMap)),
+
+                    // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
+                    //   `$${readableNumber(getPrizePoolByRank(rank))}`
+                    // )
+                  )
+                }, tableList)
+              }
+              ,
+              // {
+              //   $head: $text('Account'),
+              //   columnOp: style({ minWidth: '120px', flex: 1.2 }),
+              //   $body: map(({ account }) => {
+
+              //     return switchLatest(map(map => {
+              //       return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
+              //         profileClick: routeChangeTether()
+              //       })
+              //     }, config.claimMap))
+              //   })
+              // },
+              {
+                $head: $text('Win/Loss'),
+                columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
+                $body: map(pos => {
+                  return $row(
+                    $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+                  )
+                })
+              },
+              ...(screenUtils.isDesktopScreen ? [
+                {
+                  $head: $column(style({ textAlign: 'center' }))(
+                    $text('Size $'),
+                    $text(style({ fontSize: '.65em' }))('Avg Leverage'),
+                  ),
+                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+                  $body: map((pos: IAbstractTrade) => {
+                    return $riskLabel(pos)
                   })
                 },
                 {
-                  $head: $text('Win/Loss'),
-                  columnOp: style({ maxWidth: '110px', alignItems: 'center', placeContent: 'center' }),
-                  $body: map(pos => {
-                    return $row(
-                      $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
-                    )
-                  })
-                },
-                ...(screenUtils.isDesktopScreen ? [
-                  {
-                    $head: $column(style({ textAlign: 'center' }))(
-                      $text('Size $'),
-                      $text(style({ fontSize: '.65em' }))('Avg Leverage'),
-                    ),
-                    columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                    $body: map((pos: IAbstractTrade) => {
-                      return $riskLabel(pos)
-                    })
-                  },
-                  {
-                    $head: $text('Pnl $'),
-                    columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                    $body: map((pos: IAccountLadderSummary) => {
-                      const val = formatReadableUSD(pos.pnl)
-                      const isNeg = pos.pnl < 0n
+                  $head: $text('Pnl $'),
+                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+                  $body: map((pos: IAccountLadderSummary) => {
+                    const val = formatReadableUSD(pos.pnl)
+                    const isNeg = pos.pnl < 0n
 
-                      return $row(
-                        $column(style({ alignItems: 'center' }))(
-                          // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
-                          style({ color: pallete.message })(
-                            $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                              `${isNeg ? '' : '+'}${val}`
-                            )
+                    return $row(
+                      $column(style({ alignItems: 'center' }))(
+                        // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
+                        style({ color: pallete.message })(
+                          $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                            `${isNeg ? '' : '+'}${val}`
                           )
                         )
                       )
-                    })
-                  }
-                ] : []),
-                {
-                  $head: $column(style({ textAlign: 'center' }))(
-                    $text('Prize $'),
-                    $text(style({ fontSize: '.65em' }))('ROI %'),
-                  ),
-                  columnOp: style({ flex: 1, alignItems: 'flex-end' }),
-                  $body: snapshot((list, pos) => {
-                    const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
-
-                    return $column(
-                      style({ fontSize: '1.3em' })($ProfitLossText(prizeUsd)),
-                      $text(`${formatFixed(pos.roi, 2)}%`)
                     )
-                  }, tableList)
+                  })
                 }
-              ],
-            })({ scrollIndex: highTableRequestIndexTether() }),
-          ),
+              ] : []),
+              {
+                $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
+                  $text('Prize $'),
+                  $text(style({ fontSize: '.65em' }))('ROI %'),
+                ),
+                columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end' }),
+                $body: snapshot((list, pos) => {
+                  const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
+
+                  return $column(
+                    style({ fontSize: '1.3em' })($ProfitLossText(prizeUsd)),
+                    $text(`${formatFixed(pos.roi, 2)}%`)
+                  )
+                }, tableList)
+              }
+            ],
+          })({ scrollIndex: highTableRequestIndexTether() }),
         )
       ),
 

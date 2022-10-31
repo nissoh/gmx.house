@@ -4,10 +4,10 @@ import { Route } from "@aelea/router"
 import { $row, layoutSheet, $column } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { empty, map, periodic } from "@most/core"
-import { calculatePositionDelta, formatReadableUSD, IPositionDelta, unixTimestampNow } from "@gambitdao/gmx-middleware"
+import { formatReadableUSD, unixTimestampNow } from "@gambitdao/gmx-middleware"
 import { $AnchorLink } from "../../components/$Link"
 import { $anchor } from "../../elements/$common"
-import { $ProfitLossText, $SummaryDeltaPercentage } from "../common"
+import { $ProfitLossText } from "../common"
 
 
 export const COMPETITION_START = Date.UTC(2022, 9, 10) / 1000

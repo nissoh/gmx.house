@@ -195,12 +195,12 @@ export const $Portfolio = (config: IAccount) => component((
                       })
                     }
 
-                    // series.applyOptions({
-                    //   scaleMargins: {
-                    //     top: .45,
-                    //     bottom: 0
-                    //   }
-                    // })
+                    series.applyOptions({
+                      scaleMargins: {
+                        top: .45,
+                        bottom: 0
+                      }
+                    })
 
                     setTimeout(() => {
                       api.timeScale().fitContent()
@@ -210,6 +210,14 @@ export const $Portfolio = (config: IAccount) => component((
                   }),
                   chartConfig: {
                     handleScale: false,
+
+                    rightPriceScale: {
+                      visible: false,
+                      scaleMargins: {
+                        top: .45,
+                        bottom: 0
+                      },
+                    },
                     handleScroll: false,
                     timeScale: {
                       // rightOffset: 110,
@@ -309,47 +317,45 @@ export const $Portfolio = (config: IAccount) => component((
         $node(),
 
 
-        $card(layoutSheet.spacingBig)(
-          $Table2<ITradeOpen>({
-            bodyContainerOp: layoutSheet.spacing,
-            scrollConfig: {
-              containerOps: O(layoutSheet.spacingBig)
+        $Table2<ITradeOpen>({
+          $container: $card,
+          scrollConfig: {
+            containerOps: O(layoutSheet.spacingBig)
+          },
+          dataSource: openTradeList,
+          columns: [
+            {
+              $head: $text('Entry'),
+              columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
+              $body: map((pos) => {
+                return $Link({
+                  anchorOp: style({ position: 'relative' }),
+                  $content: style({ pointerEvents: 'none' }, $Entry(pos)),
+                  url: `/${getChainName(chain).toLowerCase()}/${TOKEN_ADDRESS_TO_SYMBOL[pos.indexToken]}/${pos.id}/${pos.timestamp}`,
+                  route: config.parentRoute.create({ fragment: '2121212' })
+                })({ click: changeRouteTether() })
+              })
             },
-            dataSource: openTradeList,
-            columns: [
-              {
-                $head: $text('Entry'),
-                columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                $body: map((pos) => {
-                  return $Link({
-                    anchorOp: style({ position: 'relative' }),
-                    $content: style({ pointerEvents: 'none' }, $Entry(pos)),
-                    url: `/${getChainName(chain).toLowerCase()}/${TOKEN_ADDRESS_TO_SYMBOL[pos.indexToken]}/${pos.id}/${pos.timestamp}`,
-                    route: config.parentRoute.create({ fragment: '2121212' })
-                  })({ click: changeRouteTether() })
-                })
-              },
-              {
-                $head: $text('Size'),
-                columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
-                $body: map(trade => {
-                  const positionMarkPrice = latestPrice(trade)
+            {
+              $head: $text('Size'),
+              columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.3, alignItems: 'center', placeContent: 'center', minWidth: '80px' })),
+              $body: map(trade => {
+                const positionMarkPrice = latestPrice(trade)
 
-                  return $riskLiquidator(trade, positionMarkPrice)
-                })
-              },
-              {
-                $head: $text('PnL $'),
-                columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
-                $body: map((trade) => {
+                return $riskLiquidator(trade, positionMarkPrice)
+              })
+            },
+            {
+              $head: $text('PnL $'),
+              columnOp: style({ flex: 2, placeContent: 'flex-end', maxWidth: '160px' }),
+              $body: map((trade) => {
 
-                  const newLocal = latestPrice(trade)
-                  return $livePnl(trade, newLocal)
-                })
-              },
-            ],
-          })({})
-        ),
+                const newLocal = latestPrice(trade)
+                return $livePnl(trade, newLocal)
+              })
+            },
+          ],
+        })({}),
 
         $column(
           switchLatest(
@@ -379,33 +385,33 @@ export const $Portfolio = (config: IAccount) => component((
             }, accountTradeList, selectedToken)
           ),
 
-          $card(layoutSheet.spacingBig, style({ padding: '16px 8px' }))(
-            $Table2<ITradeSettled>({
-              bodyContainerOp: layoutSheet.spacing,
-              scrollConfig: {
-                containerOps: O(layoutSheet.spacingBig)
-              },
+          $Table2<ITradeSettled>({
+            $container: $card(layoutSheet.spacingBig, style({ padding: '16px 8px' })),
+            scrollConfig: {
+              containerOps: O(layoutSheet.spacingBig)
+            },
 
-              dataSource: map((data) => {
-                const settledList = data.sort((a, b) => b.settledTimestamp - a.settledTimestamp)
-                return settledList
-              }, settledTradeList),
-              columns: [
-                {
-                  $head: $text('Settled'),
-                  columnOp: O(style({ flex: 1.2 })),
-                  $body: map(pos => {
-                    return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-                      $text(timeSince(pos.settledTimestamp)),
-                      $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),
-                    )
-                  })
-                },
-                {
-                  $head: $text('Entry'),
-                  columnOp: O(style({ maxWidth: '65px', flexDirection: 'column' }), layoutSheet.spacingTiny),
-                  $body: map(trade => {
-                    return $Link({
+            dataSource: map((data) => {
+              const settledList = data.sort((a, b) => b.settledTimestamp - a.settledTimestamp)
+              return settledList
+            }, settledTradeList),
+            columns: [
+              {
+                $head: $text('Settled'),
+                columnOp: O(style({ flex: .7 })),
+                $body: map(pos => {
+                  return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+                    $text(timeSince(pos.settledTimestamp)),
+                    $text(new Date(pos.settledTimestamp * 1000).toLocaleDateString()),
+                  )
+                })
+              },
+              {
+                $head: $text('Entry'),
+                columnOp: O(style({ flex: .7, placeContent: 'center' }), layoutSheet.spacingTiny),
+                $body: map(trade => {
+                  return $row(
+                    $Link({
                       anchorOp: style({ position: 'relative' }),
                       $content: style({ pointerEvents: 'none' }, $Entry(trade)),
                       url: `/${getChainName(chain).toLowerCase()}/${TOKEN_ADDRESS_TO_SYMBOL[trade.indexToken]}/${trade.id}/${trade.timestamp}/${trade.settledTimestamp}`,
@@ -413,24 +419,24 @@ export const $Portfolio = (config: IAccount) => component((
                     })({
                       click: changeRouteTether()
                     })
-                  })
-                },
-                {
-                  $head: $text('Size'),
-                  columnOp: O(layoutSheet.spacingTiny, style({ placeContent: 'center' })),
-                  $body: map((pos: ITrade) => {
-                    return $riskLabel(pos)
-                  })
-                },
-                {
-                  $head: $text('PnL $'),
-                  columnOp: style({ flex: 1, placeContent: 'flex-end', maxWidth: '110px' }),
-                  $body: map(pos => $ProfitLossText(pos.realisedPnl - pos.fee))
-                }
-              ],
-            })({
-            })
-          ),
+                  )
+                })
+              },
+              {
+                $head: $text('Size'),
+                columnOp: O(layoutSheet.spacingTiny, style({ flex: 1.5, placeContent: 'center' })),
+                $body: map((pos: ITrade) => {
+                  return $riskLabel(pos)
+                })
+              },
+              {
+                $head: $text('PnL $'),
+                columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end', maxWidth: '110px' }),
+                $body: map(pos => $row($ProfitLossText(pos.realisedPnl - pos.fee)))
+              }
+            ],
+          })({
+          }),
         )
       ),
       $column(style({ position: 'relative', flex: 1 }))(

@@ -127,10 +127,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const usedCollateralMap = {
         ...seed.usedCollateralMap,
-        [next.key]: next.collateral,
-        // [next.key]: next.status === TradeStatus.OPEN ? next.collateral : 0n,
+        [next.key]: next.collateral
       }
-      const usedCollateral = Object.values(usedCollateralMap).reduce((s, n) => s + n, 0n)
+      const currentUsedCollateral = Object.values(usedCollateralMap).reduce((s, n) => s + n, 0n)
+      const usedCollateral = currentUsedCollateral > seed.maxCollateral ? currentUsedCollateral : seed.maxCollateral
 
       const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
       const posDelta = calculatePositionDelta(indexTokenMarkPrice, next.averagePrice, next.isLong, next)
@@ -142,8 +142,8 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       const pnl = openPnl + realisedPnl
 
       const usedMinProfit = usedCollateral - pnl
-      const collateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
-      const roi = pnl * BASIS_POINTS_DIVISOR / collateral
+      const maxCollateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
+      const roi = pnl * BASIS_POINTS_DIVISOR / maxCollateral
 
       // const updateListFiltered = next.updateList.filter(t => t.timestamp <= endDate)
       // const adjustmentList = [...next.increaseList, ...next.decreaseList].sort((a, b) => a.timestamp - b.timestamp).filter(t => t.timestamp <= endDate)
@@ -165,10 +165,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       // }, initialRoi).roi
 
       return {
-        collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi,
-
-        maxCollateral: 0n,
+        account, realisedPnl, openPnl, pnl, usedCollateralMap, roi, maxCollateral,
         // openCollateral: 0n,
+
+        collateral: seed.collateral + next.collateral,
         claim: null,
         fee: seed.fee + next.fee,
         collateralDelta: seed.collateralDelta + next.collateralDelta,

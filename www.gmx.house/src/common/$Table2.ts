@@ -1,5 +1,5 @@
 import { Behavior, O, Op } from "@aelea/core"
-import { $Node, $svg, attr, component, INode, nodeEvent, style, stylePseudo } from '@aelea/dom'
+import { $Node, $svg, attr, component, INode, NodeComposeFn, nodeEvent, style, stylePseudo } from '@aelea/dom'
 import { $column, $icon, $row, layoutSheet } from "@aelea/ui-components"
 import { pallete } from "@aelea/ui-components-theme"
 import { chain, constant, map, merge, never, now, scan, startWith, switchLatest } from "@most/core"
@@ -16,7 +16,7 @@ export interface TableOption<T, FilterState> {
   dataSource: Stream<TablePageResponse<T>>
   scrollConfig?: Omit<QuantumScroll, 'dataSource'>
 
-  bodyContainerOp?: Op<INode, INode>
+  $container?: NodeComposeFn<$Node>
 
   rowOp?: Op<INode, INode>
   cellOp?: Op<INode, INode>
@@ -54,7 +54,7 @@ export const $caretDown = $svg('path')(attr({ d: 'M4.616.296c.71.32 1.326.844 2.
 export const $Table2 = <T, FilterState = never>({
   dataSource, columns, scrollConfig, cellOp,
   headerCellOp, bodyCellOp,
-  bodyContainerOp = O(),
+  $container = $column,
   rowOp = O(),
   sortChange = never(),
   filterChange = never(),
@@ -84,7 +84,7 @@ export const $Table2 = <T, FilterState = never>({
     bodyCellOp || O()
   )
 
-  const $rowContainer = $row(layoutSheet.spacingSmall)
+  const $rowContainer = $row(layoutSheet.spacingSmall, rowOp)
 
   const $rowHeaderContainer = $rowContainer(
     style({ overflowY: 'scroll' }), stylePseudo('::-webkit-scrollbar', { backgroundColor: 'transparent', width: '6px' })
@@ -160,7 +160,7 @@ export const $Table2 = <T, FilterState = never>({
   }, startWith(null, requestPageFilters)))
 
   return [
-    $column(bodyContainerOp)(
+    $container(
       $header,
       $body,
     ),

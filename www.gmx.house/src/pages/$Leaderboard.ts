@@ -6,7 +6,7 @@ import { pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, empty, map, merge, multicast, now, periodic, snapshot, startWith, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IAccountSummary,  IClaim, ILeaderboardRequest, intervalInMsMap, IPageParapApi, ITradeOpen, IChainParamApi, IOpenTradesParamApi, IPriceLatestMap, getChainName, TOKEN_ADDRESS_TO_SYMBOL } from '@gambitdao/gmx-middleware'
+import { IAccountSummary, IClaim, ILeaderboardRequest, intervalInMsMap, IPageParapApi, ITradeOpen, IChainParamApi, IOpenTradesParamApi, IPriceLatestMap, getChainName, TOKEN_ADDRESS_TO_SYMBOL } from '@gambitdao/gmx-middleware'
 import { $Table2, ISortBy, TablePageResponse } from "../common/$Table2"
 import { $AccountPreview } from '../components/$AccountProfile'
 import { $Link } from "../components/$Link"
@@ -58,7 +58,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   const tableTopSettledSortByStore = config.parentStore<ISortBy<IAccountSummary>>('tableTopSettledSortByStore', { name: 'realisedPnl', direction: 'asc' })
   const tableTopOpenSortByStore = config.parentStore<ISortBy<ITradeOpen>>('tableTopOpenSortByStore', { name: 'realisedPnl', direction: 'asc' })
   const selectedMobileContent = config.parentStore<string>('selectedMobileContent', topSettledOption)
-  
+
   const tableTopSettledSortBy = startWith(tableTopSettledSortByStore.state, tableTopSettledSortByStore.store(tableTopSettledSortByChange, map(x => x)))
   const tableTopOpenSortBy = startWith(tableTopOpenSortByStore.state, tableTopOpenSortByStore.store(tableTopOpenSortByChange, map(x => x)))
   const filterByTimeFrameState = replayLatest(multicast(startWith(timeFrameStore.state, timeFrameStore.store(topPnlTimeframeChange, map(x => x)))))
@@ -109,7 +109,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   const $topAccounts = $Table2<IAccountSummary>({
-    bodyContainerOp: layoutSheet.spacing,
+    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' })),
     rowOp: layoutSheet.spacingTiny,
     scrollConfig: {
       containerOps: O(layoutSheet.spacingBig)
@@ -146,13 +146,15 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
         $head: $text('PnL-$'),
         sortBy: 'realisedPnl',
         columnOp: style({ flex: 1.2, placeContent: 'flex-end', maxWidth: '110px' }),
-        $body: map(pos => $ProfitLossText(pos.realisedPnl))
+        $body: map(pos => $row(
+          $ProfitLossText(pos.realisedPnl)
+        ))
       },
     ],
   })({ scrollIndex: tableTopPnlRequestTether(), sortBy: tableTopSettledsortByChangeTether() })
 
   const $topOpen = $Table2<ITradeOpen>({
-    bodyContainerOp: layoutSheet.spacing,
+    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' })),
     scrollConfig: {
       containerOps: O(layoutSheet.spacingBig)
     },
@@ -225,7 +227,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   return [
 
     $column(
-      
+
       // $CompeititonInfo(config.parentRoute, routeChangeTether),
 
       screenUtils.isDesktopScreen
@@ -235,21 +237,17 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
               $header(layoutSheet.flex)(topSettledOption),
               $topAccountsFilter,
             ),
-            $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-              $topAccounts
-            ),
+            $topAccounts,
           ),
           $column(layoutSheet.spacing, style({ padding: '0 12px', flex: 1 }))(
             $row(layoutSheet.spacing, style({ fontSize: '0.85em' }))(
               $row(layoutSheet.spacing)(
                 $header(layoutSheet.flex)(topOpenOption),
-              // $header(layoutSheet.flex)(`Settled`),
-              // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
+                // $header(layoutSheet.flex)(`Settled`),
+                // $icon({ $content: $caretDown, viewBox: '0 0 32 32', width: '8px', svgOps: style({ marginTop: '4px' }) })
               ),
             ),
-            $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-              $topOpen,
-            ),
+            $topOpen,
           )
         )
         : switchLatest(map(showContent => {
@@ -277,7 +275,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 optionOp: map(option => $row(style({ alignItems: 'center', width: '100%' }))(
                   $text(option)
                 )),
-                options: [ topSettledOption, topOpenOption ],
+                options: [topSettledOption, topOpenOption],
               }
             })({ select: selectMobileContentTether() }),
             $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(

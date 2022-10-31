@@ -74,114 +74,112 @@ export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCu
 
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
       $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
-        $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
-          $Table2({
-            bodyContainerOp: layoutSheet.spacing,
-            scrollConfig: {
-              containerOps: O(layoutSheet.spacingBig)
-            },
-            dataSource: datas,
-            columns: [
-              {
-                $head: $text('Rank'),
-                columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
-                $body: snapshot((datasource, pos) => {
+        $Table2({
+          $container: $card(layoutSheet.spacingBig, style({ background: `radial-gradient(101% 83% at 100% 100px, ${colorAlpha(pallete.positive, .04)} 0px, ${pallete.background} 100%)`, padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' })),
+          scrollConfig: {
+            containerOps: O(layoutSheet.spacingBig)
+          },
+          dataSource: datas,
+          columns: [
+            {
+              $head: $text('Rank'),
+              columnOp: style({ flex: .7, alignItems: 'center', placeContent: 'center' }),
+              $body: snapshot((datasource, pos) => {
 
-                  return $column(layoutSheet.spacingSmall)(
-                    $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+                return $column(layoutSheet.spacingSmall)(
+                  $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
 
-                      switchLatest(map(claimMap => {
-                        const claim = claimMap[pos.account]
+                    switchLatest(map(claimMap => {
+                      const claim = claimMap[pos.account]
 
-                        if (!claim) {
-                          return $row(
-                            style({ zoom: '0.7' })(
-                              $alert($text('Unclaimed'))
-                            )
+                      if (!claim) {
+                        return $row(
+                          style({ zoom: '0.7' })(
+                            $alert($text('Unclaimed'))
                           )
-                        }
-
-                        const rank = datasource.offset + datasource.page.indexOf(pos) + 1
-
-
-                        let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-                          $text(style({ fontSize: '1em' }))(`#`),
-                          $text(style({ fontSize: '1.5em' }))(`${rank}`),
                         )
+                      }
 
-                        if (rank < 2) {
-                          $nftPLaceholder = $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
-                        }
+                      const rank = datasource.offset + datasource.page.indexOf(pos) + 1
 
-                        if (rank < 21) {
 
-                          return $column(layoutSheet.spacingSmall)(
-                            $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                              $nftPLaceholder
-                            )
+                      let $nftPLaceholder = $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                        $text(style({ fontSize: '1em' }))(`#`),
+                        $text(style({ fontSize: '1.5em' }))(`${rank}`),
+                      )
+
+                      if (rank < 2) {
+                        $nftPLaceholder = $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
+                      }
+
+                      if (rank < 21) {
+
+                        return $column(layoutSheet.spacingSmall)(
+                          $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
+                            $nftPLaceholder
                           )
-                        }
+                        )
+                      }
 
 
-                        return $nftPLaceholder
-                      }, config.claimMap))
+                      return $nftPLaceholder
+                    }, config.claimMap))
 
-                    ),
-
-                    // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
-                    //   `$${readableNumber(getPrizePoolByRank(rank))}`
-                    // )
-                  )
-                }, datas)
-              },
-              {
-                $head: $text('Account'),
-                columnOp: style({ minWidth: '120px', flex: 1.2 }),
-                $body: map(({ account }) => {
-
-                  return switchLatest(map(map => {
-                    return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
-                      profileClick: routeChangeTether()
-                    })
-                  }, config.claimMap))
-                })
-              },
-              {
-                $head: $text('Win/Loss'),
-                columnOp: style({ maxWidth: '110px', alignItems: 'center', placeContent: 'center' }),
-                $body: map(pos => {
-                  return $row(
-                    $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
-                  )
-                })
-              },
-              ...(screenUtils.isDesktopScreen ? [
-                {
-                  $head: $column(style({ textAlign: 'center' }))(
-                    $text('Size $'),
-                    $text(style({ fontSize: '.65em' }))('Avg Leverage'),
                   ),
-                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                  $body: map((pos: IAbstractTrade) => {
-                    return $riskLabel(pos)
+
+                  // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
+                  //   `$${readableNumber(getPrizePoolByRank(rank))}`
+                  // )
+                )
+              }, datas)
+            },
+            {
+              $head: $text('Account'),
+              columnOp: style({ minWidth: '120px', flex: 1.2 }),
+              $body: map(({ account }) => {
+
+                return switchLatest(map(map => {
+                  return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
+                    profileClick: routeChangeTether()
                   })
-                }
-              ] : []),
+                }, config.claimMap))
+              })
+            },
+            {
+              $head: $text('Win/Loss'),
+              columnOp: style({ maxWidth: '110px', alignItems: 'center', placeContent: 'center' }),
+              $body: map(pos => {
+                return $row(
+                  $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+                )
+              })
+            },
+            ...(screenUtils.isDesktopScreen ? [
               {
                 $head: $column(style({ textAlign: 'center' }))(
-                  $text('Prize $'),
-                  $text(style({ fontSize: '.65em' }))('Profit $'),
+                  $text('Size $'),
+                  $text(style({ fontSize: '.65em' }))('Avg Leverage'),
                 ),
-                columnOp: style({ flex: 1, placeContent: 'flex-end' }),
-                $body: snapshot((list, pos) => {
-                  const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
-
-                  return $competitionPrize(prizeUsd, pos.pnl)
-                }, datas)
+                columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+                $body: map((pos: IAbstractTrade) => {
+                  return $riskLabel(pos)
+                })
               }
-            ],
-          })({ scrollIndex: highTableRequestIndexTether() }),
-        ),
+            ] : []),
+            {
+              $head: $column(style({ textAlign: 'center' }))(
+                $text('Prize $'),
+                $text(style({ fontSize: '.65em' }))('Profit $'),
+              ),
+              columnOp: style({ flex: 1, placeContent: 'flex-end' }),
+              $body: snapshot((list, pos) => {
+                const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
+
+                return $competitionPrize(prizeUsd, pos.pnl)
+              }, datas)
+            }
+          ],
+        })({ scrollIndex: highTableRequestIndexTether() }),
       ),
 
     ),

@@ -155,93 +155,91 @@ export const $Trade = (config: ITradeView) => component((
                 $labelUSD('Paid fees', trade.fee),
                 // $labelUSD('Average Price', summary.averagePrice),
               ),
+              
+              $Table2({
+                dataSource: now(actionList),
+                $container: $card,
+                scrollConfig: {
+                  containerOps: O(layoutSheet.spacingBig)
+                },
+                columns: [
+                  {
+                    $head: $text('Timestamp'),
+                    columnOp: O(style({ flex: 1 })),
 
-              $card(
-                $Table2({
-                  dataSource: now(actionList),
-                  bodyContainerOp: layoutSheet.spacing,
-                  scrollConfig: {
-                    containerOps: O(layoutSheet.spacingBig)
+                    $body: map((pos) => {
+                      return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
+                        $text(timeSince(pos.timestamp)),
+                        $text(new Date(pos.timestamp * 1000).toLocaleDateString()),
+                      )
+                    })
                   },
-                  columns: [
-                    {
-                      $head: $text('Timestamp'),
-                      columnOp: O(style({  flex: 1 })),
+                  {
+                    $head: $text('Action'),
+                    columnOp: O(style({ flex: 1.2 })),
 
-                      $body: map((pos) => {
-                        return $column(layoutSheet.spacingTiny, style({ fontSize: '.65em' }))(
-                          $text(timeSince(pos.timestamp)),
-                          $text(new Date(pos.timestamp * 1000).toLocaleDateString()),  
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+
+                      const actionType = pos.__typename === "DecreasePosition"
+                        ? pos.collateralDelta === 0n ? actionList.indexOf(pos) === 0 ? pos.fee === 0n ? 'Liquidated' : 'Close' : 'Decrease' : 'Decrease'
+                        : actionList.indexOf(pos) === actionList.length - 1 ? 'Open' : 'Increase'
+
+                      const [_, txHash] = pos.id.split(':')
+                      return $container(
+                        $text(actionType),
+                        $anchor(attr({ href: getTxExplorerUrl(chain, txHash) }))(
+                          $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
                         )
-                      })
-                    },
-                    {
-                      $head: $text('Action'),
-                      columnOp: O(style({ flex: 1.2 })),
-                    
-                      $body: map((pos) => {
-                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Collateral Delta'),
+                    columnOp: O(style({ flex: 1.2 })),
+                    $body: map((pos) => {
 
-                        const actionType = pos.__typename === "DecreasePosition"
-                          ? pos.collateralDelta === 0n ? actionList.indexOf(pos) === 0 ? pos.fee === 0n ? 'Liquidated' : 'Close' : 'Decrease' : 'Decrease'
-                          : actionList.indexOf(pos) === actionList.length - 1 ? 'Open' : 'Increase'
+                      if (pos.collateralDelta === 0n) {
+                        return $text('')
+                      }
 
-                        const [_, txHash] = pos.id.split(':')
-                        return $container(
-                          $text(actionType),
-                          $anchor(attr({ href: getTxExplorerUrl(chain, txHash) }))(
-                            $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
-                          )
-                        )
-                      })
-                    },
-                    {
-                      $head: $text('Collateral Delta'),
-                      columnOp: O(style({ flex: 1.2 })),
-                      $body: map((pos) => {
+                      const $token = $TokenIndex(TOKEN_ADDRESS_TO_SYMBOL[pos.collateralToken], { width: '18px' })
+                      const $container = $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))
+                      const isDecrease = pos.__typename === "DecreasePosition"
 
-                        if (pos.collateralDelta === 0n) {
-                          return $text('')
-                        }
+                      return $container(
+                        $token,
+                        $ProfitLossText(isDecrease ? -pos.collateralDelta : pos.collateralDelta, false),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Size Delta'),
+                    columnOp: O(style({ flex: 1.2 })),
 
-                        const $token = $TokenIndex(TOKEN_ADDRESS_TO_SYMBOL[pos.collateralToken], { width: '18px' })
-                        const $container = $row(layoutSheet.spacingTiny, style({ alignItems: 'center' }))
-                        const isDecrease = pos.__typename === "DecreasePosition"
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
 
-                        return $container(
-                          $token,
-                          $ProfitLossText(isDecrease ? -pos.collateralDelta : pos.collateralDelta, false),
-                        )
-                      })
-                    },
-                    {
-                      $head: $text('Size Delta'),
-                      columnOp: O(style({ flex: 1.2 })),
-                    
-                      $body: map((pos) => {
-                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      const isDecrease = pos.__typename === "DecreasePosition"
 
-                        const isDecrease = pos.__typename === "DecreasePosition"
+                      return $container(
+                        $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.sizeDelta, false),
+                      )
+                    })
+                  },
+                  {
+                    $head: $text('Market Price'),
+                    columnOp: O(style({ flex: .5 })),
 
-                        return $container(
-                          $ProfitLossText(isDecrease ? -pos.sizeDelta : pos.sizeDelta, false),
-                        )
-                      })
-                    },
-                    {
-                      $head: $text('Market Price'),
-                      columnOp: O(style({ flex: .5 })),
-                    
-                      $body: map((pos) => {
-                        const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
-                        return $container(
-                          $text(formatReadableUSD(pos.price)),
-                        )
-                      })
-                    },
-                  ]
-                })({})
-              )
+                    $body: map((pos) => {
+                      const $container = $row(layoutSheet.spacing, style({ alignItems: 'center' }))
+                      return $container(
+                        $text(formatReadableUSD(pos.price)),
+                      )
+                    })
+                  },
+                ]
+              })({})
             )
           }, tradeSummary)
         ),

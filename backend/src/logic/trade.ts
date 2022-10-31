@@ -4,7 +4,8 @@ import { awaitPromises, combine, constant, map, merge, multicast, now, periodic,
 import {
   calculatePositionDelta, fromJson, ILeaderboardRequest,
   intervalInMsMap, IPricefeedParamApi, IRequestTradeQueryparam,
-  pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap} from '@gambitdao/gmx-middleware'
+  pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap
+} from '@gambitdao/gmx-middleware'
 import { cacheMap } from '../utils'
 import { fetchHistoricTrades, graphMap, fetchTrades } from './api'
 import { tradeQuery, accountTradeListQuery, IAccountTradeListParamApi, latestPriceTimelineQuery, pricefeed, tradeSettledListQuery, tradeOpenListQuery } from './queries'
