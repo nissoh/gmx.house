@@ -2,7 +2,7 @@ import { Op } from "@aelea/core"
 import { $text, style, attr, $node } from "@aelea/dom"
 import { Route } from "@aelea/router"
 import { $row, layoutSheet, $column } from "@aelea/ui-components"
-import { pallete } from "@aelea/ui-components-theme"
+import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { empty, map, periodic } from "@most/core"
 import { formatReadableUSD, unixTimestampNow } from "@gambitdao/gmx-middleware"
 import { $AnchorLink } from "../../components/$Link"
@@ -10,11 +10,8 @@ import { $anchor } from "../../elements/$common"
 import { $ProfitLossText } from "../common"
 
 
-export const COMPETITION_START = Date.UTC(2022, 9, 10) / 1000
-export const COMPETITION_END = Date.UTC(2022, 9, 20) / 1000
-
-export const BATCH_1_END = Date.UTC(2021, 10, 16, 13, 0, 0) / 1000
-export const BATCH_2_START = Date.UTC(2021, 10, 17, 13, 0, 0) / 1000
+export const COMPETITION_START = Date.UTC(2022, 10, 16) / 1000
+export const COMPETITION_END = Date.UTC(2022, 10, 23) / 1000
 
 function countdownFn(targetDate: number, now: number) {
   const distance = targetDate - now
@@ -71,16 +68,16 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
 
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
     $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-      $text(style({ fontSize: '3.8em', fontWeight: 'bold', color: pallete.negative, textShadow: `1px 1px 50px ${pallete.negative}, 1px 1px 50px rgb(250 67 51 / 59%) ` }))('Avalanche'),
+      $text(style({ fontSize: '3.8em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${pallete.primary}, 1px 1px 50px ${colorAlpha(pallete.primary, .55)} ` }))('#GMXRush'),
       $text(style({}))('Tournament'),
     ),
     $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
-      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/gmx-trading-competition-win-250-000-usd-in-prizes-1346504b96f6' }))(
-        $text('medium.com - GMX <> Avalanche Trading Competition — $500,000 in prize pool')
+      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/sign-up-for-the-gmxrush-avalanche-trading-contest-win-100-000-usd-in-prizes-546b1ab2e416' }))(
+        $text('medium.com - #GMXRUSH Avalanche Trading Contest')
       ),
       $node(),
 
-      details(COMPETITION_START, BATCH_1_END),
+      details(COMPETITION_START, COMPETITION_END),
     )
   )
 }

@@ -125,7 +125,7 @@ export const $AccountPreview = ({
   )
   return [
 
-    $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+    $row(layoutSheet.spacingSmall, style({ alignItems: 'center', minWidth: 0 }))(
       parentRoute
         ? $Link({ route: parentRoute.create({ fragment: '2121212' }),
           $content: $preview,

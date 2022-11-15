@@ -4,15 +4,21 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 const CopyPlugin = require("copy-webpack-plugin")
 
+/**
+ * @type import('webpack').Configuration
+ */
 module.exports = {
   mode: "development",
   watch: false,
   context: __dirname, // to automatically find tsconfig.json
-  devtool: 'source-map',
+  devtool: 'eval-source-map',
   entry: {
     theme: './src/assignThemeSync.ts',
     main: './src/index.ts',
   },
+  // optimization: {
+  //   runtimeChunk: true,
+  // },
   module: {
     rules: [
       {
@@ -34,8 +40,14 @@ module.exports = {
       path.resolve(__dirname)
     ],
     extensions: [".ts", '.js'],
-    alias: {
-      "hash.js": require.resolve('hash.js'),
+    fallback: {
+      '@walletconnect/encoding': require.resolve("@walletconnect/encoding"),
+      // ethers: false,
+      ethers: require.resolve("ethers"),
+      process: false,
+      events: require.resolve("eventemitter3"),
+      buffer: false
+      // buffer: require.resolve("buffer/")
     }
   },
   plugins: [
@@ -49,7 +61,9 @@ module.exports = {
     }),
     new CopyPlugin({
       patterns: [
-        { from: "assets", to: 'assets' }
+        { from: "assets", to: 'assets' },
+        { from: '_redirects' },
+        { from: 'robots.txt' },
       ]
     }),
   ],

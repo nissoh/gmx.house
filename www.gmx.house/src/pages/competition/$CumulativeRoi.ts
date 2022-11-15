@@ -4,7 +4,7 @@ import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { combine, constant, delay, empty, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
+import { combine, constant, delay, empty, map, multicast, periodic, scan, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
 import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
@@ -75,6 +75,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   )
 
   
+  const newLocal = take(1, tableList)
   return [
     $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
       $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
@@ -120,13 +121,13 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[2].account}`,
             })({ click: routeChangeTether() })
           )
-        }, tableList, config.claimMap)),
+        }, newLocal, config.claimMap)),
 
         $column(style({ alignItems: 'center' }))(
           $row(style({ width: '780px', }))(
             $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-              $text(style({  }))(`Cumulative ROI(TEST)`),
-              $text(style({ fontSize: '.75em' }))(`${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`),
+              $text(style({}))(`Highest ROI (%)`),
+              $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral * 100`),
             ),
 
             $row(

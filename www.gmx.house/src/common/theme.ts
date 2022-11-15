@@ -19,16 +19,16 @@ const light: Theme = {
     indeterminate: '#dccb07',
   }
 }
-
+// radial - gradient(570 % 71 % at 50 % 15vh, rgb(26 24 63) 0px, rgb(29 18 38) 100 %)
 const dark: Theme = {
   name: 'dark',
   pallete: {
-    primary: '#079dfa',
+    primary: 'rgb(255 0 116)',
 
     message: '#ffffff',
 
-    background: '#0e0f20',
-    horizon: '#16273a',
+    background: '#030a17',
+    horizon: '#1c1b3d',
     middleground: colorAlpha('#fff', .15),
     foreground: '#75849f',
 

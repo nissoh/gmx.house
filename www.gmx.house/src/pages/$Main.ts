@@ -3,7 +3,7 @@ import { $element, $node, $text, attr, component, eventElementTarget, style } fr
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
-import { colorAlpha, pallete, theme } from '@aelea/ui-components-theme'
+import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
@@ -29,7 +29,7 @@ import { $Leaderboard } from './$Leaderboard'
 import { $Account } from './account/$Account'
 // import { $CompetitionCumulative } from "./competition/$cumulative"
 // import { $CompetitionSingle } from "./competition/$single"
-import { $CompeititonInfo, BATCH_1_END, BATCH_2_START, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
+import { $CompeititonInfo, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
 import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
 import { IAccountLadderSummary } from "common"
@@ -230,24 +230,27 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
             router.match(leaderboardRoute)(
-              $Leaderboard({
-                claimMap,
-                parentRoute: rootRoute,
-                walletLink,
-                latestPriceMap,
-                parentStore: rootStore,
-                openTrades: map((x: IPageParapApi<ITradeOpen>) => ({ ...x, page: x.page.map(fromJson.toTradeJson) }), clientApi.requestOpenTrades),
-                requestLeaderboardTopList: map((data: IPageParapApi<IAccountSummary>) => ({
-                  page: data.page.map(fromJson.accountSummaryJson),
-                  offset: data.offset,
-                  pageSize: data.pageSize
-                }), clientApi.requestLeaderboardTopList),
-              })({
-                requestLeaderboardTopList: requestLeaderboardTopListTether(),
-                requestOpenTrades: requestOpenTradesTether(),
-                requestLatestPriceMap: requestLatestPriceMapTether(),
-                routeChange: linkClickTether()
-              })
+              $column(
+                $CompeititonInfo(rootRoute, linkClickTether),
+                $Leaderboard({
+                  claimMap,
+                  parentRoute: rootRoute,
+                  walletLink,
+                  latestPriceMap,
+                  parentStore: rootStore,
+                  openTrades: map((x: IPageParapApi<ITradeOpen>) => ({ ...x, page: x.page.map(fromJson.toTradeJson) }), clientApi.requestOpenTrades),
+                  requestLeaderboardTopList: map((data: IPageParapApi<IAccountSummary>) => ({
+                    page: data.page.map(fromJson.accountSummaryJson),
+                    offset: data.offset,
+                    pageSize: data.pageSize
+                  }), clientApi.requestLeaderboardTopList),
+                })({
+                  requestLeaderboardTopList: requestLeaderboardTopListTether(),
+                  requestOpenTrades: requestOpenTradesTether(),
+                  requestLatestPriceMap: requestLatestPriceMapTether(),
+                  routeChange: linkClickTether()
+                })
+              )
             ),
 
             router.match(competitionCumulativePnlRoute)(
