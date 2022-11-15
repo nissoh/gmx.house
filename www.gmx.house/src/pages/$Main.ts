@@ -9,6 +9,7 @@ import { IEthereumProvider } from "eip1193-provider"
 import {
   ARBITRUM_TRADEABLE_ADDRESS,
   AVALANCHE_TRADEABLE_ADDRESS,
+  CHAIN,
   fromJson, groupByMap, IAccountSummary,
   IAccountTradeListParamApi,
   IChainParamApi,
@@ -29,10 +30,10 @@ import { $Leaderboard } from './$Leaderboard'
 import { $Account } from './account/$Account'
 // import { $CompetitionCumulative } from "./competition/$cumulative"
 // import { $CompetitionSingle } from "./competition/$single"
-import { $CompeititonInfo, COMPETITION_END, COMPETITION_START } from "./competition/$rules"
+import { $CompeititonInfo } from "./competition/$rules"
 import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
-import { IAccountLadderSummary } from "common"
+import { IAccountLadderSummary, IQueryCompetitionApi } from "common"
 import { $CompetitionRoi } from "./competition/$CumulativeRoi"
 import { $CompetitionPnl } from "./competition/$CumulativePnl"
 
@@ -60,8 +61,8 @@ export default ({ baseRoute = '' }: Website) => component((
   [requestOpenTrades, requestOpenTradesTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi[]>,
   [requestPricefeed, requestPricefeedTether]: Behavior<IPricefeedParamApi, IPricefeedParamApi>,
   [requestLatestPriceMap, requestLatestPriceMapTether]: Behavior<IChainParamApi, IChainParamApi>,
-  [competitionCumulativePnl, competitionCumulativePnlTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
-  [competitionCumulativeRoi, competitionCumulativeRoiTether]: Behavior<IPagePositionParamApi, IPagePositionParamApi & ITimerangeParamApi>,
+  [competitionCumulativePnl, competitionCumulativePnlTether]: Behavior<IQueryCompetitionApi, IQueryCompetitionApi>,
+  [competitionCumulativeRoi, competitionCumulativeRoiTether]: Behavior<IQueryCompetitionApi, IQueryCompetitionApi>,
   [requestTrade, requestTradeTether]: Behavior<IIdentifiableEntity, IIdentifiableEntity>,
   [walletChange, walletChangeTether]: Behavior<IEthereumProvider | null, IEthereumProvider | null>,
 ) => {
@@ -143,7 +144,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
   function competitionHeadline(title: string, description: string, prizePool: string) {
     return $column(style({ padding: '0 10px' }))(
-      $CompeititonInfo(rootRoute, linkClickTether),
+      $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
 
       $row(style({}))(
 
@@ -160,15 +161,19 @@ export default ({ baseRoute = '' }: Website) => component((
           }))(prizePool)
         )
       )
-      
+
     )
   }
-  
+
   const latestPriceMap = replayLatest(multicast(map((res: IPriceLatestMap) => Object.entries(res).reduce((seed, [key, price]) => {
     const k = key as ARBITRUM_TRADEABLE_ADDRESS | AVALANCHE_TRADEABLE_ADDRESS
     seed[k] = fromJson.priceLatestJson(price)
     return seed
   }, {} as IPriceLatestMap), clientApi.requestLatestPriceMap)))
+
+
+  const COMPETITION_START = Date.UTC(2022, 10, 16, 12) / 1000
+  const COMPETITION_END = Date.UTC(2022, 10, 23, 12) / 1000
 
   return [
     mergeArray([
@@ -178,9 +183,9 @@ export default ({ baseRoute = '' }: Website) => component((
 
             $row(style({ alignItems: 'center', width: '100%' }))(
               $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center', color: pallete.foreground }))(
-                $text(style({  }))(`Novel Perpetual Protocol`),
+                $text(style({}))(`Novel Perpetual Protocol`),
                 $text(style({ fontSize: '2em', fontWeight: 700, paddingBottom: '6px', color: pallete.message }))(`GMX Community`),
-                $text(style({  }))(`Low slippage, low fees and Instant Finality`),
+                $text(style({}))(`Low slippage, low fees and Instant Finality`),
 
                 $node(),
                 $node(),
@@ -231,7 +236,7 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(leaderboardRoute)(
               $column(
-                $CompeititonInfo(rootRoute, linkClickTether),
+                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
                 $Leaderboard({
                   claimMap,
                   parentRoute: rootRoute,
@@ -257,6 +262,9 @@ export default ({ baseRoute = '' }: Website) => component((
               $column(
                 // competitionHeadline(`Cumulative PnL`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
                 $CompetitionPnl({
+                  from: COMPETITION_START,
+                  to: COMPETITION_END,
+                  chain: CHAIN.ARBITRUM,
                   claimMap,
                   parentRoute: rootRoute,
                   parentStore: rootStore,
@@ -273,8 +281,11 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(competitionCumulativeRoiRoute)(
               $column(
-                $CompeititonInfo(rootRoute, linkClickTether),
+                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
                 $CompetitionRoi({
+                  from: COMPETITION_START,
+                  to: COMPETITION_END,
+                  chain: CHAIN.ARBITRUM,
                   claimMap,
                   parentRoute: rootRoute,
                   parentStore: rootStore,
@@ -282,9 +293,7 @@ export default ({ baseRoute = '' }: Website) => component((
                     return { ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl), roi: BigInt(obj.roi) })) }
                   }, clientApi.competitionCumulativeRoi),
                 })({
-                  competitionCumulativeRoi: competitionCumulativeRoiTether(map(page => {
-                    return { ...page, from: COMPETITION_START, to: COMPETITION_END }
-                  })),
+                  competitionCumulativeRoi: competitionCumulativeRoiTether(),
                   routeChange: linkClickTether()
                 })
               )
@@ -311,7 +320,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 walletChange: walletChangeTether()
               })
             ),
-            
+
             router.contains(tradeRoute)(
               $Trade({
                 claimMap,
@@ -330,9 +339,9 @@ export default ({ baseRoute = '' }: Website) => component((
           )
         ),
       ),
-      
+
       router.contains(cardRoute)(
-        $node(designSheet.main, style({ overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(  
+        $node(designSheet.main, style({ overflow: 'hidden', fontWeight: 300, backgroundImage: `radial-gradient(100vw 50% at 50% 15vh,${pallete.horizon} 0,${pallete.background} 100%)`, alignItems: 'center', placeContent: 'center' }))(
           $Card({
             claimMap,
             trade: clientApi.requestTrade,

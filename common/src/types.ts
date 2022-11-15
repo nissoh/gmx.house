@@ -1,4 +1,4 @@
-import { AVALANCHE_TRADEABLE_ADDRESS, IAccountSummary } from "@gambitdao/gmx-middleware"
+import { IAccountSummary, IChainParamApi, IPagePositionParamApi, ITimerangeParamApi } from "@gambitdao/gmx-middleware"
 
 export interface IAccountLadderSummary extends IAccountSummary {
   performancePercentage: bigint
@@ -12,3 +12,5 @@ export interface IAccountLadderSummary extends IAccountSummary {
     [k: string]: bigint
   }
 }
+
+export type IQueryCompetitionApi = IPagePositionParamApi & ITimerangeParamApi & IChainParamApi

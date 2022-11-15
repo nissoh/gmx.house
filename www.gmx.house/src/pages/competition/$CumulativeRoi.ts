@@ -1,28 +1,27 @@
 import { Behavior, O, Op, replayLatest } from '@aelea/core'
-import { $element, $node, $text, attrBehavior, component, INode, style } from "@aelea/dom"
+import { $element, $node, $text, component, INode, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { combine, constant, delay, empty, map, multicast, periodic, scan, snapshot, switchLatest, take } from '@most/core'
+import { combine, constant, map, multicast, periodic, scan, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN } from '@gambitdao/gmx-middleware'
+import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountLabel, $AccountPhoto, $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'
-import { $CompeititonInfo, $competitionPrize, COMPETITION_END, COMPETITION_START } from './$rules'
 import { $ProfitLossText, $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
-import { displayDate } from './$CumulativePnl'
+import { countdown } from './$rules'
 
 
 const prizeLadder: bigint[] = [parseFixed(65000, 30), parseFixed(30000, 30), parseFixed(15000, 30), ...Array(17).fill(parseFixed(1000, 30))]
 
 
 
-export interface ICompetitonTopCumulative<T extends BaseProvider> {
+export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimerangeParamApi, IChainParamApi {
   parentRoute: Route
   provider?: Stream<T>
   claimMap: Stream<{ [k: string]: IClaim }>
@@ -60,10 +59,12 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
   const chain = CHAIN_LABEL_ID[chainLabel]
 
-  const pagerOp = map((pageIndex: number): IPagePositionParamApi & IChainParamApi => {
+  const pagerOp = map((pageIndex: number): IPagePositionParamApi & ITimerangeParamApi & IChainParamApi => {
 
     return {
-      chain,
+      chain: config.chain,
+      from: config.from,
+      to: config.to,
       offset: pageIndex * 20,
       pageSize: 20,
     }
@@ -83,7 +84,11 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
         switchLatest(combine((page, claimMap) => {
           const list = page.page
 
-          return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px' }))(
+          return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
+            $column(style({ alignItems: 'center' }))(
+              $text(`Ending in`),
+              $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
+            ),
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(

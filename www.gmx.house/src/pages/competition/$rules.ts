@@ -10,9 +10,6 @@ import { $anchor } from "../../elements/$common"
 import { $ProfitLossText } from "../common"
 
 
-export const COMPETITION_START = Date.UTC(2022, 10, 16) / 1000
-export const COMPETITION_END = Date.UTC(2022, 10, 23) / 1000
-
 function countdownFn(targetDate: number, now: number) {
   const distance = targetDate - now
 
@@ -30,22 +27,21 @@ export const countdown = (targetDate: number) => {
   return map(now => countdownFn(targetDate, now), everySec)
 }
 
-export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op<string, string>) {
+export function $CompeititonInfo(from: number, to: number, parentRoute: Route, routeChangeTether: () => Op<string, string>) {
 
 
   const details = (start: number, end: number) => {
     const now = unixTimestampNow()
     const ended = end < now
 
-    return $row(layoutSheet.spacingSmall, style({ fontSize: '.85em', alignItems: 'center', placeContent: 'center' }))(
-      ...start > now
-        ? [
-          $column(style({ alignItems: 'center' }))(
-            $text(`Starting in`),
-            $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(start)),
-          )
-        ]
-        : [
+    return start > now
+      ? $column(style({ alignItems: 'center' }))(
+        $text(`Starting in`),
+        $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(start)),
+      )
+      : $column(
+
+        $row(layoutSheet.spacingSmall, style({ fontSize: '.85em', alignItems: 'center', placeContent: 'center' }))(
           $text(style({ color: ended ? '' : pallete.indeterminate }))(
             `Competition ${ended ? 'has ended!' : 'is Live!'} `),
           $AnchorLink({
@@ -61,9 +57,9 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
             url: `/arbitrum/top-roi`,
             route: parentRoute.create({ fragment: '2121212' })
           })({ click: routeChangeTether() }),
+        )
+      )
 
-        ]
-    )
   }
 
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '60px', }))(
@@ -77,7 +73,7 @@ export function $CompeititonInfo(parentRoute: Route, routeChangeTether: () => Op
       ),
       $node(),
 
-      details(COMPETITION_START, COMPETITION_END),
+      details(from, to),
     )
   )
 }

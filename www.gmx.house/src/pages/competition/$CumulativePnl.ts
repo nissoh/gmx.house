@@ -6,21 +6,21 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { constant, map, multicast, periodic, scan, snapshot, switchLatest } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD } from '@gambitdao/gmx-middleware'
+import { IClaim, parseFixed, IPageParapApi, IChainParamApi, IAbstractTrade, ITimerangeParamApi } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountPreview } from '../../components/$AccountProfile'
 import { $alert } from '../../elements/$common'
 import { $competitionPrize } from './$rules'
 import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
-import { IAccountLadderSummary } from 'common'
+import { IAccountLadderSummary, IQueryCompetitionApi } from 'common'
 
 
 const prizeLadder: bigint[] = [parseFixed(65000, 30), parseFixed(30000, 30), parseFixed(15000, 30), ...Array(17).fill(parseFixed(1000, 30))]
 
 
 
-export interface ICompetitonTopCumulative<T extends BaseProvider> {
+export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimerangeParamApi, IChainParamApi {
   parentRoute: Route
   provider?: Stream<T>
   claimMap: Stream<{ [k: string]: IClaim }>
@@ -58,10 +58,12 @@ export const $CompetitionPnl = <T extends BaseProvider>(config: ICompetitonTopCu
   const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
   const chain = CHAIN_LABEL_ID[chainLabel]
 
-  const pagerOp = map((pageIndex: number): IPagePositionParamApi & IChainParamApi => {
+  const pagerOp = map((pageIndex: number): IQueryCompetitionApi => {
 
     return {
       chain,
+      from: config.from,
+      to: config.to,
       offset: pageIndex * 20,
       pageSize: 20,
     }
