@@ -120,7 +120,7 @@ export const competitionAccountListDoc: TypedDocumentNode<{trades: ITrade[]}, Pa
 ${schemaFragments}
 
 query ($pageSize: Int, $offset: Int = 0, $from: Int = 0, $to: Int = 1999999999) {
-  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, timestamp_lte: $to, collateral_gt: "1500000000000000000000000000000000"}) {
+  trades(first: $pageSize, skip: $offset, where: {timestamp_gte: $from, timestamp_lte: $to}) {
       ...tradeFields
   }
 }
