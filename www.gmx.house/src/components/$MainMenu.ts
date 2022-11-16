@@ -1,9 +1,9 @@
 import { Behavior, combineArray, O, Op } from "@aelea/core"
 import { $element, $text, attr, component, IBranch, nodeEvent, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $column, $icon, $Popover, $row, $seperator, layoutSheet, state } from '@aelea/ui-components'
+import { $column, $icon, $Popover, $row, $seperator, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
-import { combine, constant, filter, map, startWith, switchLatest } from '@most/core'
+import { combine, constant, empty, filter, map, startWith, switchLatest } from '@most/core'
 import { Stream } from "@most/types"
 import { IEthereumProvider } from "eip1193-provider"
 import { CHAIN, IClaim } from "@gambitdao/gmx-middleware"
@@ -52,10 +52,14 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
   return [
     $row(layoutSheet.spacingBig, style({ fontSize: '.9em', alignItems: 'center' }), containerOp)(
 
-      $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: leaderboardRoute })({
-        click: routeChangeTether()
-      }),
-      $tradeGMX,
+      screenUtils.isDesktopScreen
+        ? $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: leaderboardRoute })({
+          click: routeChangeTether()
+        })
+        : empty(),
+      screenUtils.isDesktopScreen
+        ? $tradeGMX
+        : empty(),
 
       $Popover({
         dismiss: profileLinkClick,
@@ -143,7 +147,7 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
                 }
               })({ select: changeChainTethr() }),
             )
-          ) 
+          )
         }, walletLink.account, walletLink.network)),
       )({
         // overlayClick: clickPopoverClaimTether()

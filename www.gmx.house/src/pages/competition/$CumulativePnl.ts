@@ -1,7 +1,7 @@
 import { Behavior, O, replayLatest } from '@aelea/core'
 import { $text, component, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
+import { $card, $column, $row, $seperator, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
@@ -15,6 +15,7 @@ import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
 import { $alertTooltip, $avaxIcon, formatReadableUSD } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
+import { $leverage } from '../../elements/$common'
 
 
 const prizeLadder: string[] = ['1500', '900', '600']
@@ -119,10 +120,10 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
 
 
 
-      $row(
+      $row(layoutSheet.spacing)(
         $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-          $text(style({}))(`Highest ROI (%)`),
-          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral * 100`),
+          $text(style({}))(`Highest Notional P&L`),
+          $text(style({ fontSize: '.75em' }))(`Sum of all realized and unrealized profits and losses, including open positions at the deadline.`),
         ),
 
         $row(
@@ -220,33 +221,37 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
           ...(screenUtils.isDesktopScreen ? [
             {
               $head: $column(style({ textAlign: 'center' }))(
-                $text('Size $'),
-                $text(style({ fontSize: '.65em' }))('Avg Leverage'),
+                $text('PnL $'),
+                $text(style({ fontSize: '.65em' }))('Size @ Avg. Leverage'),
               ),
               columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-              $body: map((pos: IAbstractTrade) => {
-                return $riskLabel(pos)
+              $body: map((pos: IAccountLadderSummary) => {
+                return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
+                  $text(style({ fontSize: '1.25em' }))(`${formatReadableUSD(pos.pnl)}`),
+                  $seperator,
+                  $row(layoutSheet.spacingSmall, style({ fontSize: '.75em', alignItems: 'center', placeContent: 'center' }))(
+                    $text(formatReadableUSD(pos.size)),
+                    $text(style({ color: pallete.foreground, fontSize: '.75em' }))(' @ '),
+                    style({ textAlign: 'center' }, $leverage(pos)),
+                  )
+                )
               })
             }
           ] : []),
           {
             $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
               $text('Prize $'),
-              $text(style({ fontSize: '.65em' }))('ROI %'),
+              $text(style({ fontSize: '.65em' }))('Profits'),
             ),
-            columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end' }),
+            columnOp: style({ flex: 1, alignItems: 'center', placeContent: 'flex-end' }),
             $body: snapshot((list, pos) => {
               const prize = prizeLadder[list.offset + list.page.indexOf(pos)]
 
-              return $column(
-                prize
-                  ? $row(
-                    $avaxIcon,
-                    $text(style({ fontSize: '1.3em', color: pallete.positive }))(prize),
-                  ) : empty(),
-
-                $text(`${formatReadableUSD(pos.pnl)}`)
-              )
+              return prize
+                ? $row(style({ alignSelf: 'center', alignItems: 'center' }))(
+                  $avaxIcon,
+                  $text(style({ fontSize: '1.8em', color: pallete.positive }))(prize),
+                ) : $row()
             }, tableList)
           }
         ],

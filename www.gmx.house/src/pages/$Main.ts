@@ -73,7 +73,7 @@ export default ({ baseRoute = '' }: Website) => component((
   }, changes)
 
 
-  const rootRoute = router.create({ fragment: baseRoute, title: 'Gambit  Community', fragmentsChange })
+  const rootRoute = router.create({ fragment: baseRoute, title: 'Community Leaderboard - GMX.house', fragmentsChange })
   const chainRoute = rootRoute.create({ fragment: /avalanche|arbitrum/, title: '' })
   const leaderboardRoute = chainRoute.create({ fragment: 'leaderboard', title: 'Leaderboard' })
   const accountRoute = chainRoute.create({ fragment: 'account', title: 'Portfolio' })

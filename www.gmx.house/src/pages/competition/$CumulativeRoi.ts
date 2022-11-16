@@ -123,7 +123,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
       $row(
         $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
           $text(style({}))(`Highest ROI (%)`),
-          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral * 100`),
+          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $500) * 100`),
         ),
 
         $row(

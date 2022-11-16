@@ -1,7 +1,7 @@
 import { Op } from "@aelea/core"
 import { $text, style, attr, $node, $element, $Branch } from "@aelea/dom"
 import { Route } from "@aelea/router"
-import { $row, layoutSheet, $column, $icon } from "@aelea/ui-components"
+import { $row, layoutSheet, $column, $icon, screenUtils } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { empty, map, periodic } from "@most/core"
 import { formatFixed, unixTimestampNow, USD_DECIMALS } from "@gambitdao/gmx-middleware"
@@ -67,26 +67,27 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
         $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(start)),
       )
       : $column(
-        // countdown(config.to),
-        $row(layoutSheet.spacingSmall, style({ fontSize: '.85em', alignItems: 'center', placeContent: 'center' }))(
+        $node(layoutSheet.spacing, style({ display: 'flex', flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
           ended
             ? $text(style({ color: ended ? '' : pallete.indeterminate }))(
               `Competition has ended!`
             )
             : $text(style({ color: ended ? '' : pallete.indeterminate }))('Competition is LIVE!'),
-          $AnchorLink({
-            anchorOp: style({ position: 'relative' }),
-            $content: $text('Top Profit'),
-            url: `/avalanche/top-profit`,
-            route: parentRoute.create({ fragment: '2121212' })
-          })({ click: routeChangeTether() }),
-          $row(style({ color: pallete.foreground }))($text('|')),
-          $AnchorLink({
-            anchorOp: style({ position: 'relative' }),
-            $content: $text('Top ROI'),
-            url: `/avalanche/top-roi`,
-            route: parentRoute.create({ fragment: '2121212' })
-          })({ click: routeChangeTether() }),
+          $row(layoutSheet.spacingSmall)(
+            $AnchorLink({
+              anchorOp: style({ position: 'relative' }),
+              $content: $text('Top Profit'),
+              url: `/avalanche/top-profit`,
+              route: parentRoute.create({ fragment: '2121212' })
+            })({ click: routeChangeTether() }),
+            $row(style({ color: pallete.foreground }))($text('|')),
+            $AnchorLink({
+              anchorOp: style({ position: 'relative' }),
+              $content: $text('Top ROI'),
+              url: `/avalanche/top-roi`,
+              route: parentRoute.create({ fragment: '2121212' })
+            })({ click: routeChangeTether() }),
+          )
         )
       )
 
@@ -95,7 +96,6 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '20px', }))(
     $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
       $text(style({ fontSize: '3.2em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${pallete.primary}, 1px 1px 50px ${colorAlpha(pallete.primary, .55)} ` }))('#GMXRush'),
-      $text(style({}))('Tournament'),
     ),
     $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
       $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/sign-up-for-the-gmxrush-avalanche-trading-contest-win-100-000-usd-in-prizes-546b1ab2e416' }))(

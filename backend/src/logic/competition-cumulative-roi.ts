@@ -61,12 +61,10 @@ export const competitionCumulativeRoi = O(
 
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
-          const aN = a.collateral > minEligibleMaxCollateral && claimMap[a.account] ? a.roi + bigNumberForPriority : a.roi
-          const bN = b.collateral > minEligibleMaxCollateral && claimMap[b.account] ? b.roi + bigNumberForPriority : b.roi
+          const aN = claimMap[a.account] ? a.roi : a.roi - bigNumberForPriority
+          const bN = claimMap[b.account] ? b.roi : b.roi - bigNumberForPriority
 
-          // minEligibleMaxCollateral
-
-          return Number(bN) - Number(aN)
+          return Number(bN - aN)
         })
 
       return formattedList
@@ -140,7 +138,7 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const usedMinProfit = usedCollateral - pnl
       const collateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
-      const roi = pnl * BASIS_POINTS_DIVISOR / collateral
+      const roi = pnl * BASIS_POINTS_DIVISOR / (collateral > minEligibleMaxCollateral ? collateral : minEligibleMaxCollateral)
 
       return {
         collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi,
