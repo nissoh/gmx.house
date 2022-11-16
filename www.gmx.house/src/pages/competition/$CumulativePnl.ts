@@ -226,23 +226,16 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
           ...(screenUtils.isDesktopScreen ? [
             {
               $head: $column(style({ textAlign: 'center' }))(
-                $text('PnL $'),
-                $text(style({ fontSize: '.65em' }))('Size @ Avg. Leverage'),
+                $text('Size'),
+                $text(style({ fontSize: '.65em' }))('Avg. Leverage'),
               ),
               columnOp: style({ placeContent: 'center', minWidth: '125px' }),
               $body: map((pos: IAccountLadderSummary) => {
                 const val = formatReadableUSD(pos.pnl)
                 const isNeg = pos.pnl < 0n
 
-                return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
-                  $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(val),
-                  $seperator,
-                  $row(layoutSheet.spacingSmall, style({ fontSize: '.75em', alignItems: 'center', placeContent: 'center' }))(
-                    $text(formatReadableUSD(pos.size)),
-                    $text(style({ color: pallete.foreground, fontSize: '.75em' }))(' @ '),
-                    style({ textAlign: 'center' }, $leverage(pos)),
-                  )
-                )
+                return $riskLabel(pos)
+
               })
             }
           ] : []),
@@ -251,15 +244,18 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
               $text('Prize AVAX'),
               $text(style({ fontSize: '.65em' }))('Profits'),
             ),
-            columnOp: style({ flex: 1, alignItems: 'center', placeContent: 'flex-end' }),
+            columnOp: style({ flex: 1, placeContent: 'flex-end', alignItems: 'flex-end' }),
             $body: snapshot((list, pos) => {
               const prize = prizeLadder[list.offset + list.page.indexOf(pos)]
 
-              return prize
-                ? $row(style({ alignSelf: 'center', alignItems: 'center' }))(
-                  $avaxIcon,
-                  $text(style({ fontSize: '1.8em', color: pallete.positive }))(prize),
-                ) : $row()
+              return $column(
+                prize
+                  ? $row(style({  }))(
+                    $avaxIcon,
+                    $text(style({ fontSize: '1.8em', color: pallete.positive }))(prize),
+                  ) : $row(),
+                $text(`${formatReadableUSD(pos.pnl)}`)
+              )
             }, tableList)
           }
         ],

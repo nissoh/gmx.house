@@ -26,11 +26,21 @@ export let EM: EntityManager<IDatabaseDriver<Connection>>
 
 const app = express()
 const port = process.env.PORT
+const origin = process.env.ORIGIN
 
 const server = http.createServer(app)
 
+
 // const wss = new ws('wss://api.thegraph.com/subgraphs/name/nissoh/gmx-vault')
-const wss = new ws.Server({ server, path: '/api-ws', })
+const wss = new ws.Server({
+  server,
+  path: '/api-ws',
+})
+
+wss.shouldHandle = (request) => {
+  return request.headers.origin === origin
+}
+
 const liveClients = new Map<ws, {ws: ws, isAlive: boolean}>()
 
 wss.on('connection', function connection(ws) {

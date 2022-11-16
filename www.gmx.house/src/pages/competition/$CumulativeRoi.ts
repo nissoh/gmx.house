@@ -233,7 +233,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
 
 
               return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
-                $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                $text(style({  }))(
                   `${isNeg ? '' : '+'}${val}`
                 ),
                 $seperator,
