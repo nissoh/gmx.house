@@ -1,7 +1,7 @@
 import { Behavior, O, replayLatest } from '@aelea/core'
 import { $text, component, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
-import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
+import { $card, $column, $row, $seperator, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
@@ -219,11 +219,24 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             }, tableList)
           },
           {
-            $head: $text('Win/Loss'),
-            columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
-            $body: map(pos => {
-              return $row(
-                $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+            $head: $column(style({ textAlign: 'center' }))(
+              $text('Profits $'),
+              $text(style({ fontSize: '.65em' }))('Max Collateral'),
+            ),
+            columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+            $body: map((pos: IAccountLadderSummary) => {
+              const val = formatReadableUSD(pos.pnl)
+              const isNeg = pos.pnl < 0n
+
+
+              return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
+                style({ color: pallete.message })(
+                  $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                    `${isNeg ? '' : '+'}${val}`
+                  )
+                ),
+                $seperator,
+                $text(formatReadableUSD(pos.collateral))
               )
             })
           },
@@ -239,24 +252,15 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               })
             },
             {
-              $head: $text('Pnl $'),
-              columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+              $head: $text('Win/Loss'),
+              columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
               $body: map((pos: IAccountLadderSummary) => {
-                const val = formatReadableUSD(pos.pnl)
-                const isNeg = pos.pnl < 0n
-
                 return $row(
-                  $column(style({ alignItems: 'center' }))(
-                    // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
-                    style({ color: pallete.message })(
-                      $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                        `${isNeg ? '' : '+'}${val}`
-                      )
-                    )
-                  )
+                  $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
                 )
               })
-            }
+            },
+
           ] : []),
           {
             $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(

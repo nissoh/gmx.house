@@ -1,6 +1,6 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
-import { fromJson, pagingQuery, groupByMap, groupByMapMany, ITrade, TradeStatus, IChainParamApi, intervalInMsMap, IPagePositionParamApi, ITimerangeParamApi, unixTimestampNow, IPricefeed, calculatePositionDelta, isTradeOpen, isTradeSettled, BASIS_POINTS_DIVISOR, isTradeLiquidated } from "@gambitdao/gmx-middleware"
+import { fromJson, pagingQuery, groupByMap, groupByMapMany, ITrade, TradeStatus, IChainParamApi, intervalInMsMap, IPagePositionParamApi, ITimerangeParamApi, unixTimestampNow, IPricefeed, calculatePositionDelta, isTradeOpen, isTradeSettled, BASIS_POINTS_DIVISOR, isTradeLiquidated, formatReadableUSD } from "@gambitdao/gmx-middleware"
 import { IAccountLadderSummary } from "common"
 import { EM } from '../server'
 import { Claim } from "./dto"
@@ -9,8 +9,9 @@ import { competitionAccountListDoc } from "./queries"
 import { fetchHistoricTrades, graphMap } from "./api"
 import { gql, TypedDocumentNode } from "@urql/core"
 
-
-const bigNumberForPriority = 10n ** 50n
+const USED_PERCISION = 10n ** 30n
+const bigNumberForPriority = 100000000n
+const minEligibleMaxCollateral = USED_PERCISION * 500n
 
 const createCache = cacheMap({})
 
@@ -53,17 +54,19 @@ export const competitionCumulativeRoi = O(
       const historicTradeList = await competitionAccountListQuery
       const priceMap = await priceMapQuery
       const claimList = await claimListQuery
-
       const tradeList: ITrade[] = historicTradeList.map(fromJson.toTradeJson)
+
       // .filter(x => x.account === '0xd92f6d0c7c463bd2ec59519aeb59766ca4e56589')
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
-          const aN = claimMap[a.account] ? a.roi : a.roi - bigNumberForPriority
-          const bN = claimMap[b.account] ? b.roi : b.roi - bigNumberForPriority
+          const aN = a.collateral > minEligibleMaxCollateral && claimMap[a.account] ? a.roi + bigNumberForPriority : a.roi
+          const bN = b.collateral > minEligibleMaxCollateral && claimMap[b.account] ? b.roi + bigNumberForPriority : b.roi
 
-          return Number(bN - aN)
+          // minEligibleMaxCollateral
+
+          return Number(bN) - Number(aN)
         })
 
       return formattedList
@@ -121,7 +124,7 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const usedCollateralMap = {
         ...seed.usedCollateralMap,
-        [next.key]: next.collateral,
+        [next.key]: next.updateList.reduce((seed, next) => next.collateral > seed ? next.collateral : seed, 0n),
         // [next.key]: next.status === TradeStatus.OPEN ? next.collateral : 0n,
       }
       const usedCollateral = Object.values(usedCollateralMap).reduce((s, n) => s + n, 0n)
