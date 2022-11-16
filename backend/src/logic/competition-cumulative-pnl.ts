@@ -1,13 +1,12 @@
 import { O } from "@aelea/core"
 import { awaitPromises, map } from "@most/core"
 import {
-  fromJson, pagingQuery, groupByMap, groupByMapMany, ITrade, TradeStatus, IChainParamApi, intervalInMsMap, IPagePositionParamApi,
-  ITimerangeParamApi, unixTimestampNow, IPricefeed, calculatePositionDelta, isTradeSettled, BASIS_POINTS_DIVISOR
+  fromJson, pagingQuery, groupByMap, ITrade, IChainParamApi, intervalInMsMap, IPagePositionParamApi,
+  ITimerangeParamApi, unixTimestampNow, IPricefeed
 } from "@gambitdao/gmx-middleware"
-import { IAccountLadderSummary } from "common"
 import { EM } from '../server'
 import { Claim } from "./dto"
-import { cacheMap } from "../utils"
+import { cacheMap, toAccountCompetitionSummary } from "../utils"
 import { competitionAccountListDoc } from "./queries"
 import { fetchHistoricTrades, graphMap } from "./api"
 import { gql, TypedDocumentNode } from "@urql/core"
@@ -48,7 +47,6 @@ export const competitionCumulativePnl = O(
         }
       }
     `
-
       const priceMapQuery = graphMap[queryParams.chain](competitionPricefeedMap, {}).then(res => {
         const list = groupByMap(res.pricefeeds, item => item.tokenAddress)
         return list
@@ -61,7 +59,6 @@ export const competitionCumulativePnl = O(
       const tradeList: ITrade[] = historicTradeList.map(fromJson.toTradeJson)
       // .filter(x => x.account === '0xd92f6d0c7c463bd2ec59519aeb59766ca4e56589')
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
-
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
           const aN = claimMap[a.account] ? a.realisedPnl + a.openPnl : a.realisedPnl + a.openPnl - bigNumberForPriority
@@ -87,88 +84,4 @@ export interface ILadderAccount {
 }
 
 
-
-export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }): IAccountLadderSummary[] {
-  const tradeListMap = groupByMapMany(list, a => a.account)
-  const tradeListEntries = Object.entries(tradeListMap)
-
-  return tradeListEntries.reduce((seed, [account, tradeList]) => {
-
-    const seedAccountSummary: IAccountLadderSummary = {
-      claim: null,
-      account,
-
-      collateral: 0n,
-      size: 0n,
-
-      fee: 0n,
-      realisedPnl: 0n,
-
-      collateralDelta: 0n,
-      sizeDelta: 0n,
-      realisedPnlPercentage: 0n,
-      performancePercentage: 0n,
-      roi: 0n,
-      openPnl: 0n,
-      pnl: 0n,
-
-      usedCollateralMap: {},
-      maxCollateral: 0n,
-
-      winTradeCount: 0,
-      settledTradeCount: 0,
-      openTradeCount: 0,
-    }
-
-    const sortedTradeList = tradeList.sort((a, b) => a.timestamp - b.timestamp)
-    const summary = sortedTradeList.reduce((seed, next): IAccountLadderSummary => {
-
-      const usedCollateralMap = {
-        ...seed.usedCollateralMap,
-        [next.key]: next.collateral,
-        // [next.key]: next.status === TradeStatus.OPEN ? next.collateral : 0n,
-      }
-      const usedCollateral = Object.values(usedCollateralMap).reduce((s, n) => s + n, 0n)
-
-      const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
-      const posDelta = calculatePositionDelta(indexTokenMarkPrice, next.averagePrice, next.isLong, next)
-      const isSettled = isTradeSettled(next)
-
-
-      const realisedPnl = seed.realisedPnl + next.realisedPnl
-      const openPnl = seed.openPnl + posDelta.delta
-      const pnl = openPnl + realisedPnl
-
-      const usedMinProfit = usedCollateral - pnl
-      const collateral = usedMinProfit > seed.collateral ? usedMinProfit : seed.collateral
-      const roi = pnl * BASIS_POINTS_DIVISOR / collateral
-
-
-      return {
-        collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi,
-
-        maxCollateral: 0n,
-        // openCollateral: 0n,
-        claim: null,
-        fee: seed.fee + next.fee,
-        collateralDelta: seed.collateralDelta + next.collateralDelta,
-
-        realisedPnlPercentage: seed.realisedPnlPercentage + next.realisedPnlPercentage,
-        size: seed.size + next.size,
-        sizeDelta: seed.sizeDelta + next.sizeDelta,
-        performancePercentage: 0n,
-        // performancePercentage: seed.performancePercentage + performancePercentage,
-
-
-        winTradeCount: seed.winTradeCount + (isSettled && next.realisedPnl > 0n ? 1 : 0),
-        settledTradeCount: seed.settledTradeCount + (isSettled ? 1 : 0),
-        openTradeCount: next.status === TradeStatus.OPEN ? seed.openTradeCount + 1 : seed.openTradeCount,
-      }
-    }, seedAccountSummary)
-
-    seed.push(summary)
-
-    return seed
-  }, [] as IAccountLadderSummary[])
-}
 

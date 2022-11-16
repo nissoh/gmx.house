@@ -6,10 +6,9 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
-import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
@@ -40,7 +39,6 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimer
 export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCumulative<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
-  [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
 ) => {
 
   const urlFragments = document.location.pathname.split('/')
@@ -222,10 +220,8 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
 
 
               return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
-                style({ color: pallete.message })(
-                  $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                    `${isNeg ? '' : '+'}${val}`
-                  )
+                $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                  `${isNeg ? '' : '+'}${val}`
                 ),
                 $seperator,
                 $text(formatReadableUSD(pos.collateral))
@@ -246,7 +242,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
           ] : []),
           {
             $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
-              $text('Prize $'),
+              $text('Prize AVAX'),
               $text(style({ fontSize: '.65em' }))('ROI %'),
             ),
             columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end' }),
@@ -257,7 +253,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                 prize
                   ? $row(
                     $avaxIcon,
-                    $text(style({ fontSize: '1.3em', color: pallete.positive }))(prize),
+                    $text(style({ fontSize: '1.8em', color: pallete.positive }))(prize),
                   ) : empty(),
 
                 $text(`${formatFixed(pos.roi, 2)}%`)

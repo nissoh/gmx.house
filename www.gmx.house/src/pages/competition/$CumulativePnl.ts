@@ -231,8 +231,11 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
               ),
               columnOp: style({ placeContent: 'center', minWidth: '125px' }),
               $body: map((pos: IAccountLadderSummary) => {
+                const val = formatReadableUSD(pos.pnl)
+                const isNeg = pos.pnl < 0n
+
                 return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
-                  $text(style({ fontSize: '1.25em' }))(`${formatReadableUSD(pos.pnl)}`),
+                  $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(val),
                   $seperator,
                   $row(layoutSheet.spacingSmall, style({ fontSize: '.75em', alignItems: 'center', placeContent: 'center' }))(
                     $text(formatReadableUSD(pos.size)),
@@ -245,7 +248,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
           ] : []),
           {
             $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
-              $text('Prize $'),
+              $text('Prize AVAX'),
               $text(style({ fontSize: '.65em' }))('Profits'),
             ),
             columnOp: style({ flex: 1, alignItems: 'center', placeContent: 'flex-end' }),

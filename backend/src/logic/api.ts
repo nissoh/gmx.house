@@ -75,7 +75,7 @@ api.post('/claim-account-ens', async (req, res) => {
   const verifiedAddress = verifyMessage(account, req.body.signature)
 
   if (verifiedAddress !== account) {
-    return res.status(403).json({ message: 'Signature hash could not match' })
+    return res.status(403).json({ message: 'Signature hash does not match' })
   }
 
   if (isAddress(account)) {
