@@ -1,6 +1,6 @@
-import { Op } from "@aelea/core"
-import { $text, style, attr, $node, $element, $Branch } from "@aelea/dom"
-import { Route } from "@aelea/router"
+import { O, Op } from "@aelea/core"
+import { $text, style, attr, $node, $element, $Branch, styleBehavior } from "@aelea/dom"
+import { Route, contains } from "@aelea/router"
 import { $row, layoutSheet, $column, $icon, screenUtils } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { empty, map, periodic } from "@most/core"
@@ -75,17 +75,17 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
             : $text(style({ color: ended ? '' : pallete.indeterminate }))('Competition is LIVE!'),
           $row(layoutSheet.spacingSmall)(
             $AnchorLink({
-              anchorOp: style({ position: 'relative' }),
+              anchorOp: O(style({ position: 'relative' })),
               $content: $text('Top Profit'),
               url: `/avalanche/top-profit`,
-              route: parentRoute.create({ fragment: '2121212' })
+              route: parentRoute.create({ fragment: 'top-profit' })
             })({ click: routeChangeTether() }),
             $row(style({ color: pallete.foreground }))($text('|')),
             $AnchorLink({
               anchorOp: style({ position: 'relative' }),
               $content: $text('Top ROI'),
               url: `/avalanche/top-roi`,
-              route: parentRoute.create({ fragment: '2121212' })
+              route: parentRoute.create({ fragment: 'top-roi' })
             })({ click: routeChangeTether() }),
           )
         )

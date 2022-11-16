@@ -208,6 +208,19 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               )
             }, tableList)
           },
+          ...(screenUtils.isDesktopScreen ? [
+            {
+              $head: $text('Win/Loss'),
+              columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
+              $body: map((pos: IAccountLadderSummary) => {
+                return $row(
+                  $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+                )
+              })
+            },
+
+          ] : []),
+
           {
             $head: $column(style({ textAlign: 'center' }))(
               $text('Profits $'),
@@ -228,18 +241,6 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               )
             })
           },
-          ...(screenUtils.isDesktopScreen ? [
-            {
-              $head: $text('Win/Loss'),
-              columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
-              $body: map((pos: IAccountLadderSummary) => {
-                return $row(
-                  $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
-                )
-              })
-            },
-
-          ] : []),
           {
             $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
               $text('Prize AVAX'),

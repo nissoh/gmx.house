@@ -8,8 +8,6 @@ import { competitionAccountListDoc } from "./queries"
 import { fetchHistoricTrades, graphMap } from "./api"
 import { gql, TypedDocumentNode } from "@urql/core"
 
-const USED_PERCISION = 10n ** 30n
-const bigNumberForPriority = 100000000n
 
 const createCache = cacheMap({})
 
@@ -59,8 +57,8 @@ export const competitionCumulativeRoi = O(
 
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
-          const aN = claimMap[a.account] ? a.roi : a.roi - bigNumberForPriority
-          const bN = claimMap[b.account] ? b.roi : b.roi - bigNumberForPriority
+          const aN = claimMap[a.account] ? a.roi : a.roi - 100000000n
+          const bN = claimMap[b.account] ? b.roi : b.roi - 100000000n
 
           return Number(bN - aN)
         })

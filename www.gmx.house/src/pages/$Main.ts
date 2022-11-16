@@ -242,7 +242,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   ? style({ width: '780px', alignSelf: 'center' })
                   : style({ width: '100%' })
               )(
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
                 $CumulativePnl({
                   from: COMPETITION_START,
                   to: COMPETITION_END,
@@ -250,7 +250,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   walletStore,
                   walletLink,
                   claimMap,
-                  parentRoute: rootRoute,
+                  parentRoute: chainRoute,
                   parentStore: rootStore,
                   competitionCumulativePnl: map((x: IPageParapApi<IAccountLadderSummary>) => ({
                     ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl) }))
@@ -270,7 +270,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   ? style({ width: '780px', alignSelf: 'center' })
                   : style({ width: '100%' })
               )(
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
                 $CompetitionRoi({
                   from: COMPETITION_START,
                   to: COMPETITION_END,
@@ -278,7 +278,7 @@ export default ({ baseRoute = '' }: Website) => component((
                   walletStore,
                   claimMap,
                   walletLink,
-                  parentRoute: rootRoute,
+                  parentRoute: chainRoute,
                   parentStore: rootStore,
                   competitionCumulativeRoi: map((x: IPageParapApi<IAccountLadderSummary>) => {
                     return { ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl), roi: BigInt(obj.roi) })) }

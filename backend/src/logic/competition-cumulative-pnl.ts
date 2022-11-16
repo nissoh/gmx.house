@@ -12,7 +12,6 @@ import { fetchHistoricTrades, graphMap } from "./api"
 import { gql, TypedDocumentNode } from "@urql/core"
 
 
-const bigNumberForPriority = 10n ** 50n
 
 const createCache = cacheMap({})
 
@@ -61,8 +60,8 @@ export const competitionCumulativePnl = O(
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
-          const aN = claimMap[a.account] ? a.realisedPnl + a.openPnl : a.realisedPnl + a.openPnl - bigNumberForPriority
-          const bN = claimMap[b.account] ? b.realisedPnl + b.openPnl : b.realisedPnl + b.openPnl - bigNumberForPriority
+          const aN = claimMap[a.account] ? a.realisedPnl + a.openPnl : a.realisedPnl + a.openPnl - 100000000n
+          const bN = claimMap[b.account] ? b.realisedPnl + b.openPnl : b.realisedPnl + b.openPnl - 100000000n
 
           return Number(bN - aN)
         })

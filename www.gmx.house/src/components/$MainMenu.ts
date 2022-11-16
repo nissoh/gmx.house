@@ -47,10 +47,8 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
 
   const chainLabel = chainFragment || 'arbitrum'
 
-  const leaderboardRoute = parentRoute.create({ fragment: 'guide', title: 'Guide' })
-
   const $menuLinks = [
-    $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: leaderboardRoute })({
+    $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: parentRoute.create({ fragment: 'leaderboard' }) })({
       click: routeChangeTether()
     }),
     $tradeGMX
