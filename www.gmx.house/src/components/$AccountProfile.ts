@@ -24,7 +24,7 @@ export interface IAccountPreview {
   labelSize?: string
   avatarSize?: string
   parentRoute?: Route
-  chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE
+  chain: CHAIN
   claim?: IClaim
 }
 
@@ -67,16 +67,23 @@ export const $AccountPhoto = (address: string | null, claim?: IClaim, size = '42
   return $jazzicon(address, size)
 }
 
-export const $AccountLabel = (address: string | null, claim?: IClaim, adressOp: Op<INode, INode> = O()) => {
-  const isAddressValid = address && isAddress(address)
+export const $disconnectedWalletDisplay = (avatarSize = 38) => {
+  const sizePx = avatarSize + 'px'
+  const $wrapper = $node(style({ width: sizePx, height: sizePx, minWidth: sizePx, minHeight: sizePx, borderRadius: '50%' }))
 
-  if (!isAddressValid) {
-    return $column(
+  return $row(layoutSheet.row, layoutSheet.spacingSmall, style({ alignItems: 'center', textDecoration: 'none' }))(
+    $wrapper(style({ display: 'flex', border: `1px solid ${pallete.foreground}`, placeContent: 'center', alignItems: 'center' }))(
+      $text(style({ fontWeight: 800, color: pallete.foreground }))('?')
+    ),
+    $column(style({ whiteSpace: 'nowrap' }))(
       $text(style({ fontSize: '.75em' }))('0x----'),
-      $text(adressOp, style({ fontSize: '1em' }))('----')
+      $text(style({ fontSize: '1em' }))('----')
     )
-  }
+  )
+}
 
+export const $AccountLabel = (address: string, claim?: IClaim, adressOp: Op<INode, INode> = O()) => {
+  
   if (claim) {
     return $text(style({ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }), adressOp)(claim.name)
   }
@@ -88,7 +95,7 @@ export const $AccountLabel = (address: string | null, claim?: IClaim, adressOp: 
 }
 
 
-export const $ProfileLinks = (address: string, chain: CHAIN.ARBITRUM | CHAIN.AVALANCHE, claim?: IClaim) => {
+export const $ProfileLinks = (address: string, chain: CHAIN, claim?: IClaim) => {
   const $explorer = $anchor(attr({ href: getAccountExplorerUrl(chain, address) }))(
     $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
   )
@@ -285,37 +292,7 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                       return empty()
                     }, isNotMatchedAccount)),
 
-                    // https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc
-                    $text(style({ color: pallete.foreground }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
-                    $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))(
-                      $text('Guide on setting ENS profile avatar')
-                    ),
-                    // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
-                    $row(style({ justifyContent: 'center' }))(
-                      $ButtonPrimary({
-                        $content: $text(`Sign & ${claim && claim.sourceType === IClaimSource.ENS ? 'Refresh' : 'Link'}`),
-                        disabled: isNotMatchedAccount
-                      })({
-                        click: claimTxTether(
-                          map(async () => {
 
-                            // const mainnetProvider = getDefaultProvider()
-                            const signer = provider.getSigner()
-                            const signature = await signer.signMessage(address)
-
-                            return http.fetchJson<IClaim>('/api/claim-account-ens', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ account: address, signature })
-                            })
-                          }),
-                          claimFlowOp
-                        )
-                      }),
-                    ),
-
-                    $labeledDivider('or'),
-              
                     // $text(style({ fontSize: '1.25em' }))('Claim Account'),
                     $node(),
                     // chain(x => $text(String(x)), wallet),
@@ -325,7 +302,7 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                       value: now(''),
                       validation: map(str => {
 
-                        
+
                         try {
                           validateIdentityName(String(str))
                         } catch (err) {
@@ -336,6 +313,8 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                     })({
                       change: displayTether()
                     }),
+
+
                     $node(),
                     $row(style({ justifyContent: 'center' }), layoutSheet.spacing)(
                       $ButtonPrimary({
@@ -356,7 +335,7 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                             }, display)
                           ])
                         ),
-                        $content: $text('Sign & Post')
+                        $content: $text('Use Twitter')
                       })({
                         click: claimTxTether(
                           snapshot(async state => {
@@ -373,8 +352,41 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                           claimFlowOp
                         )
                       })
-                  
                     ),
+
+                    $labeledDivider('or'),
+
+
+                    // https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc
+                    $text(style({ color: pallete.foreground }))(`link Ethereum Name Service(ENS) and fetch(twitter and NFT profile photo) metadata if assigned`),
+                    $anchor(attr({ href: 'https://medium.com/the-ethereum-name-service/step-by-step-guide-to-setting-an-nft-as-your-ens-profile-avatar-3562d39567fc' }))(
+                      $text('Guide on setting ENS profile avatar')
+                    ),
+                    // switchLatest(map(ensName => ensName ? empty() : $alert($text(`No ENS has been assigned. visit https://app.ens.domains/`)), ensNameQuery)),
+                    $row(style({ justifyContent: 'center' }))(
+                      $ButtonPrimary({
+                        $content: $text(`Use ENS`),
+                        disabled: isNotMatchedAccount
+                      })({
+                        click: claimTxTether(
+                          map(async () => {
+
+                            // const mainnetProvider = getDefaultProvider()
+                            const signer = provider.getSigner()
+                            const signature = await signer.signMessage(address)
+
+                            return http.fetchJson<IClaim>('/api/claim-account-ens', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ account: address, signature })
+                            })
+                          }),
+                          claimFlowOp
+                        )
+                      }),
+                    ),
+
+
                   )
                 }, claim, walletLink.provider)
               ),

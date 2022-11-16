@@ -58,7 +58,7 @@ export const competitionCumulativeRoi = O(
       // .filter(x => x.account === '0xd92f6d0c7c463bd2ec59519aeb59766ca4e56589')
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 
-      const formattedList = toAccountCompetitionSummary(tradeList, priceMap, to)
+      const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
           const aN = claimMap[a.account] ? a.roi : a.roi - bigNumberForPriority
           const bN = claimMap[b.account] ? b.roi : b.roi - bigNumberForPriority
@@ -83,13 +83,8 @@ export interface ILadderAccount {
 }
 
 
-function getChangePercentage(isLong: boolean, price: bigint, markPrice: bigint) {
-  const priceDelta = isLong ? markPrice - price : price - markPrice
 
-  return priceDelta * BASIS_POINTS_DIVISOR / price
-}
-
-export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }, endDate: number): IAccountLadderSummary[] {
+export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }): IAccountLadderSummary[] {
   const tradeListMap = groupByMapMany(list, a => a.account)
   const tradeListEntries = Object.entries(tradeListMap)
 
@@ -144,24 +139,6 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       const collateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
       const roi = pnl * BASIS_POINTS_DIVISOR / collateral
 
-      // const updateListFiltered = next.updateList.filter(t => t.timestamp <= endDate)
-      // const adjustmentList = [...next.increaseList, ...next.decreaseList].sort((a, b) => a.timestamp - b.timestamp).filter(t => t.timestamp <= endDate)
-      // const lastAdjustedPrice = isSettled
-      //   ? isTradeLiquidated(next) ? next.liquidatedPosition.markPrice : next.decreaseList[0].price
-      //   : adjustmentList[0].price
-      // const lastRoi = getChangePercentage(next.isLong, lastAdjustedPrice, indexTokenMarkPrice)
-      // const initialRoi = {
-      //   roi: isSettled ? 0n : getChangePercentage(next.isLong, lastAdjustedPrice, indexTokenMarkPrice),
-      //   prevAdjustedPrice: adjustmentList[0].price
-      // }
-      // const performancePercentage = adjustmentList.reduce((seed, nextUpdate, ifx, arr) => {
-      //   const deltaRoi = getChangePercentage(next.isLong, seed.prevAdjustedPrice, nextUpdate.price)
-
-      //   return {
-      //     roi: seed.roi + deltaRoi,
-      //     prevAdjustedPrice: nextUpdate.price
-      //   }
-      // }, initialRoi).roi
 
       return {
         collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi,

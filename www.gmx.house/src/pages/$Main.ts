@@ -7,14 +7,10 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@most/core'
 import { IEthereumProvider } from "eip1193-provider"
 import {
-  ARBITRUM_TRADEABLE_ADDRESS,
-  AVALANCHE_TRADEABLE_ADDRESS,
-  CHAIN,
-  fromJson, groupByMap, IAccountSummary,
-  IAccountTradeListParamApi,
-  IChainParamApi,
+  ARBITRUM_TRADEABLE_ADDRESS, AVALANCHE_TRADEABLE_ADDRESS,
+  CHAIN, fromJson, groupByMap, IAccountSummary, IAccountTradeListParamApi, IChainParamApi,
   IIdentifiableEntity, ILeaderboardRequest, IPageParapApi,
-  IPagePositionParamApi, IPricefeed, IPricefeedParamApi, IPriceLatestMap, ITimerangeParamApi, ITradeOpen, TradeStatus, TX_HASH_REGEX
+  IPagePositionParamApi, IPricefeed, IPricefeedParamApi, IPriceLatestMap, ITradeOpen, TradeStatus, TX_HASH_REGEX
 } from '@gambitdao/gmx-middleware'
 import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
@@ -35,7 +31,7 @@ import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
 import { IAccountLadderSummary, IQueryCompetitionApi } from "common"
 import { $CompetitionRoi } from "./competition/$CumulativeRoi"
-import { $CompetitionPnl } from "./competition/$CumulativePnl"
+import { $CumulativePnl } from "./competition/$CumulativePnl"
 
 
 
@@ -142,29 +138,6 @@ export default ({ baseRoute = '' }: Website) => component((
 
 
 
-  function competitionHeadline(title: string, description: string, prizePool: string) {
-    return $column(style({ padding: '0 10px' }))(
-      $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
-
-      $row(style({}))(
-
-        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-          $text(title),
-          $text(style({ fontSize: '.65em' }))(description)
-        ),
-
-        $row(
-          $text(style({
-            color: pallete.positive,
-            fontSize: '1.75em',
-            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-          }))(prizePool)
-        )
-      )
-
-    )
-  }
-
   const latestPriceMap = replayLatest(multicast(map((res: IPriceLatestMap) => Object.entries(res).reduce((seed, [key, price]) => {
     const k = key as ARBITRUM_TRADEABLE_ADDRESS | AVALANCHE_TRADEABLE_ADDRESS
     seed[k] = fromJson.priceLatestJson(price)
@@ -235,8 +208,9 @@ export default ({ baseRoute = '' }: Website) => component((
               })
             ),
             router.match(leaderboardRoute)(
-              $column(
+              $column(layoutSheet.spacingBig)(
                 $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $node(),
                 $Leaderboard({
                   claimMap,
                   parentRoute: rootRoute,
@@ -260,11 +234,18 @@ export default ({ baseRoute = '' }: Website) => component((
 
             router.match(competitionCumulativePnlRoute)(
               $column(
-                // competitionHeadline(`Cumulative PnL`, `During(TEST) ${displayDate(COMPETITION_START)} - ${displayDate(COMPETITION_END)}`, '$125,000'),
-                $CompetitionPnl({
+                style({ gap: '46px', display: 'flex' }),
+                screenUtils.isDesktopScreen
+                  ? style({ width: '780px', alignSelf: 'center' })
+                  : style({ width: '100%' })
+              )(
+                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $CumulativePnl({
                   from: COMPETITION_START,
                   to: COMPETITION_END,
-                  chain: CHAIN.ARBITRUM,
+                  chain: CHAIN.AVALANCHE,
+                  walletStore,
+                  walletLink,
                   claimMap,
                   parentRoute: rootRoute,
                   parentStore: rootStore,
@@ -281,12 +262,19 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(competitionCumulativeRoiRoute)(
               $column(
+                style({ gap: '46px', display: 'flex' }),
+                screenUtils.isDesktopScreen
+                  ? style({ width: '780px', alignSelf: 'center' })
+                  : style({ width: '100%' })
+              )(
                 $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
                 $CompetitionRoi({
                   from: COMPETITION_START,
                   to: COMPETITION_END,
-                  chain: CHAIN.ARBITRUM,
+                  chain: CHAIN.AVALANCHE,
+                  walletStore,
                   claimMap,
+                  walletLink,
                   parentRoute: rootRoute,
                   parentStore: rootStore,
                   competitionCumulativeRoi: map((x: IPageParapApi<IAccountLadderSummary>) => {

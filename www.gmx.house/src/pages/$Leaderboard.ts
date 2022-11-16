@@ -15,7 +15,6 @@ import { $Entry, $livePnl, $ProfitLossText, $riskLabel, $riskLiquidator } from "
 import { CHAIN_LABEL_ID } from '../types'
 import { IWalletLink } from '@gambitdao/wallet-link'
 import { $Dropdown } from '../components/$Dropdown'
-import { $CompeititonInfo } from './competition/$rules'
 
 
 

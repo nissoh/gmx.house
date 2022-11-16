@@ -1,30 +1,33 @@
-import { Behavior, O, Op, replayLatest } from '@aelea/core'
-import { $element, $node, $text, component, INode, style } from "@aelea/dom"
+import { Behavior, O, replayLatest } from '@aelea/core'
+import { $text, component, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $card, $column, $row, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
-import { combine, constant, map, multicast, periodic, scan, snapshot, switchLatest, take } from '@most/core'
+import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, parseFixed, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
-import { $AccountLabel, $AccountPhoto, $AccountPreview } from '../../components/$AccountProfile'
-import { $alert } from '../../elements/$common'
-import { $ProfitLossText, $riskLabel } from '../common'
+import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
+import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
-import { countdown } from './$rules'
+import { $alertTooltip, $avaxIcon } from './$rules'
+import { IWalletLink } from '@gambitdao/wallet-link'
 
 
-const prizeLadder: bigint[] = [parseFixed(65000, 30), parseFixed(30000, 30), parseFixed(15000, 30), ...Array(17).fill(parseFixed(1000, 30))]
+const prizeLadder: string[] = ['1200', '600', '300', ...Array(15).fill('60')]
 
 
 
 export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimerangeParamApi, IChainParamApi {
+  walletLink: IWalletLink
   parentRoute: Route
   provider?: Stream<T>
   claimMap: Stream<{ [k: string]: IClaim }>
+  walletStore: state.BrowserStore<"metamask" | "walletConnect" | null, "walletStore">
+
 
   competitionCumulativeRoi: Stream<IPageParapApi<IAccountLadderSummary>>
 
@@ -32,27 +35,12 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimer
 }
 
 
-const $nftPrice = (rank: number, imgOp: Op<INode, INode>) => {
-  const size = '54px'
-  const block = style({ width: size, height: size, position: 'absolute', offset: 0 })
-  const $img = $element('img')(block)
 
-  return $row(style({ position: 'relative', width: size }))(
-    $img(imgOp)(),
-    $row(style({ alignItems: 'baseline', width: size, zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-      $text(style({ fontSize: '1em', textShadow: `rgb(0 0 0 / 61%) 1px 1px 0px` }))(`#`),
-      $text(style({ fontSize: '1.5em', lineHeight: size, textShadow: `rgb(0 0 0 / 61%) 1px 1px 0px` }))(`${rank}`),
-    )
-  )
-}
-
-const counter = scan((seed, n: number) => seed + n, 0, constant(1, periodic(2000)))
-
-const blueberriesPreviewList = ['/assets/blueberriesNFT/Green.png', '/assets/blueberriesNFT/Orange.png', '/assets/blueberriesNFT/Purple.png', '/assets/blueberriesNFT/Yellow.png']
 
 export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCumulative<T>) => component((
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
+  [clickPopoverClaim, clickPopoverClaimTether]: Behavior<any, any>,
 ) => {
 
   const urlFragments = document.location.pathname.split('/')
@@ -75,20 +63,20 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   }, multicast(config.competitionCumulativeRoi))
   )
 
-  
+
   const newLocal = take(1, tableList)
   return [
-    $node(style({ gap: '46px', display: 'flex', flexDirection: screenUtils.isMobileScreen ? 'column' : 'row' }))(
-      $column(layoutSheet.spacing, style({ flex: 1, padding: '0 12px' }))(
+    $column(
 
-        switchLatest(combine((page, claimMap) => {
+      unixTimestampNow() >= config.to
+        ? switchLatest(combine((page, claimMap) => {
           const list = page.page
 
           return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
-            $column(style({ alignItems: 'center' }))(
-              $text(`Ending in`),
-              $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
-            ),
+            // $column(style({ alignItems: 'center' }))(
+            //   $text(`Ending in`),
+            //   $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
+            // ),
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
@@ -126,166 +114,172 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[2].account}`,
             })({ click: routeChangeTether() })
           )
-        }, newLocal, config.claimMap)),
-
-        $column(style({ alignItems: 'center' }))(
-          $row(style({ width: '780px', }))(
-            $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-              $text(style({}))(`Highest ROI (%)`),
-              $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral * 100`),
-            ),
-
-            $row(
-              $text(style({
-                color: pallete.positive,
-                fontSize: '1.75em',
-                textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-              }))('$125,000')
-            )
-          ),
-
-          $Table2({
-            $container: $card(
-              layoutSheet.spacingBig,
-              screenUtils.isDesktopScreen
-                ? style({ padding: '28px 50px', width: '780px', })
-                : style({ padding: '16px 8px', margin: '0 -12px' })
-            ),
-            scrollConfig: {
-              containerOps: O(layoutSheet.spacingBig)
-            },
-            dataSource: tableList,
-            columns: [
-
-              {
-                $head: $text('Account'),
-                columnOp: style({ minWidth: '120px', flex: 1.2, alignItems: 'center' }),
-                $body: snapshot((datasource, pos: IAccountLadderSummary) => {
-
-                  return $row(layoutSheet.spacingSmall)(
-
-                    $row(layoutSheet.spacingSmall)(
-
-                      switchLatest(map(claimMap => {
-                        const claim = claimMap[pos.account]
-
-                        if (!claim) {
-                          return $row(
-                            style({ zoom: '0.7' })(
-                              $alert($text('Unclaimed'))
-                            )
-                          )
-                        }
-
-                        const rank = datasource.offset + datasource.page.indexOf(pos) + 1
+        }, newLocal, config.claimMap))
+        : empty(),
 
 
-                        return $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
-                          $text(style({ fontSize: '.65em' }))(`${rank}`),
-                        )
-
-                        // if (rank < 2) {
-                        //   $nftPLaceholder = $nftPrice(rank, attrBehavior(map(n => ({ src: blueberriesPreviewList[(n % blueberriesPreviewList.length)] }), counter)))
-                        // }
-
-                        // if (rank < 21) {
-
-                        //   return $column(layoutSheet.spacingSmall)(
-                        //     $row(style({ alignItems: 'center' }), layoutSheet.spacingSmall)(
-                        //       $nftPLaceholder
-                        //     )
-                        //   )
-                        // }
 
 
-                        // return $nftPLaceholder
-                      }, config.claimMap))
+      $row(
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
+          $text(style({}))(`Highest ROI (%)`),
+          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral * 100`),
+        ),
 
-                    ),
-                    switchLatest(map(map => {
-                      return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
-                        profileClick: routeChangeTether()
-                      })
-                    }, config.claimMap)),
-
-                    // $text(style({ fontSize: '1em', fontWeight: 'bold' }))(
-                    //   `$${readableNumber(getPrizePoolByRank(rank))}`
-                    // )
-                  )
-                }, tableList)
-              }
-              ,
-              // {
-              //   $head: $text('Account'),
-              //   columnOp: style({ minWidth: '120px', flex: 1.2 }),
-              //   $body: map(({ account }) => {
-
-              //     return switchLatest(map(map => {
-              //       return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
-              //         profileClick: routeChangeTether()
-              //       })
-              //     }, config.claimMap))
-              //   })
-              // },
-              {
-                $head: $text('Win/Loss'),
-                columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
-                $body: map(pos => {
-                  return $row(
-                    $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
-                  )
-                })
-              },
-              ...(screenUtils.isDesktopScreen ? [
-                {
-                  $head: $column(style({ textAlign: 'center' }))(
-                    $text('Size $'),
-                    $text(style({ fontSize: '.65em' }))('Avg Leverage'),
-                  ),
-                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                  $body: map((pos: IAbstractTrade) => {
-                    return $riskLabel(pos)
-                  })
-                },
-                {
-                  $head: $text('Pnl $'),
-                  columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-                  $body: map((pos: IAccountLadderSummary) => {
-                    const val = formatReadableUSD(pos.pnl)
-                    const isNeg = pos.pnl < 0n
-
-                    return $row(
-                      $column(style({ alignItems: 'center' }))(
-                        // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
-                        style({ color: pallete.message })(
-                          $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
-                            `${isNeg ? '' : '+'}${val}`
-                          )
-                        )
-                      )
-                    )
-                  })
-                }
-              ] : []),
-              {
-                $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
-                  $text('Prize $'),
-                  $text(style({ fontSize: '.65em' }))('ROI %'),
-                ),
-                columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end' }),
-                $body: snapshot((list, pos) => {
-                  const prizeUsd = prizeLadder[list.offset + list.page.indexOf(pos)]
-
-                  return $column(
-                    style({ fontSize: '1.3em' })($ProfitLossText(prizeUsd)),
-                    $text(`${formatFixed(pos.roi, 2)}%`)
-                  )
-                }, tableList)
-              }
-            ],
-          })({ scrollIndex: highTableRequestIndexTether() }),
+        $row(
+          $text(style({
+            color: pallete.positive,
+            fontSize: '1.75em',
+            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
+          }))('~$50,000')
         )
       ),
+
+      switchLatest(combine((account, chain) => {
+
+        if (!account || !chain) {
+          return empty()
+        }
+
+        return $row(style({ backgroundColor: pallete.background, borderLeft: 0, borderRadius: '30px', alignSelf: 'center', marginBottom: '30px', padding: '20px' }))(
+
+          switchLatest(map(map => {
+
+            return $ProfilePreviewClaim({
+              address: account,
+              chain,
+              claimMap: config.claimMap, walletStore: config.walletStore, walletLink: config.walletLink,
+              avatarSize: '55px', labelSize: '1.2em',
+            })({
+              // walletChange: walletChangeTether()
+            })
+
+            // return $AccountPreview({
+            //   parentRoute: config.parentRoute,
+            //   address: account || '',
+            //   claim: map[account!.toLowerCase()],
+            //   chain: chain === CHAIN.ARBITRUM || chain === CHAIN.AVALANCHE ? chain : CHAIN.ARBITRUM
+            // })({ profileClick: O(routeChangeTether(), routeChangeTether()) })
+            // return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
+            //   profileClick: routeChangeTether()
+            // })
+          }, config.claimMap)),
+
+
+        )
+      }, config.walletLink.account, config.walletLink.network)),
+
+
+      $Table2({
+        $container: $card(layoutSheet.spacingBig, style(screenUtils.isDesktopScreen ? { padding: "28px 40px" } : {})),
+        scrollConfig: {
+          containerOps: O(layoutSheet.spacingBig)
+        },
+        dataSource: tableList,
+        columns: [
+
+          {
+            $head: $text('Account'),
+            columnOp: style({ minWidth: '120px', flex: 1.2, alignItems: 'center' }),
+            $body: snapshot((datasource, pos: IAccountLadderSummary) => {
+
+              return $row(layoutSheet.spacingSmall)(
+
+                $row(layoutSheet.spacingSmall)(
+                  switchLatest(map(claimMap => {
+                    const claim = claimMap[pos.account]
+
+                    if (!claim) {
+                      return $row(
+                        $alertTooltip($text(style({ whiteSpace: 'pre-wrap', fontSize: '.75em' }))(`Unclaimed profile remains below until claimed`)),
+                        // style({ zoom: '0.7' })(
+                        //   $alert($text('Unclaimed'))
+                        // )
+                      )
+                    }
+
+                    const rank = datasource.offset + datasource.page.indexOf(pos) + 1
+
+
+                    return $row(style({ alignItems: 'baseline', zIndex: 5, textAlign: 'center', placeContent: 'center' }))(
+                      $text(style({ fontSize: '.65em' }))(`${rank}`),
+                    )
+
+                  }, config.claimMap))
+
+                ),
+                switchLatest(map(map => {
+                  return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
+                    profileClick: routeChangeTether()
+                  })
+                }, config.claimMap)),
+
+
+              )
+            }, tableList)
+          },
+          {
+            $head: $text('Win/Loss'),
+            columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
+            $body: map(pos => {
+              return $row(
+                $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+              )
+            })
+          },
+          ...(screenUtils.isDesktopScreen ? [
+            {
+              $head: $column(style({ textAlign: 'center' }))(
+                $text('Size $'),
+                $text(style({ fontSize: '.65em' }))('Avg Leverage'),
+              ),
+              columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+              $body: map((pos: IAbstractTrade) => {
+                return $riskLabel(pos)
+              })
+            },
+            {
+              $head: $text('Pnl $'),
+              columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+              $body: map((pos: IAccountLadderSummary) => {
+                const val = formatReadableUSD(pos.pnl)
+                const isNeg = pos.pnl < 0n
+
+                return $row(
+                  $column(style({ alignItems: 'center' }))(
+                    // prize ? style({ fontSize: '1.3em' })($ProfitLossText(prize)) : empty(),
+                    style({ color: pallete.message })(
+                      $text(style({ color: isNeg ? pallete.negative : pallete.positive }))(
+                        `${isNeg ? '' : '+'}${val}`
+                      )
+                    )
+                  )
+                )
+              })
+            }
+          ] : []),
+          {
+            $head: $column(style({ placeContent: 'flex-end', alignItems: 'flex-end' }))(
+              $text('Prize $'),
+              $text(style({ fontSize: '.65em' }))('ROI %'),
+            ),
+            columnOp: style({ flex: 1, alignItems: 'flex-end', placeContent: 'flex-end' }),
+            $body: snapshot((list, pos) => {
+              const prize = prizeLadder[list.offset + list.page.indexOf(pos)]
+
+              return $column(
+                prize
+                  ? $row(
+                    $avaxIcon,
+                    $text(style({ fontSize: '1.3em', color: pallete.positive }))(prize),
+                  ) : empty(),
+
+                $text(`${formatFixed(pos.roi, 2)}%`)
+              )
+            }, tableList)
+          }
+        ],
+      })({ scrollIndex: highTableRequestIndexTether() }),
 
     ),
 
