@@ -241,16 +241,16 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             })
           },
           ...(screenUtils.isDesktopScreen ? [
-            {
-              $head: $column(style({ textAlign: 'center' }))(
-                $text('Size $'),
-                $text(style({ fontSize: '.65em' }))('Avg Leverage'),
-              ),
-              columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-              $body: map((pos: IAbstractTrade) => {
-                return $riskLabel(pos)
-              })
-            },
+            // {
+            //   $head: $column(style({ textAlign: 'center' }))(
+            //     $text('Size $'),
+            //     $text(style({ fontSize: '.65em' }))('Avg Leverage'),
+            //   ),
+            //   columnOp: style({ placeContent: 'center', minWidth: '125px' }),
+            //   $body: map((pos: IAbstractTrade) => {
+            //     return $riskLabel(pos)
+            //   })
+            // },
             {
               $head: $text('Win/Loss'),
               columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
