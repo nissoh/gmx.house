@@ -99,7 +99,7 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
     ),
     $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
       $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/sign-up-for-the-gmxrush-avalanche-trading-contest-win-100-000-usd-in-prizes-546b1ab2e416' }))(
-        $text('medium.com - #GMXRUSH Avalanche Trading Contest')
+        $text('medium.com - $100,000 #GMXRUSH Avalanche Trading Contest')
       ),
       $node(),
 

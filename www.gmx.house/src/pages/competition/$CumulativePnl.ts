@@ -13,7 +13,7 @@ import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
-import { $alertTooltip, $avaxIcon, formatReadableUSD } from './$rules'
+import { $alertTooltip, $avaxIcon, countdown, formatReadableUSD } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
 import { $leverage } from '../../elements/$common'
 
@@ -119,22 +119,6 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
 
 
 
-
-      $row(layoutSheet.spacing)(
-        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-          $text(style({}))(`Highest Notional P&L`),
-          $text(style({ fontSize: '.75em' }))(`Sum of all realized and unrealized profits and losses, including open positions at the deadline.`),
-        ),
-
-        $row(
-          $text(style({
-            color: pallete.positive,
-            fontSize: '1.75em',
-            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-          }))('~$50,000')
-        )
-      ),
-
       switchLatest(combine((account, chain) => {
 
         if (!account || !chain) {
@@ -159,6 +143,27 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
 
         )
       }, config.walletLink.account, config.walletLink.network)),
+
+
+      $row(style({ padding: screenUtils.isMobileScreen ? '0 12px' : '' }))(
+
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
+          $row(layoutSheet.spacingSmall, style({ alignItems: 'flex-end' }))(
+            $text(style({}))(`Highest Notional P&L`),
+            $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
+            $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+          ),
+          $text(style({ fontSize: '.75em' }))(`Sum of all realized and unrealized profits and losses, including open positions at the deadline.`),
+        ),
+
+        $row(
+          $text(style({
+            color: pallete.positive,
+            fontSize: '1.75em',
+            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
+          }))('~$50,000')
+        )
+      ),
 
 
       $Table2({

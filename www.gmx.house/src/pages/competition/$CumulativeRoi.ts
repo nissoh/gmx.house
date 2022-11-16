@@ -13,7 +13,7 @@ import { $riskLabel } from '../common'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
-import { $alertTooltip, $avaxIcon } from './$rules'
+import { $alertTooltip, $avaxIcon, countdown } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
 
 
@@ -73,10 +73,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
           const list = page.page
 
           return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
-            // $column(style({ alignItems: 'center' }))(
-            //   $text(`Ending in`),
-            //   $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
-            // ),
+
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
               $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
@@ -118,23 +115,6 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
         : empty(),
 
 
-
-
-      $row(
-        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
-          $text(style({}))(`Highest ROI (%)`),
-          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $500) * 100`),
-        ),
-
-        $row(
-          $text(style({
-            color: pallete.positive,
-            fontSize: '1.75em',
-            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-          }))('~$50,000')
-        )
-      ),
-
       switchLatest(combine((account, chain) => {
 
         if (!account || !chain) {
@@ -153,21 +133,33 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             })({
               // walletChange: walletChangeTether()
             })
-
-            // return $AccountPreview({
-            //   parentRoute: config.parentRoute,
-            //   address: account || '',
-            //   claim: map[account!.toLowerCase()],
-            //   chain: chain === CHAIN.ARBITRUM || chain === CHAIN.AVALANCHE ? chain : CHAIN.ARBITRUM
-            // })({ profileClick: O(routeChangeTether(), routeChangeTether()) })
-            // return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
-            //   profileClick: routeChangeTether()
-            // })
           }, config.claimMap)),
 
 
         )
       }, config.walletLink.account, config.walletLink.network)),
+
+
+      $row(style({ padding: screenUtils.isMobileScreen ? '0 12px' : '' }))(
+        $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
+          $row(layoutSheet.spacingSmall, style({ alignItems: 'flex-end' }))(
+            $text(style({}))(`Highest ROI (%)`),
+            $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
+            $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+          ),
+          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $500) * 100`),
+        ),
+
+        $row(
+          $text(style({
+            color: pallete.positive,
+            fontSize: '1.75em',
+            textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
+          }))('~$50,000')
+        )
+      ),
+
+
 
 
       $Table2({
@@ -241,16 +233,6 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             })
           },
           ...(screenUtils.isDesktopScreen ? [
-            // {
-            //   $head: $column(style({ textAlign: 'center' }))(
-            //     $text('Size $'),
-            //     $text(style({ fontSize: '.65em' }))('Avg Leverage'),
-            //   ),
-            //   columnOp: style({ placeContent: 'center', minWidth: '125px' }),
-            //   $body: map((pos: IAbstractTrade) => {
-            //     return $riskLabel(pos)
-            //   })
-            // },
             {
               $head: $text('Win/Loss'),
               columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),

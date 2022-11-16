@@ -1,5 +1,5 @@
 import { Behavior, combineArray, O, Op } from "@aelea/core"
-import { $element, $text, attr, component, IBranch, nodeEvent, style } from "@aelea/dom"
+import { $element, $node, $text, attr, component, IBranch, nodeEvent, style } from "@aelea/dom"
 import { Route } from '@aelea/router'
 import { $column, $icon, $Popover, $row, $seperator, layoutSheet, screenUtils, state } from '@aelea/ui-components'
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
@@ -49,22 +49,31 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
 
   const leaderboardRoute = parentRoute.create({ fragment: 'guide', title: 'Guide' })
 
+  const $menuLinks = [
+    $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: leaderboardRoute })({
+      click: routeChangeTether()
+    }),
+    $tradeGMX
+  ]
+
   return [
     $row(layoutSheet.spacingBig, style({ fontSize: '.9em', alignItems: 'center' }), containerOp)(
 
-      screenUtils.isDesktopScreen
-        ? $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: leaderboardRoute })({
-          click: routeChangeTether()
-        })
-        : empty(),
-      screenUtils.isDesktopScreen
-        ? $tradeGMX
-        : empty(),
+      ...screenUtils.isDesktopScreen
+        ? $menuLinks 
+        : [],
 
       $Popover({
         dismiss: profileLinkClick,
         $$popContent: combineArray((_) => {
           return $column(layoutSheet.spacingBig)(
+
+            ...screenUtils.isMobileScreen
+              ? $menuLinks.reverse()
+              : [],
+            
+            $node(),
+
             $Picker([light, dark])({}),
 
             $IntermediateConnect({
@@ -92,6 +101,7 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
         switchLatest(combine((account, chain) => {
 
           return $row(layoutSheet.spacing)(
+
 
             $icon({
               svgOps: O(

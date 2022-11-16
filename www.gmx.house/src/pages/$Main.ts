@@ -196,16 +196,19 @@ export default ({ baseRoute = '' }: Website) => component((
         router.contains(chainRoute)(
           $column(layoutSheet.spacingBig, style({ maxWidth: '1080px', width: '100%', margin: '0 auto', paddingBottom: '45px' }))(
             $row(layoutSheet.spacing, style({ padding: screenUtils.isDesktopScreen ? '34px 15px' : '18px 12px 0', zIndex: 30, alignItems: 'center' }))(
-              screenUtils.isDesktopScreen
-                ? $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
+
+              $row(layoutSheet.flex)(
+                $RouterAnchor({ $anchor: $element('a')($icon({ $content: $logo, fill: pallete.message, width: '46px', height: '46px', viewBox: '0 0 32 32' })), url: '/', route: rootRoute })({
                   click: linkClickTether()
-                })
-                : empty(),
-              screenUtils.isDesktopScreen ? $node(layoutSheet.flex)() : empty(),
+                }),
+              ),
+              
               $MainMenu({ walletLink, walletStore, claimMap, parentRoute: chainRoute, containerOp: style({ padding: '34px, 20px' }) })({
                 routeChange: linkClickTether(),
                 walletChange: walletChangeTether()
-              })
+              }),
+
+              screenUtils.isDesktopScreen ? empty() : $node(layoutSheet.flex)(),
             ),
             router.match(leaderboardRoute)(
               $column(layoutSheet.spacingBig)(
