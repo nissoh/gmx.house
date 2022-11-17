@@ -8,7 +8,7 @@ import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@m
 import { Stream } from '@most/types'
 import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, getChainName } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
-import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
+import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileLink, $ProfilePreviewClaim, $twitterProfileLink, getTwitterHandle } from '../../components/$AccountProfile'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
@@ -195,9 +195,14 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
 
                 ),
                 switchLatest(map(map => {
-                  return $AccountPreview({ address: pos.account, chain: config.chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
-                    profileClick: routeChangeTether()
-                  })
+                  const claim = map[pos.account.toLowerCase()]
+
+                  return $row(layoutSheet.spacing, style({ minWidth: '0', alignItems: 'center' }))(
+                    $AccountPreview({ address: pos.account, chain: config.chain, parentRoute: config.parentRoute, claim })({
+                      profileClick: routeChangeTether()
+                    }),
+                    $defaultProfileLink(pos.account, config.chain, claim)
+                  )
                 }, config.claimMap)),
 
 

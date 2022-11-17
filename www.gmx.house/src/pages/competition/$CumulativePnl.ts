@@ -6,16 +6,14 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, readableNumber, getLeverage, BASIS_POINTS_DIVISOR } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, readableNumber, BASIS_POINTS_DIVISOR } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
-import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
-import { $riskLabel } from '../common'
+import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileLink, $ProfilePreviewClaim } from '../../components/$AccountProfile'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
 import { $alertTooltip, $avaxIcon, countdown, formatReadableUSD } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
-import { $leverage } from '../../elements/$common'
 
 
 const prizeLadder: string[] = ['1500', '900', '600']
@@ -212,9 +210,13 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
 
                 ),
                 switchLatest(map(map => {
-                  return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
-                    profileClick: routeChangeTether()
-                  })
+                  const claim = map[pos.account.toLowerCase()]
+                  return $row(layoutSheet.spacing, style({ minWidth: '0', alignItems: 'center' }))(
+                    $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim })({
+                      profileClick: routeChangeTether()
+                    }),
+                    $defaultProfileLink(pos.account, config.chain, claim)
+                  )
                 }, config.claimMap)),
 
 

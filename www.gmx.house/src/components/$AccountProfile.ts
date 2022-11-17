@@ -59,7 +59,7 @@ export const $AccountPhoto = (address: string | null, claim?: IClaim, size = '42
 
       if (imageUrl) {
         return $photoContainer(attr({ src: getGatewayUrl(imageUrl) }), style({ minWidth: size, height: size }))()
-      }     
+      }
     }
 
   }
@@ -83,34 +83,55 @@ export const $disconnectedWalletDisplay = (avatarSize = 38) => {
 }
 
 export const $AccountLabel = (address: string, claim?: IClaim, adressOp: Op<INode, INode> = O()) => {
-  
+
   if (claim) {
     return $text(style({ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }), adressOp)(claim.name)
   }
 
   return $column(
     $text(style({ fontSize: '.75em' }))(address.slice(0, 6)),
-    $text(adressOp, style({ fontSize: '1em' }))(address.slice(address.length -4, address.length))
+    $text(adressOp, style({ fontSize: '1em' }))(address.slice(address.length - 4, address.length))
   )
 }
 
 
-export const $ProfileLinks = (address: string, chain: CHAIN, claim?: IClaim) => {
+export const $twitterProfileLink = (twitterHandle: string | null) => {
+  return twitterHandle
+    ? $anchor(attr({ target: '_blank', href: `https://twitter.com/${twitterHandle}` }))(
+      $icon({ $content: $twitter, width: '16px', viewBox: `0 0 24 24` })
+    )
+    : empty()
+}
+
+export const $defaultProfileLink = (address: string, chain: CHAIN, claim?: IClaim) => {
+  const twitterHandle = getTwitterHandle(claim)
+
+  return twitterHandle
+    ? $twitterProfileLink(twitterHandle)
+    : $anchor(attr({ href: getAccountExplorerUrl(chain, address) }))(
+      $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
+    )
+}
+
+
+export function getTwitterHandle(claim?: IClaim): string | null {
+  return claim?.sourceType === IClaimSource.TWITTER
+    ? claim.name
+    : claim?.sourceType === IClaimSource.ENS
+      ? JSON.parse(claim.data).twitterUrl : null
+}
+
+export const $profileLinks = (address: string, chain: CHAIN, claim?: IClaim) => {
   const $explorer = $anchor(attr({ href: getAccountExplorerUrl(chain, address) }))(
     $icon({ $content: $ethScan, width: '16px', viewBox: '0 0 24 24' })
   )
 
-  const twitterHandle = claim?.sourceType === IClaimSource.TWITTER
-    ? claim.name
-    : claim?.sourceType === IClaimSource.ENS
-      ? JSON.parse(claim.data).twitterUrl : null
+  const twitterHandle = getTwitterHandle(claim)
 
   if (twitterHandle) {
     return $row(layoutSheet.spacing)(
       $explorer,
-      $anchor(attr({ href: `https://twitter.com/${twitterHandle}` }))(
-        $icon({ $content: $twitter, width: '16px', viewBox: `0 0 24 24` })
-      ),
+      $twitterProfileLink(twitterHandle),
     )
   }
 
@@ -134,7 +155,8 @@ export const $AccountPreview = ({
 
     $row(layoutSheet.spacingSmall, style({ alignItems: 'center', minWidth: 0 }))(
       parentRoute
-        ? $Link({ route: parentRoute.create({ fragment: '2121212' }),
+        ? $Link({
+          route: parentRoute.create({ fragment: '2121212' }),
           $content: $preview,
           anchorOp: style({ minWidth: 0, overflow: 'hidden' }),
           url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${address}`,
@@ -176,7 +198,7 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
     switchLatest(constant(claimFromMap, dismissPopover))
   ])
 
-  
+
   return [
 
     $column(layoutSheet.spacing)(
@@ -198,12 +220,12 @@ export const $ProfilePreviewClaim = ({ address, avatarSize, labelSize, claimMap,
 
                 $AccountLabel(address, claimChange, style({ fontSize: labelSize, lineHeight: 1 })),
                 $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
-                  $ProfileLinks(address, chain, claimChange),
+                  $profileLinks(address, chain, claimChange),
                   switchLatest(
                     map((claimerAddress) => {
                       const showActions = !claimerAddress || claimerAddress && claimerAddress.toLocaleLowerCase() == address.toLowerCase()
                       return showActions
-                        ? $anchor(style({  }), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
+                        ? $anchor(style({}), clickPopoverClaimTether(nodeEvent('click'), constant(claimerAddress)))(
                           $ButtonSecondary({
                             $content: claimChange ? $text('Update') : $text('Claim account'),
                           })({})
@@ -268,7 +290,7 @@ const $ClaimForm = (address: string, walletLink: IWalletLink, walletStore: state
                       const postQuery = query
                         .then(res => ClaimStatus.SUCCESS)
                         .catch(() => ClaimStatus.FAILED)
-                              
+
 
                       return merge(
                         fromPromise(postQuery),
@@ -418,7 +440,7 @@ const CACHE_TTL = intervalInMsMap.DAY7
 
 
 type ICachedId = IEnsClaim & { createdAt: number }
-export async function getCachedMetadata (address: string, provider: BaseProvider) {
+export async function getCachedMetadata(address: string, provider: BaseProvider) {
   const normalizedAddress = address.toLowerCase()
 
   const cachedItem = window.localStorage.getItem(`ens-${normalizedAddress}`)
