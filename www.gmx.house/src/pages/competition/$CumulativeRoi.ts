@@ -237,7 +237,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                   `${isNeg ? '' : '+'}${val}`
                 ),
                 $seperator,
-                $text(formatReadableUSD(pos.collateral))
+                $text(formatReadableUSD(BigInt(pos.maxCollateral)))
               )
             })
           },

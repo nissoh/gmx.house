@@ -7,11 +7,6 @@ export interface IAccountLadderSummary extends IAccountSummary {
   openPnl: bigint
   pnl: bigint
   cumulativeLeverage: bigint
-
-
-  usedCollateralMap: {
-    [k: string]: bigint
-  }
 }
 
 export type IQueryCompetitionApi = IPagePositionParamApi & ITimerangeParamApi & IChainParamApi

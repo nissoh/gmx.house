@@ -57,6 +57,8 @@ export const competitionCumulativeRoi = O(
 
       const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
         .sort((a, b) => {
+          // const aN = claimMap[a.account] ? a.roi : a.roi
+          // const bN = claimMap[b.account] ? b.roi : b.roi
           const aN = claimMap[a.account] ? a.roi : a.roi - 100000000n
           const bN = claimMap[b.account] ? b.roi : b.roi - 100000000n
 
