@@ -6,7 +6,7 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, IAbstractTrade, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, readableNumber, getLeverage, BASIS_POINTS_DIVISOR } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
 import { $riskLabel } from '../common'
@@ -35,6 +35,13 @@ export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimer
   parentStore: <T, TK extends string = string>(key: TK, intitialState: T) => state.BrowserStore<T, TK>;
 }
 
+function div(a: bigint, b: bigint): bigint {
+  if (b === 0n) {
+    return 0n
+  }
+
+  return a * BASIS_POINTS_DIVISOR / b
+}
 
 
 
@@ -231,10 +238,12 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
               ),
               columnOp: style({ placeContent: 'center', minWidth: '125px' }),
               $body: map((pos: IAccountLadderSummary) => {
-                const val = formatReadableUSD(pos.pnl)
-                const isNeg = pos.pnl < 0n
-
-                return $riskLabel(pos)
+                const leveragePercision = div(BigInt(pos.cumulativeLeverage), BigInt(pos.openTradeCount + pos.settledTradeCount)) / BASIS_POINTS_DIVISOR
+                return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
+                  $text(formatReadableUSD(pos.size)),
+                  $seperator,
+                  style({ textAlign: 'center', fontSize: '.55em' }, $text(style({ fontWeight: 'bold' }))(`${readableNumber(formatFixed(leveragePercision, 4))}x`)),
+                )
 
               })
             }
@@ -250,7 +259,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
 
               return $column(
                 prize
-                  ? $row(style({  }))(
+                  ? $row(style({}))(
                     $avaxIcon,
                     $text(style({ fontSize: '1.8em', color: pallete.positive }))(prize),
                   ) : $row(),

@@ -1,6 +1,7 @@
-import { BASIS_POINTS_DIVISOR, calculatePositionDelta, groupByMapMany, IPricefeed, isTradeSettled, ITrade, TradeStatus, unixTimestampNow } from '@gambitdao/gmx-middleware'
+import { BASIS_POINTS_DIVISOR, formatFixed, groupByMapMany, IPricefeed, isTradeOpen, isTradeSettled, ITrade, TradeStatus, unixTimestampNow } from '@gambitdao/gmx-middleware'
 import { IAccountLadderSummary } from 'common'
 
+const MIN_OF_MAX_COLLATERAL = 500000000000000000000000000000000n
 
 export const timespanPassedSinceInvoke = (timespan: number) => {
   let lastTimePasses = 0
@@ -29,6 +30,27 @@ export const cacheMap = (cacheMap: any) => async <T>(key: string, lifespan: numb
   }
 }
 
+export function getPnL(isLong: boolean, averagePrice: bigint, priceChange: bigint, size: bigint) {
+  const priceDelta = averagePrice > priceChange ? averagePrice - priceChange : priceChange - averagePrice
+  const hasProfit = isLong ? priceChange > averagePrice : averagePrice > priceChange
+  const delta = size * priceDelta / averagePrice
+
+  return hasProfit ? delta : -delta
+}
+
+export function div(a: bigint, b: bigint): bigint {
+  if (b === 0n) {
+    return 0n
+  }
+
+  return a * BASIS_POINTS_DIVISOR / b
+}
+
+
+export function bnDiv(a: bigint, b: bigint): number {
+  return formatFixed(div(a, b), 4)
+}
+
 export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }): IAccountLadderSummary[] {
   const tradeListMap = groupByMapMany(list, a => a.account)
   const tradeListEntries = Object.entries(tradeListMap)
@@ -38,6 +60,7 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
     const seedAccountSummary: IAccountLadderSummary = {
       claim: null,
       account,
+      cumulativeLeverage: 0n,
 
       collateral: 0n,
       size: 0n,
@@ -64,45 +87,55 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
     const sortedTradeList = tradeList.sort((a, b) => a.timestamp - b.timestamp)
     const summary = sortedTradeList.reduce((seed, next): IAccountLadderSummary => {
 
+      const tradeMaxCollateral = next.updateList.reduce((s, n) => n.collateral > s ? n.collateral : s, 0n)
       const usedCollateralMap = {
         ...seed.usedCollateralMap,
-        [next.key]: next.updateList.reduce((seed, next) => next.collateral > seed ? next.collateral : seed, 0n),
+        [next.key]: tradeMaxCollateral,
         // [next.key]: next.status === TradeStatus.OPEN ? next.collateral : 0n,
       }
       const usedCollateral = Object.values(usedCollateralMap).reduce((s, n) => s + n, 0n)
 
       const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
-      const posDelta = calculatePositionDelta(indexTokenMarkPrice, next.averagePrice, next.isLong, next)
+      const openDelta = isTradeOpen(next) ? getPnL(next.isLong, next.averagePrice, indexTokenMarkPrice, next.size) : 0n
       const isSettled = isTradeSettled(next)
 
-
+      const fee = seed.fee + next.fee
       const realisedPnl = seed.realisedPnl + next.realisedPnl
-      const openPnl = seed.openPnl + posDelta.delta
+      const openPnl = seed.openPnl + openDelta
       const pnl = openPnl + realisedPnl
 
       const usedMinProfit = usedCollateral - pnl
-      const collateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
-      const roi = pnl * BASIS_POINTS_DIVISOR / (collateral > 500000000000000000000000000000000n ? collateral : 500000000000000000000000000000000n)
+      const maxCollateral = usedMinProfit > seed.collateral ? usedMinProfit : usedCollateral
+      const collateral = seed.maxCollateral + tradeMaxCollateral
+      const roi = pnl * BASIS_POINTS_DIVISOR / (maxCollateral > MIN_OF_MAX_COLLATERAL ? maxCollateral : MIN_OF_MAX_COLLATERAL)
+
+      const winTradeCount = seed.winTradeCount + (isSettled && next.realisedPnl > 0n ? 1 : 0)
+      const settledTradeCount = isSettled ? seed.settledTradeCount + 1 : seed.settledTradeCount
+      const openTradeCount = next.status === TradeStatus.OPEN ? seed.openTradeCount + 1 : seed.openTradeCount
+
+      const cumulativeLeverage = seed.cumulativeLeverage + div(next.size, maxCollateral)
+
 
       return {
-        collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi,
+        collateral, account, realisedPnl, openPnl, pnl, usedCollateralMap, roi, maxCollateral,
 
-        maxCollateral: 0n,
-        // openCollateral: 0n,
+        settledTradeCount,
+        openTradeCount,
+        winTradeCount,
+
+        cumulativeLeverage,
+
         claim: null,
-        fee: seed.fee + next.fee,
+        fee,
         collateralDelta: seed.collateralDelta + next.collateralDelta,
+
 
         realisedPnlPercentage: seed.realisedPnlPercentage + next.realisedPnlPercentage,
         size: seed.size + next.size,
         sizeDelta: seed.sizeDelta + next.sizeDelta,
         performancePercentage: 0n,
-        // performancePercentage: seed.performancePercentage + performancePercentage,
 
 
-        winTradeCount: seed.winTradeCount + (isSettled && next.realisedPnl > 0n ? 1 : 0),
-        settledTradeCount: seed.settledTradeCount + (isSettled ? 1 : 0),
-        openTradeCount: next.status === TradeStatus.OPEN ? seed.openTradeCount + 1 : seed.openTradeCount,
       }
     }, seedAccountSummary)
 

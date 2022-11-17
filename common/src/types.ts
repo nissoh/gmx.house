@@ -6,6 +6,7 @@ export interface IAccountLadderSummary extends IAccountSummary {
   maxCollateral: bigint
   openPnl: bigint
   pnl: bigint
+  cumulativeLeverage: bigint
 
 
   usedCollateralMap: {

@@ -185,7 +185,7 @@ export const $Trade = (config: ITradeView) => component((
                         ? pos.collateralDelta === 0n ? actionList.indexOf(pos) === 0 ? pos.fee === 0n ? 'Liquidated' : 'Close' : 'Decrease' : 'Decrease'
                         : actionList.indexOf(pos) === actionList.length - 1 ? 'Open' : 'Increase'
 
-                      const [_, txHash] = pos.id.split(':')
+                      const txHash = pos.id.split(':')[2]
                       return $container(
                         $text(actionType),
                         $anchor(attr({ href: getTxExplorerUrl(chain, txHash) }))(
