@@ -75,6 +75,7 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       maxCollateral: 0n,
 
+      lossTradeCount: 0,
       winTradeCount: 0,
       settledTradeCount: 0,
       openTradeCount: 0,
@@ -130,10 +131,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const roi = div(pnl, (maxCollateral > MIN_OF_MAX_COLLATERAL ? maxCollateral : MIN_OF_MAX_COLLATERAL))
 
+      const winTradeCount = seed.winTradeCount + (pnl > 0n ? 1 : 0)
+      const lossTradeCount = seed.lossTradeCount + (pnl < 0n ? 1 : 0)
 
-      const winTradeCount = seed.winTradeCount + (hasSettled && next.realisedPnl > 0n ? 1 : 0)
       const settledTradeCount = hasSettled ? seed.settledTradeCount + 1 : seed.settledTradeCount
-      const openTradeCount = next.status === TradeStatus.OPEN ? seed.openTradeCount + 1 : seed.openTradeCount
 
       const cumulativeLeverage = seed.cumulativeLeverage + div(next.size, maxCollateral)
 
@@ -142,7 +143,8 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
         collateral, account, realisedPnl, openPnl, pnl, roi, maxCollateral,
 
         settledTradeCount,
-        openTradeCount,
+        lossTradeCount,
+        openTradeCount: 0,
         winTradeCount,
 
         cumulativeLeverage,

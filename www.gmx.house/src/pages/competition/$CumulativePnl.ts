@@ -226,7 +226,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
             columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
             $body: map(pos => {
               return $row(
-                $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+                $text(`${pos.winTradeCount}/${pos.lossTradeCount}`)
               )
             })
           },

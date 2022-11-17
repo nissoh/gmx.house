@@ -6,7 +6,7 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, getChainName } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
 import { $AccountLabel, $AccountPhoto, $AccountPreview, $ProfilePreviewClaim } from '../../components/$AccountProfile'
 import { CHAIN_LABEL_ID } from '../../types'
@@ -40,10 +40,6 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
 ) => {
-
-  const urlFragments = document.location.pathname.split('/')
-  const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
-  const chain = CHAIN_LABEL_ID[chainLabel]
 
   const pagerOp = map((pageIndex: number): IPagePositionParamApi & ITimerangeParamApi & IChainParamApi => {
 
@@ -82,7 +78,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[1].account}`,
+              url: `/${getChainName(config.chain)}/account/${list[1].account}`,
             })({ click: routeChangeTether() }),
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
@@ -94,7 +90,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                 )
               ),
               anchorOp: style({ minWidth: 0, zIndex: 222 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[0].account}`,
+              url: `/${getChainName(config.chain)}/account/${list[0].account}`,
             })({ click: routeChangeTether() }),
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
@@ -106,7 +102,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[2].account}`,
+              url: `/${getChainName(config.chain)}/account/${list[2].account}`,
             })({ click: routeChangeTether() })
           )
         }, newLocal, config.claimMap))
@@ -199,7 +195,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
 
                 ),
                 switchLatest(map(map => {
-                  return $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
+                  return $AccountPreview({ address: pos.account, chain: config.chain, parentRoute: config.parentRoute, claim: map[pos.account.toLowerCase()] })({
                     profileClick: routeChangeTether()
                   })
                 }, config.claimMap)),
@@ -214,7 +210,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
               columnOp: style({ maxWidth: '88px', alignItems: 'center', placeContent: 'center' }),
               $body: map((pos: IAccountLadderSummary) => {
                 return $row(
-                  $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+                  $text(`${pos.winTradeCount}/${pos.lossTradeCount}`)
                 )
               })
             },
@@ -233,7 +229,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
 
 
               return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
-                $text(style({  }))(
+                $text(style({}))(
                   `${isNeg ? '' : '+'}${val}`
                 ),
                 $seperator,
