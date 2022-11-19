@@ -12,11 +12,11 @@ export const api = Router()
 
 export const arbitrumGraph = prepareClient({
   fetch,
-  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-arbitrum-dev'
+  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-arbitrum'
 })
 export const avalancheGraph = prepareClient({
   fetch,
-  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-avalanche-dev'
+  url: 'https://api.thegraph.com/subgraphs/name/nissoh/gmx-avalanche'
 })
 
 
