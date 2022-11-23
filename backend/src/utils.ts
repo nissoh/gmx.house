@@ -114,10 +114,9 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
 
     const summary = sortedTradeList.reduce((seed, next): IAccountLadderSummary => {
-
-      const tradeMaxCollateral = next.updateList.reduce((s, n) => n.collateral > s ? n.collateral : s, 0n)
-      const collateral = seed.maxCollateral + tradeMaxCollateral
       const filteredUpdates = [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeLiquidated(next) ? [next.liquidatedPosition as IPositionLiquidated & { key: string }] : []].filter(update => update.timestamp <= endDate)
+      const tradeMaxCollateral = filteredUpdates.reduce((s, n) => n.collateral > s ? n.collateral : s, 0n)
+      const collateral = seed.maxCollateral + tradeMaxCollateral
       const lastUpdate = filteredUpdates[filteredUpdates.length - 1]
 
       const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
@@ -138,7 +137,9 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       const lossTradeCount = seed.lossTradeCount + (currentPnl < 0n ? 1 : 0)
 
 
-      const cumulativeLeverage = seed.cumulativeLeverage + div(next.size, maxCollateral)
+      const cumulativeLeverage = seed.cumulativeLeverage + div(lastUpdate.size, maxCollateral)
+
+      console.log(cumulativeLeverage)
 
 
       return {

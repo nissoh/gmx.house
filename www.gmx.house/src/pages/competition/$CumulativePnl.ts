@@ -252,7 +252,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
               ),
               columnOp: style({ placeContent: 'center', minWidth: '125px' }),
               $body: map((pos: IAccountLadderSummary) => {
-                const leveragePercision = div(BigInt(pos.cumulativeLeverage), BigInt(pos.openTradeCount + pos.settledTradeCount)) / BASIS_POINTS_DIVISOR
+                const leveragePercision = div(BigInt(pos.cumulativeLeverage), BigInt(pos.openTradeCount + pos.lossTradeCount)) / BASIS_POINTS_DIVISOR
                 return $column(layoutSheet.spacingTiny, style({ textAlign: 'center' }))(
                   $text(formatReadableUSD(pos.size)),
                   $seperator,
