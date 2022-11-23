@@ -54,7 +54,7 @@ export const competitionCumulativeRoi = O(
       // .filter(x => x.account === '0xd92f6d0c7c463bd2ec59519aeb59766ca4e56589')
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
 
-      const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
+      const formattedList = toAccountCompetitionSummary(tradeList, priceMap, to)
         .sort((a, b) => {
           // const aN = claimMap[a.account] ? a.roi : a.roi
           // const bN = claimMap[b.account] ? b.roi : b.roi

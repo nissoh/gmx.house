@@ -48,7 +48,7 @@ export function div(a: bigint, b: bigint): bigint {
 
 
 
-export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }): IAccountLadderSummary[] {
+export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: string]: IPricefeed }, endDate: number): IAccountLadderSummary[] {
   const tradeListMap = groupByMapMany(list, a => a.account)
   const tradeListEntries = Object.entries(tradeListMap)
 
@@ -87,7 +87,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
 
 
-    const newLocal = sortedTradeList.flatMap(next => [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeOpen(next) ? [] : [next.liquidatedPosition as IPositionLiquidated & { key: string }]]).sort((a, b) => a.timestamp - b.timestamp)
+    const newLocal = sortedTradeList
+      .flatMap(next => [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeOpen(next) ? [] : [next.liquidatedPosition as IPositionLiquidated & { key: string }]])
+      .filter(n => n.timestamp <= endDate)
+      .sort((a, b) => a.timestamp - b.timestamp)
     
  
 
@@ -139,9 +142,6 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const cumulativeLeverage = seed.cumulativeLeverage + div(next.size, maxCollateral)
 
-      // if (account === '0x5c72dfe4e7521ff41d4644d1b0022ebd5ea411d8') {
-      //   debugger
-      // }
 
       return {
         collateral, account, realisedPnl, openPnl, pnl, roi, maxCollateral,

@@ -6,14 +6,15 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, readableNumber, BASIS_POINTS_DIVISOR } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, readableNumber, BASIS_POINTS_DIVISOR, getChainName } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
-import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileLink, $ProfilePreviewClaim } from '../../components/$AccountProfile'
+import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileSocialLink, $ProfilePreviewClaim } from '../../components/$AccountProfile'
 import { CHAIN_LABEL_ID } from '../../types'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
 import { $alertTooltip, $avaxIcon, countdown, formatReadableUSD } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
+import { $alert } from '../../elements/$common'
 
 
 const prizeLadder: string[] = ['1500', '900', '600']
@@ -74,51 +75,59 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
   return [
     $column(
 
+      style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
+        $alert($text(`Results are being checked to ensure all data is accoutned for. expected to finalize by Nov 25 12:00 UTC`)),
+      ),
       ended
         ? switchLatest(combine((page, claimMap) => {
           const list = page.page
 
           return $row(layoutSheet.spacing, style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
-            // $column(style({ alignItems: 'center' }))(
-            //   $text(`Ending in`),
-            //   $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
-            // ),
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[1].pnl))}`)
+            $column(layoutSheet.spacing, style({ alignItems: 'center', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', textDecoration: 'none' }))(
+                $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(list[1].pnl)}`),
+                $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                  $Link({
+                    route: config.parentRoute.create({ fragment: '2121212' }),
+                    $content: $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
+                    anchorOp: style({ minWidth: 0, zIndex: 222 }),
+                    url: `/${getChainName(config.chain)}/account/${list[1].account}`,
+                  })({ click: routeChangeTether() }),
+                  $defaultProfileSocialLink(list[1].account, config.chain, claimMap[list[1].account])
                 )
-              ),
-              anchorOp: style({ minWidth: 0 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[1].account}`,
-            })({ click: routeChangeTether() }),
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -35px', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '215px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[0].pnl))}`)
+              )
+            ),
+            $column(layoutSheet.spacing, style({ alignItems: 'center', zIndex: 10, margin: '0 -35px', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '215px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', textDecoration: 'none' }))(
+                $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(list[0].pnl) }`),
+                $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                  $Link({
+                    route: config.parentRoute.create({ fragment: '2121212' }),
+                    $content: $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
+                    anchorOp: style({ minWidth: 0, zIndex: 222 }),
+                    url: `/${getChainName(config.chain)}/account/${list[0].account}`,
+                  })({ click: routeChangeTether() }),
+                  $defaultProfileSocialLink(list[0].account, config.chain, claimMap[list[0].account])
                 )
-              ),
-              anchorOp: style({ minWidth: 0, zIndex: 222 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[0].account}`,
-            })({ click: routeChangeTether() }),
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[2].pnl))}`)
+              )
+            ),
+            $column(layoutSheet.spacing, style({ alignItems: 'center', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[2].account, claimMap[list[2].account], '140px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', textDecoration: 'none' }))(
+                $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(list[2].pnl) }`),
+                $column(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+                  $Link({
+                    route: config.parentRoute.create({ fragment: '2121212' }),
+                    $content: $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
+                    anchorOp: style({ minWidth: 0, zIndex: 222 }),
+                    url: `/${getChainName(config.chain)}/account/${list[2].account}`,
+                  })({ click: routeChangeTether() }),
+                  $defaultProfileSocialLink(list[2].account, config.chain, claimMap[list[2].account])
                 )
-              ),
-              anchorOp: style({ minWidth: 0 }),
-              url: `/${chain === CHAIN.ARBITRUM ? 'arbitrum' : 'avalanche'}/account/${list[2].account}`,
-            })({ click: routeChangeTether() })
+              )
+            )
           )
         }, newLocal, config.claimMap))
         : empty(),
@@ -218,7 +227,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                     $AccountPreview({ address: pos.account, chain, parentRoute: config.parentRoute, claim })({
                       profileClick: routeChangeTether()
                     }),
-                    $defaultProfileLink(pos.account, config.chain, claim)
+                    $defaultProfileSocialLink(pos.account, config.chain, claim)
                   )
                 }, config.claimMap)),
 

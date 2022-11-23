@@ -24,7 +24,6 @@ export const competitionCumulativePnl = O(
 
     const query = globalCache('competitionCumulativePnl' + queryParams.from + queryParams.chain, cacheDuration, async () => {
 
-
       const to = Math.min(dateNow, queryParams.to)
       const timeSlot = Math.floor(to / intervalInMsMap.MIN5)
       const timestamp = timeSlot * intervalInMsMap.MIN5 - intervalInMsMap.MIN5
@@ -58,7 +57,7 @@ export const competitionCumulativePnl = O(
       const tradeList: ITrade[] = historicTradeList.map(fromJson.toTradeJson)
       // .filter(x => x.account === '0xd92f6d0c7c463bd2ec59519aeb59766ca4e56589')
       const claimMap = groupByMap(claimList, item => item.account.toLowerCase())
-      const formattedList = toAccountCompetitionSummary(tradeList, priceMap)
+      const formattedList = toAccountCompetitionSummary(tradeList, priceMap, to)
         .sort((a, b) => {
           const aN = claimMap[a.account] ? a.realisedPnl + a.openPnl : a.realisedPnl + a.openPnl - bigNumberForPriority
           const bN = claimMap[b.account] ? b.realisedPnl + b.openPnl : b.realisedPnl + b.openPnl - bigNumberForPriority

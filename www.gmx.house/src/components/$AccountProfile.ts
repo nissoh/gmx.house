@@ -103,7 +103,7 @@ export const $twitterProfileLink = (twitterHandle: string | null) => {
     : empty()
 }
 
-export const $defaultProfileLink = (address: string, chain: CHAIN, claim?: IClaim) => {
+export const $defaultProfileSocialLink = (address: string, chain: CHAIN, claim?: IClaim) => {
   const twitterHandle = getTwitterHandle(claim)
 
   return twitterHandle
