@@ -68,7 +68,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
       ended ? switchLatest(combine((page, claimMap) => {
         const list = page.page
 
-        return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
+        return $row(layoutSheet.spacing, style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
 
           $Link({
             route: config.parentRoute.create({ fragment: '2121212' }),
@@ -84,8 +84,8 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
           })({ click: routeChangeTether() }),
           $Link({
             route: config.parentRoute.create({ fragment: '2121212' }),
-            $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -20px', pointerEvents: 'none', textDecoration: 'none' }))(
-              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
+            $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -35px', pointerEvents: 'none', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '215px')),
               $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                 $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
                 $text(style({ fontSize: '.75em' }))(`${formatFixed(list[0].roi, 2)}%`)

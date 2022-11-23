@@ -78,7 +78,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
         ? switchLatest(combine((page, claimMap) => {
           const list = page.page
 
-          return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
+          return $row(layoutSheet.spacing, style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
             // $column(style({ alignItems: 'center' }))(
             //   $text(`Ending in`),
             //   $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(config.to)),
@@ -89,7 +89,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                 style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[1].roi), 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[1].pnl))}`)
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
@@ -97,11 +97,11 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
             })({ click: routeChangeTether() }),
             $Link({
               route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -20px', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
+              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -35px', pointerEvents: 'none', textDecoration: 'none' }))(
+                style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '215px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[0].roi), 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[0].pnl))}`)
                 )
               ),
               anchorOp: style({ minWidth: 0, zIndex: 222 }),
@@ -113,7 +113,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                 style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[2].roi), 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatReadableUSD(BigInt(list[2].pnl))}`)
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
