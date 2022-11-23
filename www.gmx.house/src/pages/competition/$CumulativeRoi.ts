@@ -66,7 +66,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
     $column(
 
       style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
-        $alert($text(`Results are being checked to ensure all data is accoutned for. expected to finalize by Nov 25 12:00 UTC`)),
+        $alert($text(`Results are being checked to ensure all data is accounted for. expected to finalize by Nov 25 12:00 UTC`)),
       ),
 
       ended ? switchLatest(combine((page, claimMap) => {

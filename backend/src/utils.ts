@@ -1,4 +1,4 @@
-import { BASIS_POINTS_DIVISOR, formatFixed, formatReadableUSD, groupByMapMany, IPositionLiquidated, IPricefeed, isTradeClosed, isTradeOpen, isTradeSettled, ITrade, TradeStatus, unixTimestampNow } from '@gambitdao/gmx-middleware'
+import { BASIS_POINTS_DIVISOR, formatFixed, formatReadableUSD, groupByMapMany, IPositionLiquidated, IPricefeed, isTradeClosed, isTradeLiquidated, isTradeOpen, isTradeSettled, ITrade, TradeStatus, unixTimestampNow } from '@gambitdao/gmx-middleware'
 import { IAccountLadderSummary } from 'common'
 
 const MIN_OF_MAX_COLLATERAL = 500000000000000000000000000000000n
@@ -83,23 +83,22 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
     const sortedTradeList = tradeList.sort((a, b) => a.timestamp - b.timestamp)
 
-    const initSeed = { maxUsedCollateral: 0n, positions: {} } as { maxUsedCollateral: bigint, positions: { [k: string]: bigint } }
+    const initSeed = {
+      maxUsedCollateral: 0n,
+      positions: {}
+    } as { maxUsedCollateral: bigint, positions: { [k: string]: bigint } }
 
 
 
-    const newLocal = sortedTradeList
-      .flatMap(next => [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeOpen(next) ? [] : [next.liquidatedPosition as IPositionLiquidated & { key: string }]])
-      .filter(n => n.timestamp <= endDate)
+    const adjustmentsDuringTimerange = sortedTradeList
+      .flatMap(next => [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeLiquidated(next) ? [next.liquidatedPosition as IPositionLiquidated & { key: string }] : []])
+      // .filter(n => n.timestamp <= endDate)
       .sort((a, b) => a.timestamp - b.timestamp)
-    
- 
 
-    const { maxUsedCollateral } = newLocal.reduce((seed, next) => {
+
+
+    const { maxUsedCollateral } = adjustmentsDuringTimerange.reduce((seed, next) => {
       const prevCollateral = seed.positions[next.key] || 0n
-
-      // if (account === '0xb791d1b51af954ee43a5ae1f1bcda360acfc075d') {
-      //   console.log(formatReadableUSD(next.collateral))
-      // }
 
       seed.positions[next.key] = next.__typename === 'UpdatePosition' ? next.collateral > prevCollateral ? next.collateral : prevCollateral : 0n
 
@@ -116,17 +115,17 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
     const summary = sortedTradeList.reduce((seed, next): IAccountLadderSummary => {
 
-      const hasSettled = isTradeSettled(next)
-
       const tradeMaxCollateral = next.updateList.reduce((s, n) => n.collateral > s ? n.collateral : s, 0n)
       const collateral = seed.maxCollateral + tradeMaxCollateral
+      const filteredUpdates = [...next.updateList, ...isTradeClosed(next) ? [next.closedPosition] : isTradeLiquidated(next) ? [next.liquidatedPosition as IPositionLiquidated & { key: string }] : []].filter(update => update.timestamp <= endDate)
+      const lastUpdate = filteredUpdates[filteredUpdates.length - 1]
 
       const indexTokenMarkPrice = BigInt(priceMap['_' + next.indexToken].c)
-      const openDelta = isTradeOpen(next) ? getPnL(next.isLong, next.averagePrice, indexTokenMarkPrice, next.size) : 0n
+      const openDelta = lastUpdate.__typename === 'UpdatePosition' ? getPnL(next.isLong, lastUpdate.averagePrice, indexTokenMarkPrice, lastUpdate.size) : 0n
 
       const fee = seed.fee + next.fee
-      const realisedPnl = seed.realisedPnl + next.realisedPnl
       const openPnl = seed.openPnl + openDelta
+      const realisedPnl = seed.realisedPnl + lastUpdate.realisedPnl
       const pnl = openPnl + realisedPnl
 
       const usedMinProfit = maxUsedCollateral - pnl
@@ -134,11 +133,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
 
       const roi = div(pnl, (maxCollateral > MIN_OF_MAX_COLLATERAL ? maxCollateral : MIN_OF_MAX_COLLATERAL))
 
-      const currentPnl = next.realisedPnl + openDelta
+      const currentPnl = lastUpdate.realisedPnl + openDelta
       const winTradeCount = seed.winTradeCount + (currentPnl > 0n ? 1 : 0)
       const lossTradeCount = seed.lossTradeCount + (currentPnl < 0n ? 1 : 0)
 
-      const settledTradeCount = hasSettled ? seed.settledTradeCount + 1 : seed.settledTradeCount
 
       const cumulativeLeverage = seed.cumulativeLeverage + div(next.size, maxCollateral)
 
@@ -146,10 +144,10 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       return {
         collateral, account, realisedPnl, openPnl, pnl, roi, maxCollateral,
 
-        settledTradeCount,
         lossTradeCount,
-        openTradeCount: 0,
         winTradeCount,
+        settledTradeCount: 0,
+        openTradeCount: 0,
 
         cumulativeLeverage,
 
