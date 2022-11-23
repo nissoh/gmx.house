@@ -41,6 +41,8 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
 ) => {
 
+  const ended = unixTimestampNow() >= config.to
+
   const pagerOp = map((pageIndex: number): IPagePositionParamApi & ITimerangeParamApi & IChainParamApi => {
 
     return {
@@ -62,50 +64,50 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   return [
     $column(
 
-      unixTimestampNow() >= config.to
-        ? switchLatest(combine((page, claimMap) => {
-          const list = page.page
 
-          return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
+      ended ? switchLatest(combine((page, claimMap) => {
+        const list = page.page
 
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[1].roi, 2)}%`)
-                )
-              ),
-              anchorOp: style({ minWidth: 0 }),
-              url: `/${getChainName(config.chain)}/account/${list[1].account}`,
-            })({ click: routeChangeTether() }),
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -20px', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[0].roi, 2)}%`)
-                )
-              ),
-              anchorOp: style({ minWidth: 0, zIndex: 222 }),
-              url: `/${getChainName(config.chain)}/account/${list[0].account}`,
-            })({ click: routeChangeTether() }),
-            $Link({
-              route: config.parentRoute.create({ fragment: '2121212' }),
-              $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
-                $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
-                  $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[2].roi, 2)}%`)
-                )
-              ),
-              anchorOp: style({ minWidth: 0 }),
-              url: `/${getChainName(config.chain)}/account/${list[2].account}`,
-            })({ click: routeChangeTether() })
-          )
-        }, newLocal, config.claimMap))
+        return $row(style({ alignItems: 'flex-end', placeContent: 'center', marginBottom: '40px', position: 'relative' }))(
+
+          $Link({
+            route: config.parentRoute.create({ fragment: '2121212' }),
+            $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+                $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
+                $text(style({ fontSize: '.75em' }))(`${formatFixed(list[1].roi, 2)}%`)
+              )
+            ),
+            anchorOp: style({ minWidth: 0 }),
+            url: `/${getChainName(config.chain)}/account/${list[1].account}`,
+          })({ click: routeChangeTether() }),
+          $Link({
+            route: config.parentRoute.create({ fragment: '2121212' }),
+            $content: $column(layoutSheet.spacing, style({ alignItems: 'center', margin: '0 -20px', pointerEvents: 'none', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+                $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
+                $text(style({ fontSize: '.75em' }))(`${formatFixed(list[0].roi, 2)}%`)
+              )
+            ),
+            anchorOp: style({ minWidth: 0, zIndex: 222 }),
+            url: `/${getChainName(config.chain)}/account/${list[0].account}`,
+          })({ click: routeChangeTether() }),
+          $Link({
+            route: config.parentRoute.create({ fragment: '2121212' }),
+            $content: $column(layoutSheet.spacing, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+              style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
+              $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
+                $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
+                $text(style({ fontSize: '.75em' }))(`${formatFixed(list[2].roi, 2)}%`)
+              )
+            ),
+            anchorOp: style({ minWidth: 0 }),
+            url: `/${getChainName(config.chain)}/account/${list[2].account}`,
+          })({ click: routeChangeTether() })
+        )
+      }, newLocal, config.claimMap))
         : empty(),
 
 
@@ -138,8 +140,12 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
         $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
           $row(layoutSheet.spacingSmall, style({ alignItems: 'flex-end' }))(
             $text(style({}))(`Highest ROI (%)`),
-            $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
-            $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+
+            ...ended ? [] : [
+              $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
+              $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+            ]
+
           ),
           $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $500) * 100`),
         ),

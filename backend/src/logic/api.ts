@@ -7,6 +7,7 @@ import { providerMainnet } from '../rpc'
 import { prepareClient } from './common'
 import { getIdentityFromENS } from 'common'
 import { TypedDocumentNode } from '@urql/core'
+import { cacheMap } from '../utils'
 
 export const api = Router()
 
@@ -25,6 +26,7 @@ export const graphMap = {
   [CHAIN.AVALANCHE]: avalancheGraph,
 }
 
+export const globalCache = cacheMap({})
 
 
 api.get('/claim-list', async (req, res) => {

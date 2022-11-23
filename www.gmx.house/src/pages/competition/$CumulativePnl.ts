@@ -47,6 +47,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
   [routeChange, routeChangeTether]: Behavior<string, string>,
   [highTableRequestIndex, highTableRequestIndexTether]: Behavior<number, number>,
 ) => {
+  const ended = unixTimestampNow() >= config.to
 
   const urlFragments = document.location.pathname.split('/')
   const [chainLabel] = urlFragments.slice(1) as [keyof typeof CHAIN_LABEL_ID]
@@ -73,7 +74,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
   return [
     $column(
 
-      unixTimestampNow() >= config.to
+      ended
         ? switchLatest(combine((page, claimMap) => {
           const list = page.page
 
@@ -88,7 +89,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                 style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[1].account, claimMap[list[1].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[1].account, claimMap[list[1].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[1].roi, 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[1].roi), 2)}%`)
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
@@ -100,7 +101,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                 style({ border: `2px solid ${pallete.positive}`, boxShadow: `${colorAlpha(pallete.positive, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[0].account], '185px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[0].account, claimMap[list[0].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[0].roi, 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[0].roi), 2)}%`)
                 )
               ),
               anchorOp: style({ minWidth: 0, zIndex: 222 }),
@@ -112,7 +113,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
                 style({ border: `2px solid ${pallete.background}`, boxShadow: `${colorAlpha(pallete.background, .15)} 0px 0px 20px 11px` }, $AccountPhoto(list[0].account, claimMap[list[2].account], '140px')),
                 $column(layoutSheet.spacingTiny, style({ alignItems: 'center', pointerEvents: 'none', textDecoration: 'none' }))(
                   $AccountLabel(list[2].account, claimMap[list[2].account], style({ color: pallete.primary, fontSize: '1em' })),
-                  $text(style({ fontSize: '.75em' }))(`${formatFixed(list[2].roi, 2)}%`)
+                  $text(style({ fontSize: '.75em' }))(`${formatFixed(BigInt(list[2].roi), 2)}%`)
                 )
               ),
               anchorOp: style({ minWidth: 0 }),
@@ -155,8 +156,10 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
         $column(layoutSheet.spacingSmall, style({ marginBottom: '26px', flex: 1 }))(
           $row(layoutSheet.spacingSmall, style({ alignItems: 'flex-end' }))(
             $text(style({}))(`Highest Notional P&L`),
-            $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
-            $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+            ...ended ? [] : [
+              $text(style({ color: pallete.foreground, fontSize: '.75em' }))('Ending in'),
+              $text(style({ fontSize: '.75em' }))(countdown(config.to)),
+            ]
           ),
           $text(style({ fontSize: '.75em' }))(`Sum of all realized and unrealized profits and losses, including open positions at the deadline.`),
         ),

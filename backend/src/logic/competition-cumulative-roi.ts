@@ -3,13 +3,12 @@ import { awaitPromises, map } from "@most/core"
 import { fromJson, pagingQuery, groupByMap, ITrade, IChainParamApi, intervalInMsMap, IPagePositionParamApi, ITimerangeParamApi, unixTimestampNow, IPricefeed } from "@gambitdao/gmx-middleware"
 import { EM } from '../server'
 import { Claim } from "./dto"
-import { cacheMap, toAccountCompetitionSummary } from "../utils"
+import { toAccountCompetitionSummary } from "../utils"
 import { competitionAccountListDoc } from "./queries"
-import { fetchHistoricTrades, graphMap } from "./api"
+import { fetchHistoricTrades, globalCache, graphMap } from "./api"
 import { gql, TypedDocumentNode } from "@urql/core"
 
 
-const createCache = cacheMap({})
 
 export const competitionCumulativeRoi = O(
   map((queryParams: IChainParamApi & IPagePositionParamApi & ITimerangeParamApi) => {
@@ -18,7 +17,7 @@ export const competitionCumulativeRoi = O(
     const isLive = queryParams.to > dateNow
     const cacheDuration = isLive ? intervalInMsMap.MIN5 : intervalInMsMap.YEAR
 
-    const query = createCache('competitionCumulativeRoi' + queryParams.from + queryParams.chain, cacheDuration, async () => {
+    const query = globalCache('competitionCumulativeRoi' + queryParams.from + queryParams.chain, cacheDuration, async () => {
 
       const to = Math.min(dateNow, queryParams.to)
       const timeSlot = Math.floor(to / intervalInMsMap.MIN5)

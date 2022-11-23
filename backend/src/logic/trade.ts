@@ -6,11 +6,8 @@ import {
   intervalInMsMap, IPricefeedParamApi, IRequestTradeQueryparam,
   pagingQuery, toAccountSummary, IOpenTradesParamApi, unixTimestampNow, CHAIN, IChainParamApi, IPriceLatestMap, groupByMap
 } from '@gambitdao/gmx-middleware'
-import { cacheMap } from '../utils'
-import { fetchHistoricTrades, graphMap, fetchTrades } from './api'
+import { fetchHistoricTrades, graphMap, fetchTrades, globalCache } from './api'
 import { tradeQuery, accountTradeListQuery, IAccountTradeListParamApi, latestPriceTimelineQuery, pricefeed, tradeSettledListQuery, tradeOpenListQuery } from './queries'
-
-const createCache = cacheMap({})
 
 
 
@@ -26,7 +23,7 @@ export const requestLeaderboardTopList = O(
     const cacheLife = cacheLifeMap[queryParams.timeInterval]
     const cacheKey = 'requestLeaderboardTopList' + queryParams.timeInterval + queryParams.chain
 
-    const list = createCache(cacheKey, cacheLife, async () => {
+    const list = globalCache(cacheKey, cacheLife, async () => {
       const timeNow = unixTimestampNow()
       const from = timeNow - queryParams.timeInterval
 
@@ -78,7 +75,7 @@ export const lightningLatestPricesMap = replayLatest(multicast(merge(
 
 export const requestOpenTrades = O(
   snapshot(async (feedMap, queryParams: IOpenTradesParamApi) => {
-    const query = createCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => {
+    const query = globalCache('requestOpenTrades' + queryParams.chain, intervalInMsMap.MIN5, async () => {
       const list = await fetchTrades(tradeOpenListQuery, { offset: 0, pageSize: 1000 }, queryParams.chain, 0, res => res.trades)
       return list.map(tradeJson => {
         const trade = fromJson.toTradeJson(tradeJson)
