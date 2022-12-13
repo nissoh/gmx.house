@@ -145,8 +145,8 @@ export default ({ baseRoute = '' }: Website) => component((
   }, {} as IPriceLatestMap), clientApi.requestLatestPriceMap)))
 
 
-  const COMPETITION_START = Date.UTC(2022, 10, 16, 12) / 1000
-  const COMPETITION_END = Date.UTC(2022, 10, 23, 12) / 1000
+  const COMPETITION_START = Date.UTC(2022, 11, 16, 12) / 1000
+  const COMPETITION_END = Date.UTC(2022, 11, 30, 12) / 1000
 
   return [
     mergeArray([
