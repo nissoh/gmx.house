@@ -1,7 +1,7 @@
 import { BASIS_POINTS_DIVISOR, formatFixed, formatReadableUSD, groupByMapMany, IPositionLiquidated, IPricefeed, isTradeClosed, isTradeLiquidated, isTradeOpen, isTradeSettled, ITrade, TradeStatus, unixTimestampNow } from '@gambitdao/gmx-middleware'
 import { IAccountLadderSummary } from 'common'
 
-const MIN_OF_MAX_COLLATERAL = 500000000000000000000000000000000n
+const MIN_OF_MAX_COLLATERAL = 1000000000000000000000000000000000n
 
 export const timespanPassedSinceInvoke = (timespan: number) => {
   let lastTimePasses = 0

@@ -17,7 +17,7 @@ import { IWalletLink } from '@gambitdao/wallet-link'
 import { $alert } from '../../elements/$common'
 
 
-const prizeLadder: string[] = ['1500', '900', '600']
+const prizeLadder: string[] = ['2750', '1650', '1100']
 
 
 
@@ -75,9 +75,9 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
   return [
     $column(
 
-      style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
-        $alert($text(`Results are being checked to ensure all data is accounted for. expected to finalize by Nov 25 12:00 UTC`)),
-      ),
+      // style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
+      //   $alert($text(`Results are being checked to ensure all data is accounted for. expected to finalize by Nov 25 12:00 UTC`)),
+      // ),
       ended
         ? switchLatest(combine((page, claimMap) => {
           const list = page.page
@@ -178,7 +178,7 @@ export const $CumulativePnl = <T extends BaseProvider>(config: ICompetitonTopCum
             color: pallete.positive,
             fontSize: '1.75em',
             textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-          }))('~$50,000')
+          }))('~$75,000')
         )
       ),
 

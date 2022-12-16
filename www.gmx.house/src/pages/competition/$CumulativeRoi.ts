@@ -6,19 +6,16 @@ import { colorAlpha, pallete } from '@aelea/ui-components-theme'
 import { BaseProvider } from '@ethersproject/providers'
 import { combine, empty, map, multicast, snapshot, switchLatest, take } from '@most/core'
 import { Stream } from '@most/types'
-import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, CHAIN, ITimerangeParamApi, unixTimestampNow, getChainName } from '@gambitdao/gmx-middleware'
+import { IClaim, IPageParapApi, IPagePositionParamApi, IChainParamApi, formatReadableUSD, formatFixed, ITimerangeParamApi, unixTimestampNow, getChainName } from '@gambitdao/gmx-middleware'
 import { $Table2 } from "../../common/$Table2"
-import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileSocialLink, $ProfilePreviewClaim, $twitterProfileLink, getTwitterHandle } from '../../components/$AccountProfile'
-import { CHAIN_LABEL_ID } from '../../types'
+import { $AccountLabel, $AccountPhoto, $AccountPreview, $defaultProfileSocialLink, $ProfilePreviewClaim } from '../../components/$AccountProfile'
 import { IAccountLadderSummary } from 'common'
 import { $Link } from '../../components/$Link'
 import { $alertTooltip, $avaxIcon, countdown } from './$rules'
 import { IWalletLink } from '@gambitdao/wallet-link'
-import { $alert } from '../../elements/$common'
 
 
-const prizeLadder: string[] = ['1200', '600', '300', ...Array(15).fill('60')]
-
+const prizeLadder: string[] = ['2200', '1100', '550', ...Array(15).fill('110')]
 
 
 export interface ICompetitonTopCumulative<T extends BaseProvider> extends ITimerangeParamApi, IChainParamApi {
@@ -65,9 +62,9 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
   return [
     $column(
 
-      style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
-        $alert($text(`Results are being checked to ensure all data is accounted for. expected to finalize by Nov 25 12:00 UTC`)),
-      ),
+      // style({ alignSelf: 'center', maxWidth: '500px', marginBottom: '18px' })(
+      //   $alert($text(`Results are being checked to ensure all data is accounted for. expected to finalize by Nov 25 12:00 UTC`)),
+      // ),
 
       ended ? switchLatest(combine((page, claimMap) => {
         const list = page.page
@@ -159,7 +156,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             ]
 
           ),
-          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $500) * 100`),
+          $text(style({ fontSize: '.75em' }))(`ROI (%) is defined as: Profits / Max Collateral (min $1000) * 100`),
         ),
 
         $row(
@@ -167,7 +164,7 @@ export const $CompetitionRoi = <T extends BaseProvider>(config: ICompetitonTopCu
             color: pallete.positive,
             fontSize: '1.75em',
             textShadow: `${pallete.positive} 1px 1px 20px, ${pallete.positive} 0px 0px 20px`
-          }))('~$50,000')
+          }))('~$75,000')
         )
       ),
 

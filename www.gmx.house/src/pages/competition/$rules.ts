@@ -1,6 +1,6 @@
 import { O, Op } from "@aelea/core"
-import { $text, style, attr, $node, $element, $Branch, styleBehavior } from "@aelea/dom"
-import { Route, contains } from "@aelea/router"
+import { $text, style, attr, $node, $element, $Branch } from "@aelea/dom"
+import { Route } from "@aelea/router"
 import { $row, layoutSheet, $column, $icon, screenUtils } from "@aelea/ui-components"
 import { colorAlpha, pallete } from "@aelea/ui-components-theme"
 import { empty, map, periodic } from "@most/core"
@@ -98,8 +98,8 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
       $text(style({ fontSize: '3.2em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${pallete.primary}, 1px 1px 50px ${colorAlpha(pallete.primary, .55)} ` }))('#GMXRush'),
     ),
     $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
-      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/sign-up-for-the-gmxrush-avalanche-trading-contest-win-100-000-usd-in-prizes-546b1ab2e416' }))(
-        $text('medium.com - $100,000 #GMXRUSH Avalanche Trading Contest')
+      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/launching-this-friday-the-year-end-gmxrush-avalanche-trading-contest-with-a-150-000-prize-pool-639c30e8b9db' }))(
+        $text('medium.com - $150,000 #GMXRUSH Avalanche Trading Contest #2')
       ),
       $node(),
 
