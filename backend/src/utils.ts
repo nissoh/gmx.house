@@ -127,7 +127,7 @@ export function toAccountCompetitionSummary(list: ITrade[], priceMap: { [k: stri
       const realisedPnl = seed.realisedPnl + lastUpdate.realisedPnl
       const pnl = openPnl + realisedPnl
 
-      const usedMinProfit = maxUsedCollateral - pnl
+      const usedMinProfit = maxUsedCollateral - pnl > 0n ? pnl : 0n
       const maxCollateral = usedMinProfit > maxUsedCollateral ? usedMinProfit : maxUsedCollateral
 
       const roi = div(pnl, (maxCollateral > MIN_OF_MAX_COLLATERAL ? maxCollateral : MIN_OF_MAX_COLLATERAL))
