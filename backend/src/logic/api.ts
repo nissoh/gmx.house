@@ -130,7 +130,7 @@ export const fetchHistoricTrades = async <T, R extends IPagePositionParamApi & I
 
   // splits the queries because the-graph's result limit of 5k items
   if (deltaTime >= intervalInMsMap.DAY7) {
-    const splitDelta = deltaTime / 2
+    const splitDelta = Math.floor(deltaTime / 2)
     const query0 = fetchTrades(doc, { ...params, to: params.to - splitDelta }, chain, 0, getList)
     const query1 = fetchTrades(doc, { ...params, from: params.to - splitDelta }, chain, 0, getList)
 
