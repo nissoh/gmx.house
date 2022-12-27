@@ -51,7 +51,7 @@ export const $AccountPhoto = (address: string | null, claim?: IClaim, size = '42
     if (isTwitter) {
       return $photoContainer(
         style({ width: size, height: size, minWidth: size }),
-        attr({ src: `https://unavatar.io/twitter//${claim.name}` })
+        attr({ src: `https://unavatar.io/twitter/${claim.name}` })
       )()
     } else {
       const data: IEnsClaim = claim.data ? JSON.parse(claim.data) : {}
