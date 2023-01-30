@@ -51,24 +51,18 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
     $Link({ $content: $text('Leaderboard'), url: `/${chainLabel}/leaderboard`, route: parentRoute.create({ fragment: 'leaderboard' }) })({
       click: routeChangeTether()
     }),
-    $tradeGMX
+    // $tradeGMX
   ]
 
   return [
     $row(layoutSheet.spacingBig, style({ fontSize: '.9em', alignItems: 'center' }), containerOp)(
 
-      ...screenUtils.isDesktopScreen
-        ? $menuLinks 
-        : [],
+      ...$menuLinks,
 
       $Popover({
         dismiss: profileLinkClick,
         $$popContent: combineArray((_) => {
           return $column(layoutSheet.spacingBig)(
-
-            ...screenUtils.isMobileScreen
-              ? $menuLinks.reverse()
-              : [],
             
             $node(),
 
@@ -100,23 +94,22 @@ export const $MainMenu = ({ walletLink, parentRoute, containerOp = O(), claimMap
 
           return $row(layoutSheet.spacing)(
 
-
-            $icon({
-              svgOps: O(
-                clickPopoverClaimTether(nodeEvent('click')),
-                style({
-                  padding: '6px',
-                  cursor: 'pointer',
-                  alignSelf: 'center',
-                  transform: 'rotate(90deg)',
-                  border: `1px solid ${pallete.middleground}`,
-                  borderLeft: 0, borderRadius: '30px'
-                })
-              ),
-              width: '32px',
-              $content: $moreDots,
-              viewBox: '0 0 32 32'
-            }),
+            // $icon({
+            //   svgOps: O(
+            //     clickPopoverClaimTether(nodeEvent('click')),
+            //     style({
+            //       padding: '6px',
+            //       cursor: 'pointer',
+            //       alignSelf: 'center',
+            //       transform: 'rotate(90deg)',
+            //       border: `1px solid ${pallete.middleground}`,
+            //       borderLeft: 0, borderRadius: '30px'
+            //     })
+            //   ),
+            //   width: '32px',
+            //   $content: $moreDots,
+            //   viewBox: '0 0 32 32'
+            // }),
 
             $row(style({ border: `1px solid ${pallete.middleground}`, borderLeft: 0, borderRadius: '30px' }))(
               account

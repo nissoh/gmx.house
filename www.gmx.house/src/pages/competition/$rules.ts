@@ -56,54 +56,57 @@ export const countdown = (targetDate: number) => {
 
 export function $CompeititonInfo(from: number, to: number, parentRoute: Route, routeChangeTether: () => Op<string, string>) {
 
-
-  const details = (start: number, end: number) => {
+  const $details = (start: number, end: number) => {
     const now = unixTimestampNow()
     const ended = end < now
 
-    return start > now
-      ? $column(style({ alignItems: 'center' }))(
-        $text(`Starting in`),
-        $text(style({ fontWeight: 'bold', fontSize: '3em' }))(countdown(start)),
-      )
-      : $column(
-        $node(layoutSheet.spacing, style({ display: 'flex', flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
-          ended
-            ? $text(style({ color: ended ? '' : pallete.indeterminate }))(
-              `Competition has ended!`
+    return $column(layoutSheet.spacing)(
+      $column(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
+        $row(layoutSheet.spacing)(
+          $column(style({ textAlign: 'right' }))(
+            $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+              $text(style({ fontSize: '1.65em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
+            ),
+          ),
+        ),
+        ended
+          ? $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+            // $addToCalendar({
+            //   // time: start,
+            //   time: new Date(Date.UTC(new Date().getFullYear(), 1, 1, 16)),
+            //   title: 'Blueberry Trading Compeition',
+            //   description: `Monthly trading competitions will be held. These tournaments will offer cash prizes, unique lab items, and more as rewards for traders who compete and win.  \n\n${document.location.href}`
+            // }),
+            $column(
+              $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+                $text(style({}))('Next Cycle!'),
+                $text(style({ color: pallete.foreground }))('Starting in')
+              ),
+              $text(style({}))(countdown(Date.UTC(new Date().getFullYear(), 1, 1, 16) / 1000))
             )
-            : $text(style({ color: ended ? '' : pallete.indeterminate }))('Competition is LIVE!'),
-          $row(layoutSheet.spacingSmall)(
-            $AnchorLink({
-              anchorOp: O(style({ position: 'relative' })),
-              $content: $text('Top Profit'),
-              url: `/avalanche/top-profit`,
-              route: parentRoute.create({ fragment: 'top-profit' })
-            })({ click: routeChangeTether() }),
-            $row(style({ color: pallete.foreground }))($text('|')),
-            $AnchorLink({
-              anchorOp: style({ position: 'relative' }),
-              $content: $text('Top ROI'),
-              url: `/avalanche/top-roi`,
-              route: parentRoute.create({ fragment: 'top-roi' })
-            })({ click: routeChangeTether() }),
           )
-        )
-      )
+          : $column(
+            $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+              $text(style({ color: pallete.indeterminate }))('Beta LIVE!'),
+              $text(style({ color: pallete.foreground }))('Ending in')
+            ),
+            $text(style({}))(countdown(end))
+          )
+      ),
+
+      // $anchor(style({ fontSize: '.65em', placeSelf: 'center' }), attr({ href: 'https://medium.com/@gmx.io/' }))(
+      //   $text('$50,000 GBC #GAMBIT ROI Trading Contest')
+      // )
+    )
 
   }
 
   return $column(layoutSheet.spacing, style({ alignItems: 'center', placeContent: 'center', marginBottom: '20px', }))(
-    $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-      $text(style({ fontSize: '3.2em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${pallete.primary}, 1px 1px 50px ${colorAlpha(pallete.primary, .55)} ` }))('#GMXRush'),
-    ),
-    $column(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
-      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@gmx.io/launching-this-friday-the-year-end-gmxrush-avalanche-trading-contest-with-a-150-000-prize-pool-639c30e8b9db' }))(
-        $text('medium.com - $150,000 #GMXRUSH Avalanche Trading Contest #2')
+    $column(layoutSheet.spacing, style({ alignItems: 'center' }))(
+      $details(from, to),
+      $anchor(style({ fontSize: '.65em' }), attr({ href: 'https://medium.com/@BlueberryClub/gbc-roadmap-update-pt-1-316228c1ebe7#0d2d' }))(
+        $text('medium.com - GBC Monthly Trading Competition')
       ),
-      $node(),
-
-      details(from, to),
     )
   )
 }

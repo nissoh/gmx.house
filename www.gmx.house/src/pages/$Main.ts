@@ -1,5 +1,5 @@
 import { Behavior, replayLatest } from "@aelea/core"
-import { $element, $node, $text, attr, component, eventElementTarget, style } from "@aelea/dom"
+import { $element, $node, attr, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
@@ -9,7 +9,7 @@ import { IEthereumProvider } from "eip1193-provider"
 import {
   ARBITRUM_TRADEABLE_ADDRESS, AVALANCHE_TRADEABLE_ADDRESS,
   CHAIN, fromJson, groupByMap, IAccountSummary, IAccountTradeListParamApi, IChainParamApi,
-  IIdentifiableEntity, ILeaderboardRequest, IPageParapApi,
+  IIdentifiableEntity, ILeaderboardRequest, intervalInMsMap, IPageParapApi,
   IPagePositionParamApi, IPricefeed, IPricefeedParamApi, IPriceLatestMap, ITradeOpen, TradeStatus, TX_HASH_REGEX
 } from '@gambitdao/gmx-middleware'
 import { initWalletLink } from "@gambitdao/wallet-link"
@@ -144,9 +144,10 @@ export default ({ baseRoute = '' }: Website) => component((
     return seed
   }, {} as IPriceLatestMap), clientApi.requestLatestPriceMap)))
 
+  const date = new Date()
 
-  const COMPETITION_START = Date.UTC(2022, 11, 16, 12) / 1000
-  const COMPETITION_END = Date.UTC(2022, 11, 30, 12) / 1000
+  const COMPETITION_START = Date.UTC(date.getFullYear(), date.getMonth(), 1, 16) / 1000
+  const COMPETITION_END = COMPETITION_START + intervalInMsMap.HR24 * 23
 
   return [
     mergeArray([
@@ -154,8 +155,8 @@ export default ({ baseRoute = '' }: Website) => component((
         router.match(rootRoute)(
           $column(style({ minHeight: '100vh', overflow: 'hidden', maxWidth: '1100px', padding: '0 30px', margin: '0 auto', width: '100%', alignItems: 'center', placeContent: 'center' }), layoutSheet.spacingBig)(
 
-            $row(style({ alignItems: 'center', width: '100%' }))(
-              $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center', color: pallete.foreground }))(
+            $row(style({ alignItems: 'center', placeSelf: 'center' }))(
+              $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center' }))(
 
 
                 $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
@@ -174,13 +175,10 @@ export default ({ baseRoute = '' }: Website) => component((
             $node(),
 
             $row(style({ width: '100%', padding: '26px', alignItems: 'center', zIndex: 1000, borderRadius: '12px', backgroundColor: colorAlpha(pallete.background, .9) }))(
-              $row(layoutSheet.spacingBig, style({ alignItems: 'center' }))(
+              $row(layoutSheet.spacing, style({ alignItems: 'center' }))(
                 $RouterAnchor({ url: '/', route: rootRoute, $anchor: $element('a')($icon({ $content: $logo, width: '45px', viewBox: '0 0 32 32' })) })({
                   click: linkClickTether()
                 }),
-                $anchor(layoutSheet.displayFlex, style({ padding: '0 4px' }), attr({ href: 'https://github.com/nissoh/gambit-community' }))(
-                  $icon({ $content: $github, width: '25px', viewBox: `0 0 1024 1024` })
-                ),
                 $node(),
                 $MainMenu({ walletLink, claimMap, parentRoute: chainRoute, showAccount: false, walletStore })({
                   routeChange: linkClickTether(),
@@ -235,60 +233,60 @@ export default ({ baseRoute = '' }: Website) => component((
               )
             ),
 
-            router.match(competitionCumulativePnlRoute)(
-              $column(
-                style({ gap: '46px', display: 'flex' }),
-                screenUtils.isDesktopScreen
-                  ? style({ width: '780px', alignSelf: 'center' })
-                  : style({ width: '100%' })
-              )(
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
-                $CumulativePnl({
-                  from: COMPETITION_START,
-                  to: COMPETITION_END,
-                  chain: CHAIN.AVALANCHE,
-                  walletStore,
-                  walletLink,
-                  claimMap,
-                  parentRoute: chainRoute,
-                  parentStore: rootStore,
-                  competitionCumulativePnl: map((x: IPageParapApi<IAccountLadderSummary>) => ({
-                    ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl) }))
-                  }), clientApi.competitionCumulativePnl),
-                })({
-                  competitionCumulativePnl: competitionCumulativePnlTether(map(page => {
-                    return { ...page, from: COMPETITION_START, to: COMPETITION_END }
-                  })),
-                  routeChange: linkClickTether()
-                })
-              )
-            ),
-            router.match(competitionCumulativeRoiRoute)(
-              $column(
-                style({ gap: '46px', display: 'flex' }),
-                screenUtils.isDesktopScreen
-                  ? style({ width: '780px', alignSelf: 'center' })
-                  : style({ width: '100%' })
-              )(
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
-                $CompetitionRoi({
-                  from: COMPETITION_START,
-                  to: COMPETITION_END,
-                  chain: CHAIN.AVALANCHE,
-                  walletStore,
-                  claimMap,
-                  walletLink,
-                  parentRoute: chainRoute,
-                  parentStore: rootStore,
-                  competitionCumulativeRoi: map((x: IPageParapApi<IAccountLadderSummary>) => {
-                    return { ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl), roi: BigInt(obj.roi) })) }
-                  }, clientApi.competitionCumulativeRoi),
-                })({
-                  competitionCumulativeRoi: competitionCumulativeRoiTether(),
-                  routeChange: linkClickTether()
-                })
-              )
-            ),
+            // router.match(competitionCumulativePnlRoute)(
+            //   $column(
+            //     style({ gap: '46px', display: 'flex' }),
+            //     screenUtils.isDesktopScreen
+            //       ? style({ width: '780px', alignSelf: 'center' })
+            //       : style({ width: '100%' })
+            //   )(
+            //     $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
+            //     $CumulativePnl({
+            //       from: COMPETITION_START,
+            //       to: COMPETITION_END,
+            //       chain: CHAIN.AVALANCHE,
+            //       walletStore,
+            //       walletLink,
+            //       claimMap,
+            //       parentRoute: chainRoute,
+            //       parentStore: rootStore,
+            //       competitionCumulativePnl: map((x: IPageParapApi<IAccountLadderSummary>) => ({
+            //         ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl) }))
+            //       }), clientApi.competitionCumulativePnl),
+            //     })({
+            //       competitionCumulativePnl: competitionCumulativePnlTether(map(page => {
+            //         return { ...page, from: COMPETITION_START, to: COMPETITION_END }
+            //       })),
+            //       routeChange: linkClickTether()
+            //     })
+            //   )
+            // ),
+            // router.match(competitionCumulativeRoiRoute)(
+            //   $column(
+            //     style({ gap: '46px', display: 'flex' }),
+            //     screenUtils.isDesktopScreen
+            //       ? style({ width: '780px', alignSelf: 'center' })
+            //       : style({ width: '100%' })
+            //   )(
+            //     $CompeititonInfo(COMPETITION_START, COMPETITION_END, chainRoute, linkClickTether),
+            //     $CompetitionRoi({
+            //       from: COMPETITION_START,
+            //       to: COMPETITION_END,
+            //       chain: CHAIN.AVALANCHE,
+            //       walletStore,
+            //       claimMap,
+            //       walletLink,
+            //       parentRoute: chainRoute,
+            //       parentStore: rootStore,
+            //       competitionCumulativeRoi: map((x: IPageParapApi<IAccountLadderSummary>) => {
+            //         return { ...x, page: x.page.map(obj => ({ ...fromJson.accountSummaryJson(obj), pnl: BigInt(obj.pnl), roi: BigInt(obj.roi) })) }
+            //       }, clientApi.competitionCumulativeRoi),
+            //     })({
+            //       competitionCumulativeRoi: competitionCumulativeRoiTether(),
+            //       routeChange: linkClickTether()
+            //     })
+            //   )
+            // ),
 
 
             router.contains(accountRoute)(

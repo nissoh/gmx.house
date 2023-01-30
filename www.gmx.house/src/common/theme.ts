@@ -23,12 +23,12 @@ const light: Theme = {
 const dark: Theme = {
   name: 'dark',
   pallete: {
-    primary: '#ff0074',
+    primary: '#2d7ee1',
 
     message: '#ffffff',
 
     background: '#030a17',
-    horizon: '#1c1b3d',
+    horizon: '#1f1a30',
     middleground: colorAlpha('#fff', .15),
     foreground: '#75849f',
 

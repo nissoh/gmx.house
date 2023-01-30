@@ -95,7 +95,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
   const accountTableColumn = {
     $head: $text('Account'),
-    columnOp: style({ minWidth: '125px' }),
+    columnOp: style({ maxWidth: '120px' }),
     $body: map(({ account }: { account: string }) => {
       return switchLatest(map(map => {
         return $AccountPreview({ address: account, chain, parentRoute: config.parentRoute, claim: map[account.toLowerCase()] })({
@@ -108,7 +108,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
 
 
   const $topAccounts = $Table2<IAccountSummary>({
-    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' })),
+    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px' })),
     rowOp: layoutSheet.spacingTiny,
     scrollConfig: {
       containerOps: O(layoutSheet.spacingBig)
@@ -124,15 +124,17 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
     }, config.requestLeaderboardTopList),
     columns: [
       accountTableColumn,
-      {
-        $head: $text('Win/Loss'),
-        columnOp: style({ maxWidth: '65px', placeContent: 'center' }),
-        $body: map(pos => {
-          return $row(
-            $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
-          )
-        })
-      },
+      ...screenUtils.isDesktopScreen ? [
+        {
+          $head: $text('Win/Loss'),
+          columnOp: style({ maxWidth: '65px', placeContent: 'center' }),
+          $body: map((pos: IAccountSummary) => {
+            return $row(
+              $text(`${pos.winTradeCount}/${pos.settledTradeCount - pos.winTradeCount}`)
+            )
+          })
+        }
+      ] : [],
       {
         $head: $text('Size'),
         sortBy: 'size',
@@ -153,7 +155,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
   })({ scrollIndex: tableTopPnlRequestTether(), sortBy: tableTopSettledsortByChangeTether() })
 
   const $topOpen = $Table2<ITradeOpen>({
-    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' })),
+    $container: $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px' })),
     scrollConfig: {
       containerOps: O(layoutSheet.spacingBig)
     },
@@ -230,7 +232,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
       // $CompeititonInfo(config.parentRoute, routeChangeTether),
 
       screenUtils.isDesktopScreen
-        ? $row(style({ gap: '46px' }))(
+        ? $row(style({ gap: '36px' }))(
           $column(layoutSheet.spacing, style({ padding: '0 12px', flex: 1 }))(
             $row(
               $header(layoutSheet.flex)(topSettledOption),
@@ -277,7 +279,7 @@ export const $Leaderboard = <T extends BaseProvider>(config: ILeaderboard<T>) =>
                 options: [topSettledOption, topOpenOption],
               }
             })({ select: selectMobileContentTether() }),
-            $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px', margin: '0 -12px' }))(
+            $card(layoutSheet.spacingBig, style({ padding: screenUtils.isMobileScreen ? '16px 8px' : '20px' }))(
               showContent === topSettledOption ? $topAccounts : $topOpen,
             )
           )
