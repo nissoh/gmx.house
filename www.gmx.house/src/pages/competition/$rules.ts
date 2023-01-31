@@ -64,8 +64,10 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
       $column(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
         $row(layoutSheet.spacing)(
           $column(style({ textAlign: 'right' }))(
-            $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-              $text(style({ fontSize: '1.65em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
+            $anchor(attr({ href: 'https://blueberry.club/p/leaderboard' }))(
+              $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+                $text(style({ fontSize: '1.65em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
+              )
             ),
           ),
         ),
