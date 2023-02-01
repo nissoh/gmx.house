@@ -58,7 +58,7 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
 
   const $details = (start: number, end: number) => {
     const now = unixTimestampNow()
-    const ended = end < now
+    const started = now >= start
 
     return $column(layoutSheet.spacing)(
       $column(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
@@ -71,28 +71,27 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
             ),
           ),
         ),
-        ended
-          ? $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
+        started
+          ? $column(
+            $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
+              $text(style({ fontSize: '1.25em', color: pallete.indeterminate }))('Beta LIVE!'),
+              $text(style({ color: pallete.foreground }))('Ending in')
+            ),
+            $text(style({ fontSize: '1.25em' }))(countdown(end))
+          )
+          : $row(layoutSheet.spacingSmall, style({ alignItems: 'center' }))(
             // $addToCalendar({
-            //   // time: start,
-            //   time: new Date(Date.UTC(new Date().getFullYear(), 1, 1, 16)),
+            //   time: new Date(start * 1000),
             //   title: 'Blueberry Trading Compeition',
             //   description: `Monthly trading competitions will be held. These tournaments will offer cash prizes, unique lab items, and more as rewards for traders who compete and win.  \n\n${document.location.href}`
             // }),
             $column(
               $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-                $text(style({}))('Next Cycle!'),
+                $text(style({ fontSize: '1.25em' }))('Next Cycle!'),
                 $text(style({ color: pallete.foreground }))('Starting in')
               ),
-              $text(style({}))(countdown(Date.UTC(new Date().getFullYear(), 1, 1, 16) / 1000))
+              $text(style({ fontSize: '1.25em' }))(countdown(start))
             )
-          )
-          : $column(
-            $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-              $text(style({ color: pallete.indeterminate }))('Beta LIVE!'),
-              $text(style({ color: pallete.foreground }))('Ending in')
-            ),
-            $text(style({}))(countdown(end))
           )
       ),
 

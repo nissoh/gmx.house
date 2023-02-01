@@ -146,8 +146,9 @@ export default ({ baseRoute = '' }: Website) => component((
 
   const date = new Date()
 
-  const COMPETITION_START = Date.UTC(date.getFullYear(), date.getMonth(), 1, 16) / 1000
-  const COMPETITION_END = COMPETITION_START + intervalInMsMap.HR24 * 23
+  const TOURNAMENT_TIME_DURATION = intervalInMsMap.HR24 * 28
+  const TOURNAMENT_START = Date.UTC(date.getFullYear(), date.getMonth(), 1, 16) / 1000
+
 
   return [
     mergeArray([
@@ -159,7 +160,7 @@ export default ({ baseRoute = '' }: Website) => component((
               $column(layoutSheet.spacingSmall, style({ fontWeight: 200, fontSize: '1.1em', textAlign: 'center' }))(
 
 
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $CompeititonInfo(TOURNAMENT_START, TOURNAMENT_START + TOURNAMENT_TIME_DURATION, rootRoute, linkClickTether),
 
                 $node(),
                 $node(),
@@ -210,7 +211,7 @@ export default ({ baseRoute = '' }: Website) => component((
             ),
             router.match(leaderboardRoute)(
               $column(layoutSheet.spacingBig)(
-                $CompeititonInfo(COMPETITION_START, COMPETITION_END, rootRoute, linkClickTether),
+                $CompeititonInfo(TOURNAMENT_START, TOURNAMENT_START + TOURNAMENT_TIME_DURATION, rootRoute, linkClickTether),
                 $node(),
                 $Leaderboard({
                   claimMap,
