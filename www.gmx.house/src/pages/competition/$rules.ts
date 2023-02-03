@@ -64,9 +64,10 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
       $column(screenUtils.isDesktopScreen ? layoutSheet.spacingBig : layoutSheet.spacing, style({ flexDirection: screenUtils.isDesktopScreen ? 'row' : 'column', fontSize: '1.15em', alignItems: 'center', placeContent: 'center' }))(
         $row(layoutSheet.spacing)(
           $column(style({ textAlign: 'right' }))(
-            $anchor(attr({ href: 'https://blueberry.club/p/leaderboard' }))(
-              $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-                $text(style({ fontSize: '1.65em', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
+            $anchor(style({ textDecoration: 'none' }), attr({ href: 'https://blueberry.club/p/leaderboard' }))(
+              $column(style({ alignItems: 'center', placeContent: 'center' }))(
+                $text(style({ fontSize: '1.65em', textDecoration: 'underline', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
+                $text('Highest ROI (%)')
               )
             ),
           ),
@@ -74,7 +75,7 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
         started
           ? $column(
             $row(layoutSheet.spacingSmall, style({ alignItems: 'baseline' }))(
-              $text(style({ fontSize: '1.25em', color: pallete.indeterminate }))('Beta LIVE!'),
+              $text(style({ fontSize: '1.25em', color: pallete.indeterminate }))('LIVE!'),
               $text(style({ color: pallete.foreground }))('Ending in')
             ),
             $text(style({ fontSize: '1.25em' }))(countdown(end))

@@ -187,7 +187,7 @@ export default ({ baseRoute = '' }: Website) => component((
                 })
               ),
             ),
-            $cubes(),
+            // $cubes(),
 
           )
         ),
