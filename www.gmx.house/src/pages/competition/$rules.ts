@@ -67,7 +67,7 @@ export function $CompeititonInfo(from: number, to: number, parentRoute: Route, r
             $anchor(style({ textDecoration: 'none' }), attr({ href: 'https://blueberry.club/p/leaderboard' }))(
               $column(style({ alignItems: 'center', placeContent: 'center' }))(
                 $text(style({ fontSize: '1.65em', textDecoration: 'underline', fontWeight: 'bold', color: pallete.primary, textShadow: `1px 1px 50px ${colorAlpha(pallete.primary, .45)}, 1px 1px 50px ${colorAlpha(pallete.primary, .25)} ` }))('#TopBlueberry'),
-                $text('Highest ROI (%)')
+                $text('Trading competition')
               )
             ),
           ),
