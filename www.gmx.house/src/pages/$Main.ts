@@ -100,9 +100,7 @@ export default ({ baseRoute = '' }: Website) => component((
 
   const rootStore = state.createLocalStorageChain('store-3')
 
-  const claimMap = replayLatest(
-    map(list => groupByMap(list, item => item.account.toLowerCase()), claimListQuery())
-  )
+  const claimMap = now({})
 
   const clientApi = helloBackend({
     requestLeaderboardTopList,
