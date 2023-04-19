@@ -30,8 +30,8 @@ export const globalCache = cacheMap({})
 
 
 api.get('/claim-list', async (req, res) => {
-  const claimList = await EM.find(Claim, {})
-  res.send(claimList)
+  // const claimList = await EM.find(Claim, {})
+  res.send({})
 })
 
 api.post('/claim-account-twitter', async (req, res) => {

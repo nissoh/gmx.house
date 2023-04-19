@@ -4,7 +4,6 @@ import express from 'express'
 import { readFileSync } from 'fs'
 import http from 'http'
 import path from 'path'
-import ws from 'ws'
 import { api } from './logic/api'
 // import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
 import { competitionCumulativePnl } from './logic/competition-cumulative-pnl'
@@ -14,6 +13,7 @@ import config from './mikro-orm.config'
 import compression from 'compression'
 import { requestAccountTradeList, requestLatestPriceMap, requestLeaderboardTopList, requestOpenTrades, requestPricefeed, requestTrade } from './logic/trade'
 import { competitionCumulativeRoi } from './logic/competition-cumulative-roi'
+import { runWssServer } from './runWss'
 
 
 require('events').EventEmitter.prototype._maxListeners = 100
@@ -31,61 +31,8 @@ const origin = process.env.ORIGIN
 const server = http.createServer(app)
 
 
-// const wss = new ws('wss://api.thegraph.com/subgraphs/name/nissoh/gmx-vault')
-const wss = new ws.Server({
-  server,
-  path: '/api-ws',
-})
 
-wss.shouldHandle = (request) => {
-  return request.headers.origin === origin
-}
-
-const liveClients = new Map<ws, {ws: ws, isAlive: boolean}>()
-
-wss.on('connection', function connection(ws) {
-  const client = liveClients.get(ws)
-
-  if (client) {
-    client.isAlive = true
-  } else {
-    liveClients.set(ws, { isAlive: true, ws })
-  }
-
-  ws.on('pong', heartbeat)
-})
-
-const interval = setInterval(function ping() {
-  wss.clients.forEach(function each(ws) {
-    const client = liveClients.get(ws)
-
-    if (!client) {
-      return
-    }
-
-    if (client.isAlive === false) {
-      liveClients.delete(ws)
-      return ws.terminate()
-    }
-
-    client.isAlive = false
-    ws.ping()
-  })
-}, 30000)
-
-wss.on('close', function close() {
-  clearInterval(interval)
-})
-
-function heartbeat() {
-  // @ts-ignore
-  const client = liveClients.get(this)
-
-  if (client) {
-    client.isAlive = true
-  }
-}
-
+const wss = runWssServer(server)
 
 
 const apiComponent = helloFrontend(wss, {
