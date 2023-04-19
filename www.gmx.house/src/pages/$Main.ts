@@ -1,5 +1,5 @@
 import { Behavior, replayLatest } from "@aelea/core"
-import { $element, $node, attr, component, eventElementTarget, style } from "@aelea/dom"
+import { $element, $node, component, eventElementTarget, style } from "@aelea/dom"
 import * as router from '@aelea/router'
 import { $RouterAnchor } from '@aelea/router'
 import { $column, $icon, $row, designSheet, layoutSheet, screenUtils, state } from '@aelea/ui-components'
@@ -8,7 +8,7 @@ import { awaitPromises, empty, map, merge, mergeArray, multicast, now } from '@m
 import { IEthereumProvider } from "eip1193-provider"
 import {
   ARBITRUM_TRADEABLE_ADDRESS, AVALANCHE_TRADEABLE_ADDRESS,
-  CHAIN, fromJson, groupByMap, IAccountSummary, IAccountTradeListParamApi, IChainParamApi,
+  fromJson, IAccountSummary, IAccountTradeListParamApi, IChainParamApi,
   IIdentifiableEntity, ILeaderboardRequest, intervalInMsMap, IPageParapApi,
   IPagePositionParamApi, IPricefeed, IPricefeedParamApi, IPriceLatestMap, ITradeOpen, TradeStatus, TX_HASH_REGEX
 } from '@gambitdao/gmx-middleware'
@@ -16,10 +16,6 @@ import { initWalletLink } from "@gambitdao/wallet-link"
 import { $logo } from '../common/$icons'
 import * as wallet from "../common/wallets"
 import { $MainMenu } from '../components/$MainMenu'
-import { $anchor } from '../elements/$common'
-import { $cubes } from '../elements/$cube'
-import { $github } from '../elements/$icons'
-import { claimListQuery } from "../logic/claim"
 import { helloBackend } from '../logic/leaderboard'
 import { $Card } from "./$Card"
 import { $Leaderboard } from './$Leaderboard'
@@ -29,10 +25,7 @@ import { $Account } from './account/$Account'
 import { $CompeititonInfo } from "./competition/$rules"
 import { Stream } from "@most/types"
 import { $Trade } from "./account/$Trade"
-import { IAccountLadderSummary, IQueryCompetitionApi } from "common"
-import { $CompetitionRoi } from "./competition/$CumulativeRoi"
-import { $CumulativePnl } from "./competition/$CumulativePnl"
-
+import { IQueryCompetitionApi } from "common"
 
 
 
