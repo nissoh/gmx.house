@@ -46,7 +46,7 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
       liveClients.set(ws, { isAlive: true, ws })
     }
 
-    ws.on('pong', heartbeat)
+    ws.on('pong', () => heartbeat(liveClients, ws))
   })
 
 
@@ -61,9 +61,8 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
   return wss
 }
 
-function heartbeat(liveClients: ILiveClients) {
-  // @ts-ignore
-  const client = liveClients.get(this)
+function heartbeat(liveClients: ILiveClients, wss: ws.WebSocket) {
+  const client = liveClients.get(wss)
 
   if (client) {
     client.isAlive = true
