@@ -12,6 +12,7 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
   wss.shouldHandle = (request) => {
     return request.headers.origin === process.env.ORIGIN
   }
+  const liveClients = new Map<ws, { ws: ws, isAlive: boolean }>()
 
   const interval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
@@ -31,7 +32,6 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
     })
   }, 30000)
 
-  const liveClients = new Map<ws, { ws: ws, isAlive: boolean }>()
 
   wss.on('connection', function connection(ws) {
     const client = liveClients.get(ws)
