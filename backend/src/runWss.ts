@@ -1,6 +1,10 @@
 import ws from 'ws'
 import http from 'http'
 
+type ILiveClients = Map<ws, {
+  ws: ws;
+  isAlive: boolean;
+}>
 
 export function runWssServer(server: http.Server<typeof http.IncomingMessage, typeof http.ServerResponse>) {
 
@@ -12,7 +16,7 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
   wss.shouldHandle = (request) => {
     return request.headers.origin === process.env.ORIGIN
   }
-  const liveClients = new Map<ws, { ws: ws, isAlive: boolean }>()
+  const liveClients: ILiveClients = new Map()
 
   const interval = setInterval(function ping() {
     wss.clients.forEach(function each(ws) {
@@ -57,7 +61,7 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
   return wss
 }
 
-function heartbeat() {
+function heartbeat(liveClients: ILiveClients) {
   // @ts-ignore
   const client = liveClients.get(this)
 
