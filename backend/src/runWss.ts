@@ -10,7 +10,7 @@ export function runWssServer(server: http.Server<typeof http.IncomingMessage, ty
   })
 
   wss.shouldHandle = (request) => {
-    return request.headers.origin === origin
+    return request.headers.origin === process.env.ORIGIN
   }
 
   const interval = setInterval(function ping() {

@@ -26,8 +26,6 @@ export let EM: EntityManager<IDatabaseDriver<Connection>>
 
 const app = express()
 const port = process.env.PORT
-const origin = process.env.ORIGIN
-
 const server = http.createServer(app)
 
 
