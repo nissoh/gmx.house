@@ -6,13 +6,13 @@
     "types": [
       "node"
     ],
+    "skipLibCheck": true,
     "module": "CommonJS",
     "declarationDir": ".dist/types",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "lib": [
-      "es2021",
-      "dom"
+      "es2021"
     ],
   },
   "references": [

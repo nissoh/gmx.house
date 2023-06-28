@@ -3,6 +3,7 @@ import { TypedDocumentNode } from '@urql/core'
 import Router from 'express-promise-router'
 import { cacheMap } from '../utils'
 import { prepareClient } from './common'
+import fetch from 'isomorphic-fetch'
 
 export const api = Router()
 
