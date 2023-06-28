@@ -1,4 +1,3 @@
-import { Connection, EntityManager, IDatabaseDriver, MikroORM } from '@mikro-orm/core'
 import cors from 'cors'
 import express from 'express'
 import { readFileSync } from 'fs'
@@ -6,13 +5,10 @@ import http from 'http'
 import path from 'path'
 import { api } from './logic/api'
 // import { competitionNov2021HighestPercentage, competitionNov2021LowestPercentage } from './logic/competition'
-import { competitionCumulativePnl } from './logic/competition-cumulative-pnl'
-import { scheduler } from './logic/scheduler'
-import { helloFrontend } from './messageBus'
-import config from './mikro-orm.config'
 import compression from 'compression'
+import { scheduler } from './logic/scheduler'
 import { requestAccountTradeList, requestLatestPriceMap, requestLeaderboardTopList, requestOpenTrades, requestPricefeed, requestTrade } from './logic/trade'
-import { competitionCumulativeRoi } from './logic/competition-cumulative-roi'
+import { helloFrontend } from './messageBus'
 import { runWssServer } from './runWss'
 
 
@@ -21,8 +17,6 @@ require('events').EventEmitter.prototype._maxListeners = 100
 // @ts-ignore
 BigInt.prototype.toJSON = function () { return this.toString() }
 
-export let ORM: MikroORM<IDatabaseDriver<Connection>>
-export let EM: EntityManager<IDatabaseDriver<Connection>>
 
 const app = express()
 const port = process.env.PORT
@@ -38,18 +32,12 @@ const apiComponent = helloFrontend(wss, {
   requestAccountTradeList,
   requestLeaderboardTopList,
   requestTrade,
-  // competitionNov2021HighestPercentage,
-  // competitionNov2021LowestPercentage,
-  competitionCumulativePnl,
-  competitionCumulativeRoi,
   requestPricefeed,
   requestLatestPriceMap,
 })
 
 
 const run = async () => {
-  ORM = await MikroORM.init(config)
-  EM = ORM.em
   
 
   apiComponent
